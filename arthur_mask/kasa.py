@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Tuple
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-from .turkce import ascii_katla
+from .turkce import ascii_katla, ascii_kucuk
 
 BASLIK = b"ARTHURMASK-KASA1\n"
 PAROLA_DEGISKENI = "ARTHUR_MASK_KASA_PAROLASI"
@@ -72,12 +72,16 @@ class Kasa:
 
         Yalnız tek bir aday varsa eşleştirir; belirsizlikte yeni etiket açılır.
         """
-        yeni = anahtar.split()
+        # Aksan/alfabe farkı yok sayılır: "azərenerji" = "azerenerji", OCR'daki "ayse" = "ayşe".
+        yeni = ascii_kucuk(anahtar).split()
         adaylar = set()
         for (k_tur, k_anahtar), etiket in self._dizin.items():
             if k_tur != tur:
                 continue
-            mevcut = k_anahtar.split()
+            mevcut = ascii_kucuk(k_anahtar).split()
+            if mevcut == yeni:
+                adaylar.add(etiket)
+                continue
             if varlik in ("TR_TUZEL_KISI", "SOZLUK"):
                 kisa, uzun = sorted((yeni, mevcut), key=len)
                 if len(kisa) >= 2 and uzun[:len(kisa)] == kisa:

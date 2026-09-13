@@ -67,7 +67,11 @@ class PasaportTanimlayici(KuralTanimlayici):
     DESENLER = (
         Desen(
             "pasaport bağlamı",
-            re.compile(r"(?i)(?:passport|pasaport)\s*(?:no\.?|number|numarası|#)?\s*[:.]?\s*([A-Z]{0,2}\d{6,9}|[A-Z0-9]{8,9})\b"),
+            re.compile(
+                r"(?i)(?:passport|pasaport|şəxsiyyət\s+vəsiqəsi|id\s+card|identity\s+card|national\s+id|"
+                r"kimlik\s+kartı\s+seri|fin\s+kod|fin)\s*(?:no\.?|number|numarası|nömrəsi|#)?\s*[:.]?\s*"
+                r"([A-Z]{0,3}\d{6,9}|[A-Z0-9]{7,9})\b"
+            ),
             0.85,
             grup=1,
         ),

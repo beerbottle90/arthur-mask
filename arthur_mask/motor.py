@@ -19,9 +19,9 @@ from .sozluk import Sozluk
 from . import semantik as semantik_modulu
 from .tanimlayicilar import (
     ADLAR, BELIRSIZ_ADLAR, KAMU_KURUMU_IZI, KISI_OLMAYAN, SEKTOR_SOZCUKLERI, SOYAD_OLMAYAN, TUZEL_KISI_IZI,
-    UNVANLAR, rol_ismi_mi, turk_tanimlayicilari,
+    UNVANLAR, _ASCII_ADLAR, rol_ismi_mi, turk_tanimlayicilari,
 )
-from .turkce import anahtar, kelime_desenine_cevir, tr_kucuk
+from .turkce import anahtar, ascii_kucuk, kelime_desenine_cevir, tr_kucuk
 from .uluslararasi import uluslararasi_tanimlayicilar
 
 STANDART = {
@@ -81,6 +81,60 @@ YABANCI_ATIF_DESENI = re.compile(
 
 ALT_ESIK = 0.3
 SEMANTIK_ESIK = 0.4
+
+# Sözleşme tanımları: '"Person" means…', '"Şəxs" … deməkdir', '"Kişi" … anlamına gelir'.
+_TIRNAK = r"[\"“”«»„]"
+_KAVRAM_TANIMI = re.compile(
+    rf"{_TIRNAK}([^\"“”«»„\n]{{2,60}}){_TIRNAK}\s*(?:\([^)\n]{{0,40}}\)\s*)?"
+    r"(?:means|shall\s+mean|has\s+the\s+meaning|includes|deməkdir|dedikdə|anlamına\s+gel|ifade\s+eder|:)",
+    re.IGNORECASE,
+)
+# Taraf kısa adları: '(the "Seller")', '(bundan sonra "Alıcı")'. Yalnız genel sözcüklerden oluşanlar korunur;
+# '("ABC")' gibi özel kısa adlar maskelenmeye devam eder.
+_TARAF_TANIMI = re.compile(
+    r"(?:\(|,)\s*(?:the|hereinafter(?:\s+referred\s+to\s+as)?|herein|bundan\s+sonra|bundan\s+böyle|"
+    rf"aşağıda|kısaca|qısaca|each\s+a|together\s+the)?\s*{_TIRNAK}([^\"“”«»„\n]{{2,60}}){_TIRNAK}",
+    re.IGNORECASE,
+)
+
+
+def _genel_sozcuk_mu(sozcuk: str) -> bool:
+    k = tr_kucuk(sozcuk).strip(".,:;'’()")
+    return not k or k in KISI_OLMAYAN or k in SOYAD_OLMAYAN or rol_ismi_mi(k)
+
+
+def tanim_terimleri(metin: str) -> set:
+    """Belgede tanımlanan kavram terimleri (küçük harf). Gerçek kişi adı gibi görünenler dahil edilmez."""
+    terimler = set()
+    for desen, yalniz_genel in ((_KAVRAM_TANIMI, False), (_TARAF_TANIMI, True)):
+        for m in desen.finditer(metin):
+            terim = m.group(1).strip()
+            sozcukler = terim.split()
+            if not sozcukler or (len(sozcukler) >= 2 and tr_kucuk(sozcukler[0]) in ADLAR):
+                continue
+            # Taraf tanımı: tamamı genel sözcük ya da son sözcüğü rol ismi ("Receiving Party", "Açıqlayan Tərəf").
+            if yalniz_genel and not (all(_genel_sozcuk_mu(s) for s in sozcukler) or rol_ismi_mi(tr_kucuk(sozcukler[-1]))):
+                continue
+            terimler.add(tr_kucuk(terim))
+    return terimler
+
+
+def _tanim_terimi_mi(b: "Bulgu", terimler: set) -> bool:
+    if b.varlik not in ("PERSON", "TR_TUZEL_KISI") or b.kaynak == "sözlük":
+        return False
+    parca = tr_kucuk(b.metin).strip(".,:;'’\"“”")
+    for terim in terimler:
+        # Çekimli ya da çoğul biçim: "Şəxsə", "Persons", "Representatives'"
+        if parca == terim or (parca.startswith(terim) and len(parca) - len(terim) <= 4):
+            return True
+        # Terimin baş parçası: "Receiving" ← "Receiving Party"
+        if terim.split()[:len(parca.split())] == parca.split():
+            return True
+    # "Authorised Person": terim + genel sözcüklerden oluşan bulgu
+    sozcukler = b.metin.split()
+    return any(tr_kucuk(s).strip(".,'’") in terimler for s in sozcukler) and all(
+        tr_kucuk(s).strip(".,'’") in terimler or _genel_sozcuk_mu(s) for s in sozcukler
+    )
 
 
 @dataclass(frozen=True)
@@ -162,6 +216,9 @@ class MaskeMotoru:
         """(maskelenecek bulgular, eşik altında kalan şüpheli adaylar)."""
         adaylar = self._presidio(metin) + self._sozluk_bulgulari(metin)
         adaylar = self._izin_listesi_uygula(metin, adaylar)
+        terimler = tanim_terimleri(metin)
+        if terimler:
+            adaylar = [b for b in adaylar if not _tanim_terimi_mi(b, terimler)]
         if self.ictihat_koruma:
             atiflar = [m.span() for m in YABANCI_ATIF_DESENI.finditer(metin)]
             adaylar = [
@@ -308,7 +365,16 @@ class MaskeMotoru:
             # Şirkette tür eki ("Anonim Şirketi") doğaldır; ilk sözcük rol ismiyse ("Davalı şirketin") yayılmaz.
             return not rol_ismi_mi(tr_kucuk(kelimeler[0]))
 
-        kisiler = {b.kanonik: b for b in kesin if b.varlik == "PERSON" and yayilabilir(b)}
+        def tek_sozcuk_ad_mi(b: Bulgu) -> bool:
+            # Tek sözcüklük kişi bulgusu ancak sözlükte kayıtlı bir ad ya da büyük harfli bir soyadıysa yayılır
+            # ("Şəxs", "Person" gibi model yanlışı bir sözcük belgenin her yerine taşınmasın).
+            kelimeler = b.metin.split()
+            if len(kelimeler) != 1 or b.kaynak == "sözlük":
+                return True
+            k = kelimeler[0].strip(".,'’")
+            return tr_kucuk(k) in ADLAR or ascii_kucuk(k) in _ASCII_ADLAR or (k.isupper() and len(k) >= 3)
+
+        kisiler = {b.kanonik: b for b in kesin if b.varlik == "PERSON" and yayilabilir(b) and tek_sozcuk_ad_mi(b)}
         sirketler = {b.kanonik: b for b in kesin if b.varlik in ("TR_TUZEL_KISI", "SOZLUK") and yayilabilir(b)}
 
         for ornek in list(kisiler.values()) + list(sirketler.values()):
@@ -327,8 +393,10 @@ class MaskeMotoru:
         ad_sahipleri = {}
         for b in kisiler.values():
             parcalar = b.metin.split()
-            if len(parcalar) >= 2 and parcalar[0][:1].isupper() and len(parcalar[0]) >= 3 \
-                    and tr_kucuk(parcalar[0]) not in KISI_OLMAYAN and "." not in parcalar[0]:
+            # Yalnız sözlükte kayıtlı gerçek bir ilk ad: "Affiliated Person"daki "Affiliated" gibi sözcükler yayılmaz.
+            if len(parcalar) >= 2 and len(parcalar[0]) >= 3 and "." not in parcalar[0] and (
+                tr_kucuk(parcalar[0]) in ADLAR or ascii_kucuk(parcalar[0]) in _ASCII_ADLAR
+            ):
                 ad_sahipleri.setdefault(parcalar[0], set()).add(b.kanonik)
         for ilk_ad, sahipler in ad_sahipleri.items():
             if len(sahipler) != 1:

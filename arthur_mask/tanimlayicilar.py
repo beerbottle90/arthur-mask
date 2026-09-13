@@ -148,6 +148,13 @@ ROL_KOKLERI = (
     "hâkim", "hakim", "kâtib", "katib", "zabıt", "bilirkişi", "arabulucu", "noter", "avukat", "üye",
     "başkan", "müdür", "yetkili", "temsilci", "çalışan", "personel", "abi", "abla", "hanım", "bey",
     "kişi", "şahıs", "sözleşme", "kararı", "dilekçe",
+    # Sözleşmelerde "kişi" anlamındaki genel isimler ve tanım terimleri (TR / EN / AZ)
+    "gerçek", "tüzel", "yönetici", "kişiler", "person", "people", "individual", "entity", "entities",
+    "representative", "affiliate", "affiliated", "authorised", "authorized", "recipient", "discloser",
+    "owner", "user", "subsidiary", "successor", "assignee", "advisor", "adviser", "employee",
+    "staff", "natural", "third", "counterparty", "şəxs", "fiziki", "hüquqi", "tərəf", "nümayəndə",
+    "direktor", "işçi", "məsləhətçi", "müştəri", "istifadəçi", "vətəndaş", "podratçı", "qurum",
+    "alıcı", "satıcı", "təsisçi", "səhmdar", "rəhbər", "vəkil",
 )
 
 
@@ -237,6 +244,7 @@ ULUSLARARASI_SIRKET_EKLERI = (
     r"(?:Ltd\.?|LTD\.?|Limited|LIMITED|LLC|L\.L\.C\.|Inc\.?|INC\.?|Incorporated|Corp\.?|Corporation|PLC|plc|"
     r"LLP|L\.L\.P\.|LP|L\.P\.|GmbH|GMBH|AG|KG|SE|S\.A\.|SA|S\.A\.S\.|SAS|SARL|S\.à\s?r\.l\.|S\.p\.A\.|SpA|S\.r\.l\.|"
     r"B\.V\.|BV|N\.V\.|NV|Pte\.?\s+Ltd\.?|Pty\.?\s+Ltd\.?|Co\.,?\s+Ltd\.?|& Co\.?|FZE|FZCO|FZ-LLC|DMCC|OOO|ООО|"
+    r"ASC|QSC|MMC|OJSC|CJSC|PJSC|JSC|AO|OAO|ZAO|TOO|Sp\.\s?z\s?o\.o\.|s\.r\.o\.|Kft\.|"
     r"Holdings?|Group|GROUP|HOLDINGS?|Partners|PARTNERS|Associates|Capital)(?![\w])"
 )
 

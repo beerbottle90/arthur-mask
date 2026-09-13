@@ -7,8 +7,8 @@ ofsetlerini bozar; bu modül uzunluğu koruyan Türkçe dönüşümler sağlar.
 
 import re
 
-BUYUK = "A-ZÇĞİÖŞÜÂÎÛ"
-KUCUK = "a-zçğıöşüâîû"
+BUYUK = "A-ZÇĞİÖŞÜÂÎÛƏ"
+KUCUK = "a-zçğıöşüâîûə"
 
 
 def tr_kucuk(metin: str) -> str:
@@ -19,7 +19,7 @@ def tr_buyuk(metin: str) -> str:
     return metin.replace("i", "İ").replace("ı", "I").upper()
 
 
-_ASCII_KATLAMA = str.maketrans("çğıöşüâîûÇĞİÖŞÜÂÎÛ", "cgiosuaiuCGIOSUAIU")
+_ASCII_KATLAMA = str.maketrans("çğıöşüâîûəÇĞİÖŞÜÂÎÛƏ", "cgiosuaiueCGIOSUAIUE")
 
 
 def ascii_katla(metin: str) -> str:
