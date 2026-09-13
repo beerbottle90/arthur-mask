@@ -4,7 +4,8 @@ ArthurLegal'in takma adlandırma (pseudonymization) kapısı. Türk hukuk belgel
 (UYAP `.udf`, Word `.docx`, `.pdf`, taranmış PDF ve `.jpg/.png/.tif` görüntüler, `.txt`) **cihazda** tarar. Kişisel ve gizli ifadeleri
 tutarlı maske etiketleriyle değiştirir (`{{KİŞİ-01}}`, `{{TCKN-01}}`, `{{ADRES-01}}`),
 eşleştirmeyi şifreli bir dosya kasasında saklar ve yapay zekâ çıktısını aynı kasayla geri
-açar. Hiçbir veri dışarı gönderilmez.
+açar. Belge içeriği ve kasa cihazdan çıkmaz; program internete yalnız günde bir kez, GitHub
+sürüm listesinden yeni sürüm olup olmadığını okumak için çıkar.
 
 > **Takma adlandırma anonimleştirme değildir.** Kasa büroda durduğu için veri KVKK
 > bakımından kişisel veri olmaya devam eder. Araç riski düşürür, yükümlülüğü kaldırmaz:
