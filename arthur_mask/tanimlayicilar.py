@@ -13,7 +13,7 @@ from typing import List, Optional, Sequence
 from presidio_analyzer import AnalysisExplanation, EntityRecognizer, RecognizerResult
 
 from .dogrulama import vkn_gecerli
-from .turkce import BUYUK, KUCUK, tr_kucuk
+from .turkce import BUYUK, KUCUK, ascii_kucuk, tr_kucuk
 
 DIL = "tr"
 
@@ -192,7 +192,7 @@ ROL_ETIKETLERI = (
 )
 
 UNVANLAR = (
-    r"Stj\.\s*Av\.|Av\.|Avukat|Sayın|Sn\.|Bay|Bayan|Prof\.\s*Dr\.|Doç\.\s*Dr\."
+    r"Stj\.\s*Av\.|Av\.|AV\.|Avukat|AVUKAT|Sayın|SAYIN|Sn\.|Bay|Bayan|Prof\.\s*Dr\.|Doç\.\s*Dr\.|DR\."
     r"|Dr\.\s*Öğr\.\s*Üyesi|Dr\.|Hâkim|Hakim|Cumhuriyet\s+Savcısı|Savcı|Bilirkişi"
     r"|Arabulucu|Noter|Zabıt\s+Kâtibi|Zabıt\s+Katibi|SMMM|YMM|Mali\s+Müşavir"
 )
@@ -507,6 +507,12 @@ class DogumTarihiTanimlayici(KuralTanimlayici):
             grup=0,
         ),
         Desen(
+            "şapkasız bağlam / boşluklu tarih",
+            re.compile(r"(?i)(?:do[gğ]um[ \t]+tarihi|do[gğ]umlu|d\.[ \t]?t\.)[^\n\d]{0,30}(\d{1,2}[ ./-]\d{1,2}[ ./-](?:19|20)\d{2})"),
+            0.8,
+            grup=1,
+        ),
+        Desen(
             "yalnız yıl",
             re.compile(r"(?<!\d)((?:19|20)\d{2})(?=\s+doğumlu)|(?:doğum\s+yılı|Doğum\s+Yılı)\s*[:.]?\s*((?:19|20)\d{2})"),
             0.8,
@@ -554,8 +560,9 @@ class AdresTanimlayici(KuralTanimlayici):
         Desen(
             "küçük harfli / OCR adres",
             re.compile(
-                r"(?i)((?:[\wçğıöşü.'’-]+[ \t]+){1,3}(?:mahallesi|mah\.?|mh\.?)[ \t]+[^\n]{0,120}?"
-                r"\bno\b\s*[:.]?\s*\d+[a-z]?(?:\s*/\s*\d+)?(?:\s*(?:d|daire|kat)\s*[:.]?\s*\d+)*"
+                # Önceki sözcükler harf/rakamla başlar; " - " ayracı aşılmaz (kişi adını yutmasın).
+                r"(?i)((?:[^\W_][\w.'’]*[ \t]+){1,3}(?:mahallesi|mah\.?|mh\.?)[ \t]+[^\n]{0,120}?"
+                r"\b(?:no|d|daire)\b\s*[:.]?\s*\d+[a-z]?(?:\s*/\s*\d+)?(?:\s*(?:d|daire|kat|k)\s*[:.]?\s*\d+)*"
                 r"(?:[ \t]*[,/]?[ \t]*[a-zçğıöşü]{3,}){0,2})"
             ),
             0.65,
@@ -607,9 +614,10 @@ class DosyaNoTanimlayici(KuralTanimlayici):
         Desen(
             "etiketli",
             re.compile(
-                r"(?:Dosya|Esas|Karar|Soruşturma|Hazırlık|İcra|Talimat|Başvuru|Büro|Arabuluculuk|İddianame|Takip)"
-                r"[ \t]*(?:No|Numarası|Nosu|Sayısı)[ \t]*[:.]?[ \t]*"
-                rf"({_YIL_SIRA}(?:[ \t]*(?:E|K|Esas|Karar)\b\.?)?)"
+                r"(?i:dosya|esas|karar|soru[şs]turma|haz[ıi]rl[ıi]k|[iİ]cra|talimat|ba[şs]vuru|b[üu]ro|arabuluculuk"
+                r"|[iİ]ddianame|takip)"
+                r"[ \t]*(?i:no|numaras[ıi]|nosu|say[ıi]s[ıi])[ \t]*[:.]?[ \t]*"
+                rf"({_YIL_SIRA}(?:[ \t]*(?i:e|k|esas|karar)\b\.?(?![ \t]*(?i:no\b|numaras|say[ıi]s)))?)"
             ),
             0.85,
             grup=1,
@@ -624,7 +632,9 @@ class DosyaNoTanimlayici(KuralTanimlayici):
             "yıl/sıra + tür",
             re.compile(
                 rf"(?<![\d/])({_YIL_SIRA}[ \t]*"
-                r"(?:Esas|Karar|E\.|K\.|E\b|K\b|D\.[ \t]?İş|Değişik[ \t]+İş|Talimat|Tal\.|Soruşturma|Sor\.|Hazırlık|Müt\.|Tlmt\.))"
+                r"(?:Esas|Karar|ESAS|KARAR|esas|karar|E\.|K\.|E\b|K\b|D\.[ \t]?İş|Değişik[ \t]+İş|Talimat|Tal\.|Soruşturma"
+                r"|Sor\.|Hazırlık|Müt\.|Tlmt\.|sayılı[ \t]+dosya|dosyası|dosyasında|dosyasından)"
+                r"(?![ \t]*(?i:no\b|numaras|say[ıi]s)))"
             ),
             0.75,
             grup=1,
@@ -652,8 +662,132 @@ class MahkemeTanimlayici(KuralTanimlayici):
     )
 
 
+# --- Sızıntıya öncelik: OCR, baş harf, konuşmacı, tek başına ilk ad ---------------------
+
+_ASCII_ADLAR = {ascii_kucuk(a) for a in ADLAR} | {ascii_kucuk(a) for a in BELIRSIZ_ADLAR}
+_OCR_ROLLER = (
+    r"davac[ıi]|daval[ıi]|san[ıi]k|tan[ıi]k|m[üu][şs]teki|[şs][üu]pheli|vekili|yetkilisi|muris|bor[çc]lu"
+    r"|alacakl[ıi]|ma[ğg]dur|kat[ıi]lan|av\.|avukat|m[üu]vekkil|i[şs][çc]i|kirac[ıi]|kefil|ad[ıi][ \t]+soyad[ıi]"
+)
+
+
+class OcrKisiTanimlayici(KuralTanimlayici):
+    """Türkçe karakterleri düşmüş ya da tamamen küçük harfli metinde rol bağlamındaki adlar."""
+
+    VARLIK = "PERSON"
+    DESENLER = (
+        Desen(
+            "OCR rol + ad",
+            re.compile(rf"(?i:{_OCR_ROLLER})[ \t]*:?[ \t]+([a-zçğıöşü]{{2,}}(?:[ \t]+[a-zçğıöşü]{{2,}}){{1,2}})"),
+            0.75,
+            grup=1,
+        ),
+    )
+
+    def filtrele(self, metin, bas, son):
+        kelimeler = [(m.start() + bas, m.end() + bas) for m in re.finditer(r"\S+", metin[bas:son])]
+        if ascii_kucuk(metin[kelimeler[0][0]:kelimeler[0][1]]) not in _ASCII_ADLAR:
+            return None
+        # Ada eklenen ilk genel sözcükte dur ("selcuk gungor tel" → "selcuk gungor").
+        for i, (a, z) in enumerate(kelimeler[1:], start=1):
+            kelime = ascii_kucuk(metin[a:z])
+            if kelime in {ascii_kucuk(k) for k in KISI_OLMAYAN} or rol_ismi_mi(tr_kucuk(metin[a:z])) or kelime in {
+                "tel", "telefon", "tc", "adres", "adresi", "eposta", "mail", "ve", "ile", "no", "plakali", "dogum",
+            }:
+                kelimeler = kelimeler[:i]
+                break
+        return (kelimeler[0][0], kelimeler[-1][1]) if len(kelimeler) >= 2 else None
+
+
+class OcrSirketTanimlayici(KuralTanimlayici):
+    """Küçük harfli / şapkasız şirket unvanı: 'ozgur plastik sanayi ltd sti'."""
+
+    VARLIK = "TR_TUZEL_KISI"
+    DESENLER = (
+        Desen(
+            "OCR unvan",
+            re.compile(
+                r"(?<![\w])((?:[a-zçğıöşü0-9&]+[ \t]+){1,5}"
+                r"(?:ltd\.?[ \t]*[şs]ti\.?|a\.[ \t]?[şs]\.|anonim[ \t]+[şs]irketi|limited[ \t]+[şs]irketi))(?![\w])"
+            ),
+            0.7,
+            grup=1,
+        ),
+    )
+
+    def filtrele(self, metin, bas, son):
+        kelimeler = [(m.start() + bas, m.end() + bas) for m in re.finditer(r"\S+", metin[bas:son])]
+        genel = {ascii_kucuk(k) for k in KISI_OLMAYAN} | {"sirket", "sirketi", "firma", "firmasi", "davali", "davaci"}
+        while kelimeler and (ascii_kucuk(metin[kelimeler[0][0]:kelimeler[0][1]]) in genel
+                             or rol_ismi_mi(tr_kucuk(metin[kelimeler[0][0]:kelimeler[0][1]]))):
+            kelimeler.pop(0)
+        return (kelimeler[0][0], son) if len(kelimeler) >= 2 else None
+
+
+_BAS_HARF_OLMAYAN = {"T.C.", "A.Ş.", "M.Ö.", "M.S.", "S.K.", "Y.K.", "K.K.", "A.B.", "B.M.", "D.T.", "S.S.", "T.T."}
+
+
+class BasHarfTanimlayici(KuralTanimlayici):
+    """Kişiye işaret eden baş harfler: 'A.Ö.R.', 'N.K.D.', 'B. Özdemir'."""
+
+    VARLIK = "PERSON"
+    DESENLER = (
+        Desen("üç/iki baş harf", re.compile(rf"(?<![\w.])((?:[{BUYUK}]\.[ \t]?){{2,3}})(?![\w])"), 0.6),
+        Desen("baş harf + soyad", re.compile(rf"(?<![\w.])([{BUYUK}]\.[ \t]?{_AD})(?![\w])"), 0.65),
+    )
+
+    def filtrele(self, metin, bas, son):
+        parca = metin[bas:son].strip()
+        son = bas + len(metin[bas:son].rstrip())
+        if parca.replace(" ", "") in _BAS_HARF_OLMAYAN:
+            return None
+        if re.fullmatch(r"[A-ZÇĞİÖŞÜ]\.[ \t]?\S+", parca):
+            soyad = tr_kucuk(parca.split(".", 1)[1].strip())
+            if soyad in KISI_OLMAYAN or rol_ismi_mi(soyad) or soyad in ILLER:
+                return None
+        return bas, son
+
+
+class KonusmaciTanimlayici(KuralTanimlayici):
+    """Sohbet/tutanak dökümünde konuşmacı etiketi: '[21:31] ~Şebo:', '[10:20] Memo:'."""
+
+    VARLIK = "PERSON"
+    DESENLER = (
+        Desen(
+            "zaman damgalı konuşmacı",
+            re.compile(rf"(?:\][ \t]*~?|^~)[ \t]*((?:[{BUYUK}][\w.]*)(?:[ \t]+[{BUYUK}][\w.]*){{0,2}})[ \t]*:", re.M),
+            0.7,
+            grup=1,
+        ),
+    )
+
+    def filtrele(self, metin, bas, son):
+        kelimeler = [tr_kucuk(k).strip(".") for k in metin[bas:son].split()]
+        if all(k in KISI_OLMAYAN or rol_ismi_mi(k) for k in kelimeler):
+            return None
+        return bas, son
+
+
+class IlkAdTanimlayici(KuralTanimlayici):
+    """Metin içinde tek başına geçen, sözlükte kesin ad olarak kayıtlı büyük harfle başlayan ilk ad."""
+
+    VARLIK = "PERSON"
+    DESENLER = (Desen("tek ilk ad", re.compile(rf"(?<![\w.'’])({_AD})(?![\w])"), 0.55),)
+
+    def filtrele(self, metin, bas, son):
+        if tr_kucuk(metin[bas:son]) not in ADLAR:
+            return None
+        # "Hakan Bey"/"Ad Soyad" daha uzun tanıyıcılarca yakalanır; burada yalnız tek sözcük kalır.
+        return bas, son
+
+
 def turk_tanimlayicilari() -> List[EntityRecognizer]:
     return [
+        OcrKisiTanimlayici(),
+        OcrSirketTanimlayici(),
+        BasHarfTanimlayici(),
+        KonusmaciTanimlayici(),
+        IlkAdTanimlayici(),
         KisiTanimlayici(),
         AnaBabaAdiTanimlayici(),
         AdSozluguKisiTanimlayici(),

@@ -27,6 +27,11 @@ def ascii_katla(metin: str) -> str:
     return metin.translate(_ASCII_KATLAMA).upper()
 
 
+def ascii_kucuk(metin: str) -> str:
+    """Türkçe karakterleri düşmüş OCR metniyle karşılaştırma için: 'Şebnem' → 'sebnem'."""
+    return tr_kucuk(metin).translate(_ASCII_KATLAMA)
+
+
 def harf_duyarsiz_desen(ifade: str) -> str:
     """Bir ifadeyi Türkçe büyük/küçük harf duyarsız, uzunluk koruyan regex'e çevirir.
 

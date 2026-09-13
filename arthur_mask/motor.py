@@ -67,6 +67,7 @@ ICTIHAT_ATIF_IZI = re.compile(
 ATIF_PENCERESI = 90
 
 ALT_ESIK = 0.3
+SEMANTIK_ESIK = 0.4
 
 
 @dataclass(frozen=True)
@@ -145,7 +146,8 @@ class MaskeMotoru:
         if self.ictihat_koruma:
             adaylar = [b for b in adaylar if not self._ictihat_atfi_mi(metin, b)]
 
-        kesin = [b for b in adaylar if b.skor >= self.esik]
+        # Sızıntıya öncelik: semantik katmanın bulguları daha düşük eşikle maskelenir.
+        kesin = [b for b in adaylar if b.skor >= self.esik or (b.kaynak == "GLiNER" and b.skor >= SEMANTIK_ESIK)]
         kesin = self._cakisma_coz(kesin + self._yayilim(metin, kesin))
         kesin = self._izin_listesi_uygula(metin, kesin)
 
@@ -167,7 +169,9 @@ class MaskeMotoru:
             kaynak = s.recognition_metadata.get("recognizer_name", "") if s.recognition_metadata else ""
             # Presidio desenleri harf duyarsız çalışır; plakada harfler büyük olmalı ("11 ve 13" plaka değil).
             if s.entity_type == "TR_LICENSE_PLATE" and not re.search(r"[A-Z]", metin[bas:son]):
-                continue
+                # Küçük harfli OCR plakası ancak yakınında plaka bağlamı varsa kabul edilir.
+                if not re.search(r"(?i)plaka|araç|arac[ıi]", metin[max(0, bas - 40):son + 20]):
+                    continue
             if kaynak == "GLiNER":
                 aralik = self._semantik_filtre(metin, s.entity_type, bas, son)
                 if not aralik:
@@ -200,22 +204,24 @@ class MaskeMotoru:
         if varlik == "PERSON":
             if KAMU_KURUMU_IZI.search(parca) or TUZEL_KISI_IZI.search(parca):
                 return None
-            # "davalının", "Başvurucunun", "Borçlu vekili": rol ismi, kişi adı değil.
-            if len(genel) == len(kelimeler) or rol_ismi_mi(kelimeler[0]):
+            # Sızıntıya öncelik: yalnız kesin yanlışlar elenir. Rol ismiyle başlayan dizide rol kırpılır
+            # ("Tanık Rojhat Demirtaşoğlu" → "Rojhat Demirtaşoğlu"); tamamı genel sözcükse elenir.
+            if len(genel) == len(kelimeler):
                 return None
-            # Hiçbir sözcük büyük harfle başlamıyorsa (OCR metni) ad sözlüğü teyidi aranır.
-            if not any(k[:1].isupper() for k in parca.split()) and not any(
-                k in ADLAR or k in BELIRSIZ_ADLAR for k in kelimeler
-            ):
+            parcalar = list(re.finditer(r"\S+", parca))
+            while parcalar and (rol_ismi_mi(tr_kucuk(parcalar[0].group())) or tr_kucuk(parcalar[0].group()).strip(".,:;") in KISI_OLMAYAN):
+                parcalar.pop(0)
+            if not parcalar:
                 return None
+            bas, son = bas + parcalar[0].start(), bas + parcalar[-1].end()
         elif varlik == "TR_TUZEL_KISI":
             if KAMU_KURUMU_IZI.search(parca) or ICTIHAT_ATIF_IZI.search(parca):
                 return None
-            # "Davalı şirketin", "Ltd. Şti": özel ad taşımayan genel ifade.
+            # "Davalı şirketin", "Ltd. Şti": özel ad taşımayan genel ifade (büyük harf şartı yok: OCR).
             ozel = [
                 k for k, ham in zip(kelimeler, parca.split())
-                if ham[:1].isupper() and k not in genel and not TUZEL_KISI_IZI.fullmatch(ham.strip(".,"))
-                and k.strip(".") not in {"a.ş", "aş", "ltd", "şti", "ltd.şti"}
+                if k not in genel and not TUZEL_KISI_IZI.fullmatch(ham.strip(".,"))
+                and k.strip(".") not in {"a.ş", "aş", "ltd", "şti", "sti", "ltd.şti", "ve"}
             ]
             if not ozel:
                 return None
@@ -287,6 +293,21 @@ class MaskeMotoru:
             soyad = b.metin.split()[-1]
             if soyad.isupper() and len(soyad) >= 3 and tr_kucuk(soyad) not in SOYAD_OLMAYAN:
                 soyad_sahipleri.setdefault(tr_kucuk(soyad), set()).add(b.kanonik)
+        # Tek başına geçen ilk ad ("Mehmet Kaya ... Mehmet"): yalnız o ilk ad tek bir kişiye aitse.
+        ad_sahipleri = {}
+        for b in kisiler.values():
+            parcalar = b.metin.split()
+            if len(parcalar) >= 2 and parcalar[0][:1].isupper() and len(parcalar[0]) >= 3 \
+                    and tr_kucuk(parcalar[0]) not in KISI_OLMAYAN and "." not in parcalar[0]:
+                ad_sahipleri.setdefault(parcalar[0], set()).add(b.kanonik)
+        for ilk_ad, sahipler in ad_sahipleri.items():
+            if len(sahipler) != 1:
+                continue
+            ornek = kisiler[next(iter(sahipler))]
+            for m in re.finditer(rf"(?<![\w.]){re.escape(ilk_ad)}(?![\w])", metin):
+                ek.append(replace(ornek, bas=m.start(), son=m.end(), metin=m.group(),
+                                  skor=max(min(ornek.skor, 0.7), self.esik), kaynak="yayılım (ilk ad)"))
+
         for soyad, sahipler in soyad_sahipleri.items():
             if len(sahipler) != 1:
                 continue
