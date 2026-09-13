@@ -99,7 +99,7 @@ ArthurLegal proje talimatına eklenecek bölüm:
 - Kasa anahtarı Windows Kimlik Bilgisi Yöneticisi'nde (DPAPI) durur, parola yoktur.
   Kurulumda bir kurtarma anahtarı üretilir. Kullanıcı bunu yazdırır ya da ortakta şifreli
   saklar.
-- Sürümler özel GitHub deposundan dağıtılır. Uygulama yeni sürümü bildirir, kullanıcı tek
+- Sürümler herkese açık ArthurLegal deposunun sürüm sayfasından dağıtılır. Uygulama yeni sürümü bildirir, kullanıcı tek
   tıkla günceller. Sessiz otomatik güncelleme yoktur: tanıyıcı veya model değişince
   değerlendirme yeniden koşulmadan sürüm çıkmaz.
 

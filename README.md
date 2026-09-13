@@ -44,8 +44,9 @@ uv pip install --python .venv/Scripts/python.exe -e ".[test]"
 
 ## Son kullanıcı dağıtımı
 
-Son kullanıcıya kaynak kod gitmez. Dağıtım, herkese açık ArthurLegal deposunun sürüm sayfasındaki
-tek kurulum dosyasıdır: `arthur-mask` etiketli sürümdeki `ArthurMask-Kurulum.exe` (kalıcı doğrudan bağlantı
+Kaynak kod bu depoda herkese açık olarak incelenebilir; lisansı ticari olmayan kullanım lisansıdır, açık kaynak
+lisansı değildir (`LICENSE`). Kurulum paketlerinde kaynak kod yoktur (Nuitka). Dağıtım, herkese açık ArthurLegal
+deposunun sürüm sayfasındaki kurulum dosyalarıdır: `arthur-mask` etiketli sürümdeki `ArthurMask-Kurulum.exe` ve `ArthurMask-Kurulum.dmg` (kalıcı doğrudan bağlantı
 `https://github.com/beerbottle90/ArthurLegal/releases/download/arthur-mask/ArthurMask-Kurulum.exe`; yeni sürümde dosya
 `gh release upload arthur-mask ... --clobber` ile değiştirilir, sürüm başlığı "Arthur Mask X.Y.Z" güncellenir). Kullanım rehberi ArthurLegal paketlerindeki
 `ARTHUR-MASK.md` dosyasındadır.
