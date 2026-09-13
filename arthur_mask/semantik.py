@@ -47,7 +47,14 @@ def tanimlayici_olustur(
     esik: float = 0.3,
     parca_boyu: int = 600,
     ortusme: int = 120,
+    filtre=None,
 ):
+    """filtre(metin, varlik, bas, son) -> (bas, son) | None
+
+    Filtre Presidio'nun yinelenen ayıklamasından ÖNCE uygulanır. Aksi hâlde model
+    bulgusu içindeki kural bulgusu yinelenen sayılıp silinir, model bulgusu da sonra
+    filtreden düşerse ikisi birden kaybolur.
+    """
     """Türkçe için yapılandırılmış GLiNER tanıyıcısı döndürür (yükleme ilk analizde)."""
     from presidio_analyzer.chunkers import CharacterBasedTextChunker
     from presidio_analyzer.predefined_recognizers import GLiNERRecognizer
@@ -62,7 +69,16 @@ def tanimlayici_olustur(
                 self.load()
             # Eşlenmemiş varlık adlarının (TR_VKN vb.) modele etiket diye gitmesini engelle.
             eslenen = set(self.model_to_presidio_entity_mapping.values())
-            return super().analyze(text, [e for e in entities if e in eslenen], nlp_artifacts)
+            sonuclar = super().analyze(text, [e for e in entities if e in eslenen], nlp_artifacts)
+            if filtre is None:
+                return sonuclar
+            suzulen = []
+            for s in sonuclar:
+                aralik = filtre(text, s.entity_type, s.start, s.end)
+                if aralik:
+                    s.start, s.end = aralik
+                    suzulen.append(s)
+            return suzulen
 
     return TurkceGLiNERTanimlayici(
         name="GLiNER",

@@ -144,7 +144,7 @@ class MaskeMotoru:
         if semantik:
             if not semantik_modulu.kullanilabilir_mi():
                 raise RuntimeError('Semantik katman kurulu değil: pip install "arthur-mask[semantik]"')
-            kayit.add_recognizer(semantik_modulu.tanimlayici_olustur())
+            kayit.add_recognizer(semantik_modulu.tanimlayici_olustur(filtre=self._semantik_filtre))
         self.semantik = bool(semantik)
         self.analizci = AnalyzerEngine(
             registry=kayit,
@@ -191,11 +191,6 @@ class MaskeMotoru:
                 # Küçük harfli OCR plakası ancak yakınında plaka bağlamı varsa kabul edilir.
                 if not re.search(r"(?i)plaka|araç|arac[ıi]", metin[max(0, bas - 40):son + 20]):
                     continue
-            if kaynak == "GLiNER":
-                aralik = self._semantik_filtre(metin, s.entity_type, bas, son)
-                if not aralik:
-                    continue
-                bas, son = aralik
             parca = metin[bas:son]
             bulgular.append(
                 Bulgu(bas, son, s.entity_type, TUR_ADLARI.get(s.entity_type, s.entity_type),
@@ -255,7 +250,11 @@ class MaskeMotoru:
         elif varlik == "TR_DOGUM_TARIHI":
             # Tarihler açık bırakılır; model bir tarihi doğum tarihi sanırsa bağlam aranır.
             pencere = tr_kucuk(metin[max(0, bas - 40):min(len(metin), son + 20)])
-            if not re.search(r"doğum|doğumlu|d\.\s?t\.|yaşında", pencere):
+            if not re.search(r"doğum|doğumlu|d\.\s?t\.|yaşında|birth|born|d\.?o\.?b", pencere):
+                return None
+        elif varlik in ("TR_NATIONAL_ID", "IBAN_CODE", "TR_TELEFON"):
+            # Model tarihleri ve tutarları kimlik/hesap numarası sanabilir: yeterli rakam aranır.
+            if sum(ch.isdigit() for ch in parca) < 9 or re.fullmatch(r"[\d\s./-]*(?:19|20)\d{2}[\d\s./-]*", parca) and len(re.sub(r"\D", "", parca)) <= 8:
                 return None
         return bas, son
 
