@@ -1,0 +1,18 @@
+# Sentetik TR değerlendirme seti (v0). Gerçek kişi/dosya verisi İÇERMEZ.
+# Biçim: altın etiketler {{ETİKET|ifade}}. Boş satır ve # ile başlayan satırlar atlanır.
+# Kasıtlı zor örnekler var (bağlamsız "Ad Soyad" yazımı); recall bunları da sayar.
+DAVACI: {{KİŞİ|Zeynep ARSLAN}} (T.C. Kimlik No: {{TCKN|10000000146}})
+DAVALI: {{ŞİRKET|Kuzey Rüzgârı Enerji Üretim Anonim Şirketi}}
+VEKİLİ: Av. {{KİŞİ|Hakan Emre ÖZTÜRK}}, Tel: {{TELEFON|0 (212) 555 44 33}}, KEP: {{EPOSTA|hakan.ozturk@hs01.kep.tr}}
+Adres: {{ADRES|Barbaros Mahallesi Lale Sokak No:7 D:12 Ataşehir/İstanbul}}
+Esas No: {{DOSYA_NO|2025/1432}} — Karar No: {{DOSYA_NO|2026/88}}
+Yargıtay 9. HD, 2021/5512 E., 2022/1301 K. sayılı kararında da aynı ilke benimsenmiştir.
+Danıştay İDDK'nın 2019/2201 E. sayılı kararı somut olaya uygulanamaz.
+Tanık {{KİŞİ|Selin Yıldız}} ve tanık {{KİŞİ|Burak Şahin}} dinlenmiştir.
+Müvekkil şirketin ortağı {{KİŞİ|Deniz Aydın}} toplantıya katılmamıştır.
+Bedel {{IBAN|TR33 0006 1005 1978 6457 8413 26}} numaralı hesaba yatırılacaktır.
+Sayın Mahkeme'nin takdirine arz olunur. Yargıtay HGK ve İstanbul BAM kararları uyarınca.
+Aracın plakası {{PLAKA|06 AB 1234}} olup sürücüsü {{KİŞİ|Kemal DOĞAN}}'dır.
+Şirketin MERSİS numarası {{MERSİS|0123456789012345}} olarak tescil edilmiştir.
+Borçlu {{KİŞİ|Ahmet Can Kılıç}} hakkında İstanbul 12. İcra Dairesinin {{DOSYA_NO|2024/33211 E.}} sayılı dosyası ile takip başlatılmıştır.
+{{KİŞİ|Elif ŞEN}}, {{DOGUM|14.02.1988}} doğumlu olup davacının kardeşidir.

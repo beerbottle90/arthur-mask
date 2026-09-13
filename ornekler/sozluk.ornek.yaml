@@ -1,0 +1,22 @@
+# Dosyaya özgü kişisel sözlük — ÖRNEK (kurgusal adlar).
+# Gerçek sözlük kişisel veri içerir: kasa ile aynı yerel klasörde tutulur, depoya girmez.
+
+dosya: "2026-014 alacak davası"
+
+# Her zaman maskelenecek ifadeler. 'tur' etiketin adı olur: {{PROJE-01}}, {{GİZLİ-01}}…
+maskele:
+  - deger: "Ayşe KARA"
+    tur: KİŞİ
+    varyantlar: ["Ayşe Kara", "A. KARA"]
+  - deger: "Vural İnşaat Taahhüt Anonim Şirketi"
+    tur: ŞİRKET
+    varyantlar: ["Vural İnşaat", "VURAL İNŞAAT"]
+  - deger: "Mavi Kuş"          # ticari sır: proje kod adı
+    tur: PROJE
+  - "Bebek Yalısı satışı"      # türsüz girdi {{GİZLİ-nn}} olur
+
+# Hiç maskelenmeyecek ifadeler (kamuya açık kişi/kurum adları vb.).
+# Yalnız bu ifadenin tamamen içinde kalan tespitler bırakılır.
+maskeleme:
+  - "Mehmet ŞİMŞEK"
+  - "Rekabet Kurumu"
