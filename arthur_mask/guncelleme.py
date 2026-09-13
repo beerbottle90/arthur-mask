@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import re
+import sys
 import threading
 import time
 import urllib.request
@@ -21,7 +22,9 @@ gunluk = logging.getLogger("arthur_mask.guncelleme")
 SURUM_ADRESI = "https://api.github.com/repos/beerbottle90/ArthurLegal/releases?per_page=15"
 # Kalıcı indirme bağlantısı için dosya adı sürümsüzdür (ArthurMask-Kurulum.exe); sürüm o zaman
 # sürüm başlığından okunur ("Arthur Mask 1.0.0 — Windows kurulum dosyası").
-KURULUM_DESENI = re.compile(r"^ArthurMask-Kurulum(?:-(\d+\.\d+\.\d+))?\.exe$")
+# macOS kurulum dosyası aynı sürüm sayfasında ArthurMask-Kurulum.dmg adıyla durur.
+KURULUM_UZANTISI = "dmg" if sys.platform == "darwin" else "exe"
+KURULUM_DESENI = re.compile(rf"^ArthurMask-Kurulum(?:-(\d+\.\d+\.\d+))?\.{KURULUM_UZANTISI}$")
 BASLIK_SURUMU = re.compile(r"Arthur Mask\s+v?(\d+\.\d+\.\d+)")
 YENILEME_SANIYE = 24 * 3600
 

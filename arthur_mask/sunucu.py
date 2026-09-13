@@ -223,6 +223,8 @@ class _Isleyici(BaseHTTPRequestHandler):
                 subprocess.Popen(["explorer", "/select,", str(yol)])
             else:
                 os.startfile(str(yol))  # noqa: S606 - yalnız cevaplar klasöründeki doğrulanmış dosya
+        elif sys.platform == "darwin":
+            subprocess.Popen(["/usr/bin/open", *(["-R"] if klasorde else []), str(yol)])
         return {"acildi": yol.name}
 
     def _cevap_dosyasi(self, klasor: str, ad: str) -> None:
@@ -268,6 +270,7 @@ class YerelSunucu:
             "ocr": ocr_kullanilabilir_mi(),
             "kurtarma_saklandi": (not self.kurtarma_kodu) or self._kurtarma_isareti().exists(),
             "surum": __version__,
+            "platform": sys.platform,
             "motor_hazir": self.islem.motor_hazir,
             "semantik": bool(self.islem._motor and self.islem._motor.semantik),
             "aktif_dosya": self.islem.depo.aktif_dosya,

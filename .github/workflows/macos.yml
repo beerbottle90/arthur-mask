@@ -1,0 +1,73 @@
+# Arthur Mask macOS (Apple Silicon) disk görüntüsü. macOS dakikaları ücretli olduğu için yalnız `macos`
+# dalına gönderimde ya da elle tetiklenir; Windows kurulum paketi yerelde paketleme/derle.py ile üretilir.
+name: macOS kurulum paketi
+
+on:
+  push:
+    branches: [macos]
+    paths: ["arthur_mask/**", "paketleme/**", "tests/**", "pyproject.toml", ".github/workflows/macos.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: macos-derleme-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  derle:
+    runs-on: macos-15  # arm64
+    timeout-minutes: 150
+    env:
+      PYTHON_SURUMU: "3.11.9"  # Windows paketiyle aynı
+      ARTHUR_MASK_GUNCELLEME: kapali
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ortam
+        run: |
+          echo "HF_HOME=$HOME/hf-cache" >> "$GITHUB_ENV"
+          sw_vers; uname -m; sysctl -n hw.ncpu hw.memsize
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Model önbelleği
+        uses: actions/cache@v4
+        with:
+          path: ~/hf-cache
+          key: hf-gliner_multi_pii-1fcf13e-mdeberta-a048466
+
+      - name: Python ve bağımlılıklar
+        run: |
+          uv python install "$PYTHON_SURUMU"
+          uv venv .venv --python "$PYTHON_SURUMU" --managed-python
+          uv pip install --python .venv/bin/python -r paketleme/macos/gereksinimler.txt
+          uv pip install --python .venv/bin/python --no-deps -e .
+
+      - name: Modeller
+        run: .venv/bin/python paketleme/derle_macos.py --yalniz-hazirla
+
+      - name: Testler (geliştirme ortamı)
+        run: .venv/bin/python -m pytest -q
+
+      - name: Derle, imzala, disk görüntüsü
+        run: .venv/bin/python paketleme/derle_macos.py --cikti "$RUNNER_TEMP/derleme" --dmg
+
+      - name: Disk görüntüsünü salt okunur bağlayıp sına
+        run: |
+          MNT="$RUNNER_TEMP/mnt"; mkdir -p "$MNT"
+          hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$RUNNER_TEMP/derleme/ArthurMask-Kurulum.dmg"
+          APP="$MNT/Arthur Mask.app"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          spctl --assess --type execute --verbose "$APP" || echo "Gatekeeper: imzasız paket için beklenen ret"
+          ARTHUR_MASK_TEST_PYTHON="$APP/Contents/Resources/runtime/bin/python3" \
+            .venv/bin/python -m pytest -q tests/test_uctan_uca_stdio.py
+          hdiutil detach "$MNT"
+          shasum -a 256 "$RUNNER_TEMP/derleme/ArthurMask-Kurulum.dmg" | tee "$RUNNER_TEMP/derleme/ArthurMask-Kurulum.dmg.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArthurMask-Kurulum-macos
+          path: |
+            ${{ runner.temp }}/derleme/ArthurMask-Kurulum.dmg
+            ${{ runner.temp }}/derleme/ArthurMask-Kurulum.dmg.sha256
+          compression-level: 0
+          retention-days: 7

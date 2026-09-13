@@ -67,6 +67,8 @@ async function durumuYenile() {
   const koruma = $("koruma-durumu");
   try {
     const d = await api("GET", "/api/durum");
+    const macos = d.platform === "darwin";
+    if (macos) document.querySelectorAll("[data-macos]").forEach((e) => { e.textContent = e.dataset.macos; });
     kopru.className = "durum " + (d.kopru ? "hazir" : "yukleniyor");
     kopru.textContent = d.kopru ? "Claude Desktop'a bağlı" : "Yalnız arayüz (Claude bağlı değil)";
     koruma.hidden = false;
@@ -82,7 +84,9 @@ async function durumuYenile() {
     $("kurtarma-rozet").hidden = d.kurtarma_saklandi;
     $("guncelleme").hidden = !d.guncelleme;
     if (d.guncelleme) {
-      $("guncelleme-metin").textContent = `Arthur Mask ${d.guncelleme.surum} yayımlandı (kurulu: ${d.surum}). Yeni kurulum dosyasını eskisinin üzerine kurun; dosyalarınız korunur.`;
+      $("guncelleme-metin").textContent = `Arthur Mask ${d.guncelleme.surum} yayımlandı (kurulu: ${d.surum}). ${macos
+        ? "Yeni disk görüntüsündeki Arthur Mask'i Uygulamalar klasörüne sürükleyip eskisinin yerine koyun"
+        : "Yeni kurulum dosyasını eskisinin üzerine kurun"}; dosyalarınız korunur.`;
       $("guncelleme-baglanti").href = d.guncelleme.sayfa || d.guncelleme.adres;
     }
     $("kurtarma-saklandi").hidden = !d.kurtarma_saklandi;

@@ -68,6 +68,23 @@ modelleri çevrimdışı önbelleğe koyar ve paketi kendi Python'uyla sınar. K
 ekler (`arthur_mask.claude_ayari`), kaldırmada çıkarır. Masaüstü kısayolu `arthur_mask.baslat`:
 arayüz açıksa tarayıcıda gösterir, değilse Claude Desktop'u başlatır.
 
+### macOS (Apple Silicon)
+
+macOS kurulum dosyası aynı sürüm sayfasında `ArthurMask-Kurulum.dmg` adıyla durur. Derleme bir Mac gerektirdiği için
+GitHub Actions'ta yapılır (`.github/workflows/macos.yml`; `macos` dalına gönderimde ya da elle tetiklenir) ve
+sonuç iş akışı çıktısı olarak indirilir. Yerelde bir Mac'te:
+
+```bash
+uv python install 3.11.9 && uv venv .venv --python 3.11.9 --managed-python
+uv pip install --python .venv/bin/python -r paketleme/macos/gereksinimler.txt && uv pip install --python .venv/bin/python --no-deps -e .
+.venv/bin/python paketleme/derle_macos.py --cikti ~/arthur-mask-derleme --dmg
+```
+
+`paketleme/derle_macos.py`, `derle.py` ile aynı sürümleri ve model revizyonlarını paketler. Windows'tan farkları:
+uygulama paketi `Arthur Mask.app` (ad-hoc imzalı, noter onaysız; ilk açılışta Gizlilik ve Güvenlik > "Yine de Aç"),
+ana anahtar DPAPI yerine Anahtar Zinciri'nde, belgeler `~/Arthur Mask` klasöründe (iCloud eşitlemesine girmez),
+Claude Desktop kaydı kurulumda değil uygulamanın ilk açılışında yapılır. Kullanıcı notu: `paketleme/macos/BENIOKU.md`.
+
 ## Kullanım
 
 ```bash

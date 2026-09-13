@@ -1,4 +1,4 @@
-"""Dosya (matter) klasörleri: `Belgeler\\Arthur Mask\\<dosya>\\`.
+"""Dosya (matter) klasörleri: `Belgeler\\Arthur Mask\\<dosya>\\` (macOS: `~/Arthur Mask/<dosya>/`).
 
     dosya.json              ad, oluşturma
     dosya.kasa              şifreli etiket ↔ değer kasası
@@ -16,6 +16,7 @@ dosya kilidiyle sıralanır.
 import json
 import os
 import re
+import sys
 import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -36,6 +37,9 @@ def varsayilan_kok() -> Path:
     ortam = os.environ.get("ARTHUR_MASK_KOK")
     if ortam:
         return Path(ortam)
+    if sys.platform == "darwin":
+        # Belgeler klasörü iCloud "Masaüstü ve Belgeler" eşitlemesine girebilir ve klasör izni ister.
+        return Path.home() / "Arthur Mask"
     belgeler = Path.home() / "Documents"
     return belgeler / "Arthur Mask"
 

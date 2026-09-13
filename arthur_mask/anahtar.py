@@ -5,20 +5,27 @@ aynı Windows kullanıcısı dışında (başka hesap, başka makine, diskin sö
 çözülemez. Kurtarma anahtarı ana anahtarın kendisidir: kurulumda bir kez
 gösterilir, ortakta basılı ya da şifreli saklanır.
 
-Windows dışı ortamlarda (geliştirme, test) `ARTHUR_MASK_ANA_ANAHTAR` ortam
-değişkeni (base64) kullanılır.
+macOS'ta ana anahtar kullanıcının giriş Anahtar Zinciri'nde (login keychain) durur;
+Apple imzalı `/usr/bin/security` aracıyla yazılır ve okunur, böylece uygulama
+güncellense de erişim izni sorulmaz. Diğer ortamlarda (geliştirme, test)
+`ARTHUR_MASK_ANA_ANAHTAR` ortam değişkeni (base64) kullanılır.
 """
 
 import base64
 import ctypes
 import os
 import secrets
+import subprocess
 import sys
 from ctypes import wintypes
 from pathlib import Path
 
 ORTAM_DEGISKENI = "ARTHUR_MASK_ANA_ANAHTAR"
 DPAPI_ACIKLAMA = "Arthur Mask ana anahtari"
+ANAHTAR_ZINCIRI_SERVISI = "Arthur Mask"
+ANAHTAR_ZINCIRI_HESABI = "ana-anahtar"
+_SECURITY = "/usr/bin/security"
+_OGE_YOK = 44  # errSecItemNotFound
 
 
 class AnahtarHatasi(Exception):
@@ -52,8 +59,37 @@ def _dpapi(veri: bytes, koru: bool) -> bytes:
         kernel32.LocalFree(cikis.pbData)
 
 
+def _anahtar_zinciri_oku():
+    sonuc = subprocess.run([_SECURITY, "find-generic-password", "-s", ANAHTAR_ZINCIRI_SERVISI,
+                            "-a", ANAHTAR_ZINCIRI_HESABI, "-w"], capture_output=True, text=True)
+    if sonuc.returncode == _OGE_YOK:
+        return None
+    if sonuc.returncode != 0:
+        raise AnahtarHatasi(f"Anahtar Zinciri anahtarı veremedi: {sonuc.stderr.strip()}")
+    return base64.b64decode(sonuc.stdout.strip())
+
+
+def _anahtar_zinciri(uret) -> bytes:
+    mevcut = _anahtar_zinciri_oku()
+    if mevcut is not None:
+        return mevcut
+    # Gizli değer komut satırında görünmesin diye `security -i` standart girdisinden verilir. -U yok:
+    # aynı anda başlayan iki süreçten ikincisinin yazımı reddedilir, ikisi de ilk yazılanı okur.
+    deger = base64.b64encode(uret()).decode("ascii")
+    komut = (f'add-generic-password -s "{ANAHTAR_ZINCIRI_SERVISI}" -a "{ANAHTAR_ZINCIRI_HESABI}" '
+             f'-l "{DPAPI_ACIKLAMA}" -w "{deger}"\n')
+    subprocess.run([_SECURITY, "-i"], input=komut, capture_output=True, text=True)
+    mevcut = _anahtar_zinciri_oku()
+    if mevcut is None:
+        raise AnahtarHatasi("Ana anahtar Anahtar Zinciri'ne yazılamadı.")
+    return mevcut
+
+
 def uygulama_klasoru() -> Path:
-    taban = os.environ.get("APPDATA") or str(Path.home() / ".config")
+    taban = os.environ.get("APPDATA")
+    if not taban:
+        taban = str(Path.home() / "Library" / "Application Support") if sys.platform == "darwin" \
+            else str(Path.home() / ".config")
     yol = Path(taban) / "ArthurMask"
     yol.mkdir(parents=True, exist_ok=True)
     return yol
@@ -64,6 +100,8 @@ def ana_anahtar(klasor: Path = None) -> bytes:
     ortam = os.environ.get(ORTAM_DEGISKENI)
     if ortam:
         return base64.b64decode(ortam)
+    if sys.platform == "darwin":
+        return _anahtar_zinciri(lambda: secrets.token_bytes(32))
     if sys.platform != "win32":
         raise AnahtarHatasi(f"Windows dışında {ORTAM_DEGISKENI} ortam değişkeni gerekir.")
     yol = (klasor or uygulama_klasoru()) / "ana-anahtar.dpapi"

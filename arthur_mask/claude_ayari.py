@@ -23,6 +23,8 @@ KOPRU_KOMUTU = "import sys; from arthur_mask.kopru import main; sys.exit(main())
 
 def yapilandirma_yollari() -> List[Path]:
     """Klasik kurulum (%APPDATA%\\Claude) ve Microsoft Store/MSIX kurulumunun yapılandırma dosyaları."""
+    if sys.platform == "darwin":
+        return [Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"]
     yollar = []
     appdata = os.environ.get("APPDATA")
     if appdata:
@@ -35,9 +37,12 @@ def yapilandirma_yollari() -> List[Path]:
 
 
 def sunucu_girdisi() -> Dict:
+    # macOS: -I kullanıcının PYTHONPATH/PYTHONHOME ve kullanıcı site-packages'ını yok sayar (Windows'ta ._pth
+    # dosyasının yaptığı iş); -B imzalı uygulama paketinin içine .pyc yazılmasını önler.
+    bayraklar = ["-I", "-B"] if sys.platform == "darwin" else []
     return {
         "command": str(python_yolu()),
-        "args": ["-c", KOPRU_KOMUTU],
+        "args": [*bayraklar, "-c", KOPRU_KOMUTU],
         "env": {"PYTHONIOENCODING": "utf-8", "HF_HUB_OFFLINE": "1", "PYTHONNOUSERSITE": "1"},
     }
 
@@ -56,6 +61,15 @@ def _yaz(yol: Path, veri: Dict) -> None:
     gecici = yol.with_suffix(".tmp")
     gecici.write_text(json.dumps(veri, ensure_ascii=False, indent=2), encoding="utf-8")
     os.replace(gecici, yol)
+
+
+def kayitli_mi() -> bool:
+    """Bu kurulumun güncel girdisi var olan her Claude Desktop yapılandırmasında kayıtlı mı?"""
+    girdi = sunucu_girdisi()
+    try:
+        return all(_oku(y).get("mcpServers", {}).get(SUNUCU_ADI) == girdi for y in yapilandirma_yollari())
+    except (json.JSONDecodeError, OSError):
+        return False
 
 
 def kaydet() -> List[Path]:
