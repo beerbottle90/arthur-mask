@@ -115,6 +115,9 @@ def main(argv: Optional[list] = None) -> int:
     anahtar = ana_anahtar()
     islem = Islem(Depo(anahtar))
     islem.motoru_arkaplanda_yukle()
+    from . import guncelleme
+
+    guncelleme.arkaplanda_denetle()
     silinen = islem.depo.temizle()
     if silinen:
         logging.info("Süresi dolan %s maskeli ara kopya silindi.", silinen)

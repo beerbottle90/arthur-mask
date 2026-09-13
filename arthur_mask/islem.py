@@ -209,7 +209,7 @@ class Islem:
         return cevaplar
 
     def arayuz_coz(self, metin: str, klasor: Optional[str] = None) -> Dict:
-        """Salt çözücü eklenti ve 'Maskeli görünüm' için: etiketleri gerçek değerle gösterir."""
+        """Salt çözücü eklenti ve arayüzdeki 'Claude'daki hâli' görünümü için: etiketleri gerçek değerle gösterir."""
         kasa = self.depo.kasa_oku(klasor or self._aktif())
         acik, degisiklikler, bilinmeyen = geri_ac_metin(metin, kasa)
         return {"metin": acik, "cozulen": len(degisiklikler), "bilinmeyen": bilinmeyen}

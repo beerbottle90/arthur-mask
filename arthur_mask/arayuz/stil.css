@@ -205,3 +205,9 @@ button.tam { width: 100%; margin-top: 10px; }
 .bulgu-listesi { margin: 8px 0 0 18px; padding: 0; }
 .bulgu-listesi ul { margin: 4px 0 8px 18px; padding: 0; }
 .denetim mark { background: var(--sari); color: var(--lacivert); border-radius: 3px; padding: 0 3px; }
+
+.guncelleme {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 12px 24px 0; padding: 8px 14px;
+  border: 1px solid var(--altin); border-radius: 8px; background: rgba(226, 181, 76, .08); font-size: 13px;
+}
+.guncelleme a { color: var(--altin-acik); font-weight: 600; }

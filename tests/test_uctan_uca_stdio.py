@@ -146,7 +146,9 @@ def test_claudea_giden_ham_baytlarda_gercek_deger_yok(tmp_path, motor):
              "ARTHUR_MASK_KOK": str(kok), "APPDATA": str(tmp_path / "appdata"),
              "ARTHUR_MASK_SEMANTIK": "kapali", "PYTHONIOENCODING": "utf-8", "HF_HUB_OFFLINE": "1"}
     (tmp_path / "appdata").mkdir()
-    istemci = _StdioIstemci([sys.executable, "-m", "arthur_mask.kopru", "--port", str(_bos_port())], ortam)
+    # ARTHUR_MASK_TEST_PYTHON: kurulum paketindeki runtime\python.exe ile derlenmiş ikili de sınanır.
+    python = os.environ.get("ARTHUR_MASK_TEST_PYTHON", sys.executable)
+    istemci = _StdioIstemci([python, "-c", "import sys; from arthur_mask.kopru import main; sys.exit(main())", "--port", str(_bos_port())], ortam)
     try:
         baslat = istemci.cagir("initialize", {
             "protocolVersion": "2025-06-18", "capabilities": {},

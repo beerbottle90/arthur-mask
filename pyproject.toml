@@ -1,6 +1,6 @@
 [project]
 name = "arthur-mask"
-version = "0.1.0"
+version = "1.0.0"
 description = "Arthur Mask: Türk hukuk belgeleri (UDF/DOCX/PDF) için yerel takma adlandırma"
 requires-python = ">=3.10"
 license = { text = "LicenseRef-ArthurLegal-Proprietary-Non-Commercial" }

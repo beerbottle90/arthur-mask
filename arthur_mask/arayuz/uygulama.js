@@ -80,6 +80,11 @@ async function durumuYenile() {
       koruma.title = `Kurallar${d.semantik ? " + yapay zekâ ad tespiti" : ""}${d.ocr ? " + taranmış belge okuma" : ""}`;
     }
     $("kurtarma-rozet").hidden = d.kurtarma_saklandi;
+    $("guncelleme").hidden = !d.guncelleme;
+    if (d.guncelleme) {
+      $("guncelleme-metin").textContent = `Arthur Mask ${d.guncelleme.surum} yayımlandı (kurulu: ${d.surum}). Yeni kurulum dosyasını eskisinin üzerine kurun; dosyalarınız korunur.`;
+      $("guncelleme-baglanti").href = d.guncelleme.sayfa || d.guncelleme.adres;
+    }
     $("kurtarma-saklandi").hidden = !d.kurtarma_saklandi;
   } catch {
     kopru.className = "durum hata";

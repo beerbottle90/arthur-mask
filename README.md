@@ -41,8 +41,29 @@ uv venv .venv --python 3.11
 uv pip install --python .venv/Scripts/python.exe -e ".[test]"
 ```
 
-Son kullanıcı kurulumu (tek `.exe`, yerel arayüz, Claude Desktop köprüsü) Faz 1 kapsamındadır:
-[docs/faz-1-sartname.md](docs/faz-1-sartname.md).
+## Son kullanıcı dağıtımı
+
+Son kullanıcıya kaynak kod gitmez. Dağıtım, herkese açık ArthurLegal deposunun sürüm sayfasındaki
+tek kurulum dosyasıdır (`ArthurMask-Kurulum-<sürüm>.exe`); kullanım rehberi ArthurLegal paketlerindeki
+`ARTHUR-MASK.md` dosyasındadır.
+
+```powershell
+# Derleme makinesi: MSVC Build Tools, Inno Setup 6 (kullanıcı kapsamı), uv
+uv pip install --python .venv\Scripts\python.exe -e ".[test,semantik,ocr]" nuitka ordered-set zstandard
+$env:HF_HOME = "E:\llm\hf-cache"          # GLiNER PII ve mDeBERTa önbelleği
+.venv\Scripts\python.exe paketleme\derle.py --cikti E:\arthur-mask-derleme --iss
+
+# Derlenmiş paketi uçtan uca sızıntı testinden geçirme
+$env:ARTHUR_MASK_TEST_PYTHON = "E:\arthur-mask-derleme\ArthurMask\runtime\python.exe"
+.venv\Scripts\python.exe -m pytest tests\test_uctan_uca_stdio.py
+```
+
+`paketleme/derle.py` Arthur Mask'i Nuitka ile makine koduna derler (`app\arthur_mask.*.pyd`; pakette
+`.py` kalırsa derleme durur), Python 3.11 çalışma zamanını ve üçüncü taraf kütüphaneleri ekler,
+modelleri çevrimdışı önbelleğe koyar ve paketi kendi Python'uyla sınar. Kurulum kullanıcı kapsamındadır
+(yönetici hakkı gerekmez), Claude Desktop yapılandırmasına `arthur-mask` bağlayıcısını yedek alarak
+ekler (`arthur_mask.claude_ayari`), kaldırmada çıkarır. Masaüstü kısayolu `arthur_mask.baslat`:
+arayüz açıksa tarayıcıda gösterir, değilse Claude Desktop'u başlatır.
 
 ## Kullanım
 

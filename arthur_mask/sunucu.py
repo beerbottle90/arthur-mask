@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import __version__
+from . import __version__, guncelleme
 from .anahtar import uygulama_klasoru
 from .islem import Islem, IslemHatasi
 
@@ -272,6 +272,7 @@ class YerelSunucu:
             "semantik": bool(self.islem._motor and self.islem._motor.semantik),
             "aktif_dosya": self.islem.depo.aktif_dosya,
             "kok": str(self.islem.depo.kok),
+            "guncelleme": guncelleme.bekleyen(),
         }
 
     def baslat(self) -> bool:
