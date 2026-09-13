@@ -97,7 +97,8 @@ class KuralTanimlayici(EntityRecognizer):
 
 # --- Kişi ve tüzel kişi --------------------------------------------------------
 
-_AD = rf"[{BUYUK}][{KUCUK}]+"
+# O'Brien, Smith-Jones, McDonald; Türkçe kesme işaretli ek ("Kara'nın") ada katılmaz (ekten sonra büyük harf gelmez).
+_AD = rf"[{BUYUK}](?:['’][{BUYUK}])?[{KUCUK}]+(?:['’][{BUYUK}][{KUCUK}]+|-[{BUYUK}][{KUCUK}]+|(?<=Mc)[{BUYUK}][{KUCUK}]+|(?<=Mac)[{BUYUK}][{KUCUK}]+)?"
 _BUYUK_KELIME = rf"[{BUYUK}]{{2,}}"
 _HERHANGI_AD = rf"(?:{_AD}|{_BUYUK_KELIME})"
 
@@ -150,10 +151,35 @@ ROL_KOKLERI = (
 )
 
 
+ROL_KOKLERI = ROL_KOKLERI + (
+    "claimant", "respondent", "plaintiff", "defendant", "applicant", "appellant", "seller", "buyer",
+    "purchaser", "vendor", "lessor", "lessee", "landlord", "tenant", "employer", "employee", "contractor",
+    "consultant", "guarantor", "borrower", "lender", "witness", "director", "shareholder", "counterpart",
+    "client", "counsel", "arbitrator", "customer", "supplier", "licensor", "licensee", "company", "parties",
+    "party", "signatory", "beneficiary", "trustee", "agent", "officer", "manager", "partner",
+)
+
+# Kısa köklerde ("bey", "abi", "üye") önek eşleşmesi gerçek adları yutar ("Beyza", "Abidin"); yalnız bilinen ekler.
+_KISA_KOK_EKLERI = {
+    "", "a", "e", "ı", "i", "u", "ü", "ya", "ye", "yı", "yi", "yu", "yü", "nın", "nin", "nun", "nün", "ın", "in",
+    "un", "ün", "da", "de", "ta", "te", "dan", "den", "tan", "ten", "lar", "ler", "ları", "leri", "m", "mız",
+    "miz", "s", "ciğim", "cığım", "ye", "ler'", "'s",
+}
+
+
 def rol_ismi_mi(kelime: str) -> bool:
     """Küçük harfe çevrilmiş sözcük bir rol isminin kendisi ya da kısa çekimli hâli mi."""
-    kelime = kelime.strip(".,:;'’")
-    return any(kelime.startswith(kok) and len(kelime) - len(kok) <= 6 for kok in ROL_KOKLERI)
+    kelime = re.split(r"['’]", kelime.strip(".,:;'’"))[0]
+    for kok in ROL_KOKLERI:
+        if not kelime.startswith(kok):
+            continue
+        ek = kelime[len(kok):]
+        if len(kok) <= 4:
+            if ek in _KISA_KOK_EKLERI:
+                return True
+        elif len(ek) <= 6:
+            return True
+    return False
 
 
 # Ad–SOYAD kalıbında soyadı sanılabilecek hukuk kısaltmaları ve büyük harfli sözcükler.
@@ -170,16 +196,58 @@ SOYAD_OLMAYAN = {
     "pdf", "udf", "uyap", "kep", "hsk", "tbmm", "odtü", "mb", "gb", "api",
 }
 
+# İngilizce sözleşme ve yazışma terimleri: büyük harfle yazılsa da kişi adı değildir.
+KISI_OLMAYAN.update({
+    "agreement", "party", "parties", "company", "seller", "buyer", "purchaser", "court", "section", "clause",
+    "schedule", "annex", "exhibit", "article", "governing", "law", "effective", "date", "confidential",
+    "information", "services", "service", "board", "directors", "director", "liability", "dear", "sir",
+    "madam", "regards", "sincerely", "yours", "faithfully", "kind", "best", "the", "and", "of", "for",
+    "between", "whereas", "hereby", "witness", "signature", "name", "title", "address", "email", "phone",
+    "notice", "notices", "term", "termination", "payment", "price", "total", "united", "kingdom", "states",
+    "england", "wales", "high", "supreme", "district", "tribunal", "arbitration", "chapter", "part",
+    "recital", "recitals", "definitions", "interpretation", "force", "majeure", "intellectual", "property",
+    "data", "protection", "privacy", "policy", "client", "counsel", "legal", "claimant", "respondent",
+    "plaintiff", "defendant", "lender", "borrower", "guarantor", "landlord", "tenant", "lessor", "lessee",
+    "employer", "employee", "contractor", "consultant", "shareholder", "shareholders", "memorandum",
+    "minutes", "meeting", "resolution", "resolutions", "chairman", "secretary", "managing", "chief",
+    "executive", "officer", "financial", "general", "manager", "partner", "senior", "associate", "vice",
+    "president", "limited", "group", "holdings", "subject", "re", "attachment", "attached", "please",
+    "thank", "thanks", "hi", "hello", "team", "office", "registered", "business", "day", "days", "closing",
+    "completion", "transaction", "share", "shares", "purchase", "sale", "loan", "facility", "lease",
+    "employment", "contract", "distribution", "request", "statement", "due", "diligence", "report",
+    "invoice", "power", "attorney", "translation", "true", "copy", "monday", "tuesday", "wednesday",
+    "thursday", "friday", "saturday", "sunday", "january", "february", "march", "april", "june", "july",
+    "august", "september", "october", "november", "december", "istanbul", "london", "dubai", "türkiye",
+    "turkey", "republic", "turkish", "english", "german", "swiss", "delaware", "new", "york", "icc", "lcia",
+    "istac", "uncitral", "nda", "spa", "sha", "llp", "inc", "ltd", "plc", "gmbh", "ag", "llc",
+})
+SOYAD_OLMAYAN.update({
+    "llc", "inc", "plc", "llp", "gmbh", "ag", "sa", "bv", "nv", "usa", "uk", "eu", "un", "icc", "lcia", "gdpr",
+    "nda", "vat", "gbp", "ceo", "cfo", "coo", "cto", "hr", "it", "id", "ltd", "corp", "co", "esq", "jr", "sr",
+    "ii", "iii", "spa", "sha", "kyc", "aml", "ip", "ai", "pdf", "cc", "bcc", "fyi", "asap", "llm",
+})
+
+# Yabancı şirket türleri (sözcük sınırıyla; "AG", "SA" gibi kısa ekler yalnız unvan sonunda anlamlıdır).
+ULUSLARARASI_SIRKET_EKLERI = (
+    r"(?:Ltd\.?|LTD\.?|Limited|LIMITED|LLC|L\.L\.C\.|Inc\.?|INC\.?|Incorporated|Corp\.?|Corporation|PLC|plc|"
+    r"LLP|L\.L\.P\.|LP|L\.P\.|GmbH|GMBH|AG|KG|SE|S\.A\.|SA|S\.A\.S\.|SAS|SARL|S\.à\s?r\.l\.|S\.p\.A\.|SpA|S\.r\.l\.|"
+    r"B\.V\.|BV|N\.V\.|NV|Pte\.?\s+Ltd\.?|Pty\.?\s+Ltd\.?|Co\.,?\s+Ltd\.?|& Co\.?|FZE|FZCO|FZ-LLC|DMCC|OOO|ООО|"
+    r"Holdings?|Group|GROUP|HOLDINGS?|Partners|PARTNERS|Associates|Capital)(?![\w])"
+)
+
 TUZEL_KISI_IZI = re.compile(
     r"(?:A\.\s?Ş\.?|ANONİM\s+ŞİRKETİ|Anonim\s+Şirketi|LTD\.?\s*ŞTİ\.?|Ltd\.?\s*Şti\.?"
     r"|LİMİTED\s+ŞİRKETİ|Limited\s+Şirketi|HOLDİNG|Holding|KOOPERATİFİ|Kooperatifi"
-    r"|TİCARET\s+VE\s+SANAYİ|Ticaret\s+ve\s+Sanayi)"
+    r"|TİCARET\s+VE\s+SANAYİ|Ticaret\s+ve\s+Sanayi"
+    rf"|(?<![\w]){ULUSLARARASI_SIRKET_EKLERI})"
 )
 
 KAMU_KURUMU_IZI = re.compile(
     r"(?:BAKANLIĞI|Bakanlığı|BELEDİYESİ|Belediyesi|MÜDÜRLÜĞÜ|Müdürlüğü|BAŞKANLIĞI"
     r"|Başkanlığı|KURUMU|Kurumu|VALİLİĞİ|Valiliği|KAYMAKAMLIĞI|Kaymakamlığı|HAZİNE|Hazine"
-    r"|SAVCILIĞI|Savcılığı|MAHKEMESİ|Mahkemesi|ÜNİVERSİTESİ|Üniversitesi)"
+    r"|SAVCILIĞI|Savcılığı|MAHKEMESİ|Mahkemesi|ÜNİVERSİTESİ|Üniversitesi"
+    r"|\bCourt\b|\bTribunal\b|\bMinistry\b|\bAuthority\b|\bCommission\b|\bAgency\b|\bDepartment\b"
+    r"|\bCouncil\b|\bGovernment\b|\bRegistry\b|\bUniversity\b|\bChamber of Commerce\b|\bCompanies House\b)"
 )
 
 ROL_ETIKETLERI = (
@@ -189,12 +257,19 @@ ROL_ETIKETLERI = (
     "|MİRASÇI|MİRASÇILAR|KİRAYA VEREN|KİRACI|SATICI|ALICI|KEFİL|TEMSİLCİ|YETKİLİ"
     "|Davacı|Davalı|Vekili|Müvekkil|Şüpheli|Sanık|Müşteki|Tanık|Borçlu|Alacaklı"
     "|Başvurucu|Kiracı|Kiraya Veren|Kefil|İşçi|İşveren"
+    # İngilizce taraf ve imza blokları
+    "|Claimant|Respondent|Plaintiff|Defendant|Applicant|Appellant|Seller|Buyer|Purchaser|Vendor"
+    "|Lessor|Lessee|Landlord|Tenant|Employer|Employee|Contractor|Consultant|Guarantor|Borrower"
+    "|Lender|Name|Full Name|Signed by|Signature|By|Attn|Attention|Witness|Authorised Signatory"
+    "|Authorized Signatory|Contact Person|Represented by|Director|Beneficiary|Shareholder"
+    "|CLAIMANT|RESPONDENT|SELLER|BUYER|NAME"
 )
 
 UNVANLAR = (
     r"Stj\.\s*Av\.|Av\.|AV\.|Avukat|AVUKAT|Sayın|SAYIN|Sn\.|Bay|Bayan|Prof\.\s*Dr\.|Doç\.\s*Dr\.|DR\."
     r"|Dr\.\s*Öğr\.\s*Üyesi|Dr\.|Hâkim|Hakim|Cumhuriyet\s+Savcısı|Savcı|Bilirkişi"
     r"|Arabulucu|Noter|Zabıt\s+Kâtibi|Zabıt\s+Katibi|SMMM|YMM|Mali\s+Müşavir"
+    r"|Mr\.?|Mrs\.?|Ms\.?|Miss|Mx\.|Sir|Dame|Lord|Lady|Prof\.|Herr|Frau|Mme\.?|M\.|Sr\.|Sra\.|Dott\."
 )
 
 
@@ -230,6 +305,12 @@ class KisiTanimlayici(KuralTanimlayici):
             "unvan",
             re.compile(rf"(?<!\w)(?:{UNVANLAR})[ \t]+({_HERHANGI_AD}(?:[ \t]+{_HERHANGI_AD}){{0,3}})"),
             0.8,
+            grup=1,
+        ),
+        Desen(
+            "Ad X. Soyad",
+            re.compile(rf"(?<![\w.])({_AD}(?:[ \t]+[{BUYUK}]\.){{1,2}}[ \t]+{_HERHANGI_AD})(?![\w])"),
+            0.75,
             grup=1,
         ),
         Desen(
@@ -293,14 +374,15 @@ class AnaBabaAdiTanimlayici(KuralTanimlayici):
 
 
 def _adlari_yukle():
-    yol = Path(__file__).with_name("veri") / "adlar.txt"
     kesin, belirsiz = set(), set()
-    for satir in yol.read_text(encoding="utf-8").splitlines():
-        satir = satir.strip()
-        if not satir or satir.startswith("#"):
-            continue
-        (belirsiz if satir.endswith("*") else kesin).add(tr_kucuk(satir.rstrip("*")))
-    return kesin, belirsiz
+    for dosya in ("adlar.txt", "adlar_en.txt"):
+        yol = Path(__file__).with_name("veri") / dosya
+        for satir in yol.read_text(encoding="utf-8").splitlines():
+            satir = satir.strip()
+            if not satir or satir.startswith("#"):
+                continue
+            (belirsiz if satir.endswith("*") else kesin).add(tr_kucuk(satir.rstrip("*")))
+    return kesin, belirsiz - kesin
 
 
 ADLAR, BELIRSIZ_ADLAR = _adlari_yukle()
@@ -398,9 +480,10 @@ class TuzelKisiTanimlayici(KuralTanimlayici):
         Desen(
             "unvan + şirket türü",
             re.compile(
-                rf"(?<![\w])((?:[{BUYUK}0-9][\w&.'’-]*[ \t]+){{1,7}}"
+                rf"(?<![\w])((?:(?:[{BUYUK}0-9][\w&.'’-]*|&|and|of|und|et|y)[ \t]+){{1,7}}"
                 r"(?:A\.\s?Ş\.?|ANONİM\s+ŞİRKETİ|Anonim\s+Şirketi|LTD\.?\s*ŞTİ\.?|Ltd\.?\s*Şti\.?"
-                r"|LİMİTED\s+ŞİRKETİ|Limited\s+Şirketi|KOOPERATİFİ|Kooperatifi))"
+                r"|LİMİTED\s+ŞİRKETİ|Limited\s+Şirketi|KOOPERATİFİ|Kooperatifi"
+                rf"|{ULUSLARARASI_SIRKET_EKLERI}))"
             ),
             0.75,
             grup=1,

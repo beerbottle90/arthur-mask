@@ -12,11 +12,13 @@ from typing import Dict, List
 
 KATEGORILER: Dict[str, str] = {
     "Ceza savunma stratejisi / müvekkil beyanı": (
-        r"savunma\s+stratejisi|müdafi(?:i|lik)|müvekkil(?:imiz)?in\s+(?:beyanı|anlatımı|ikrarı)"
+        r"privileged\s+(?:and|&)\s+confidential|attorney[- ]client\s+privilege|legal\s+advice\s+privilege|defen[cs]e\s+strategy|"
+                r"savunma\s+stratejisi|müdafi(?:i|lik)|müvekkil(?:imiz)?in\s+(?:beyanı|anlatımı|ikrarı)"
         r"|ikrar(?:ı|ında)?\b|itiraf(?:ı|ında)?\b|gizli\s+görüşme|avukat[- ]müvekkil\s+yazışması"
     ),
     "Uzlaşma / sulh pazarlık sınırları": (
-        r"pazarlık\s+(?:sınırı|payı|pozisyonu)|taban\s+(?:fiyat|teklif|rakam)|tavan\s+(?:teklif|rakam)"
+        r"without\s+prejudice|settlement\s+(?:offer|authority|range|limit)|bottom\s+line|reservation\s+price|"
+                r"pazarlık\s+(?:sınırı|payı|pozisyonu)|taban\s+(?:fiyat|teklif|rakam)|tavan\s+(?:teklif|rakam)"
         r"|en\s+(?:fazla|çok)\s+[^.\n]{0,40}(?:ödeyebilir|kabul\s+eder)|sulh\s+(?:teklifi|sınırı)"
         r"|uzlaşma\s+(?:teklifi|sınırı)|walk[- ]?away|BATNA"
     ),
@@ -25,18 +27,22 @@ KATEGORILER: Dict[str, str] = {
         r"|ticari\s+sır|gizli\s+(?:ve\s+)?(?:özel|hizmete\s+özel)|HİZMETE\s+ÖZEL|ÇOK\s+GİZLİ"
     ),
     "Özel nitelikli kişisel veri (KVKK m.6)": (
-        r"sağlık\s+(?:raporu|durumu|verisi)|teşhis|tanısı\s+konul|epikriz|psikiyatri|engellilik\s+oranı"
+        r"medical\s+(?:record|report|condition|history)|diagnos(?:is|ed)|criminal\s+record|conviction|biometric|"
+        r"trade\s+union\s+membership|religious\s+belief|sexual\s+orientation|ethnic\s+origin|health\s+data|"
+                r"sağlık\s+(?:raporu|durumu|verisi)|teşhis|tanısı\s+konul|epikriz|psikiyatri|engellilik\s+oranı"
         r"|hamile(?:lik)?|gebelik|HIV|kanser|adli\s+sicil|sabıka\s+kaydı|mahkûmiyet|mahkumiyet|hükümlü"
         r"|güvenlik\s+tedbiri|biyometrik|parmak\s+izi|genetik|\bDNA\b|mezhep|dini\s+inanç|siyasi\s+görüş"
         r"|sendika\s+üyeliği|etnik\s+köken|ırk(?:ı|sal)\b|cinsel\s+(?:hayat|yönelim)|kılık\s+(?:ve\s+)?kıyafet"
     ),
     "Kamuya açıklanmamış şirket işlemi (içsel bilgi)": (
-        r"kamuya\s+açıklanmamış|içsel\s+bilgi|özel\s+durum\s+açıklaması\s+(?:öncesi|yapılmadan)"
+        r"inside\s+information|price[- ]sensitive|material\s+non[- ]public|project\s+code\s*name|heads\s+of\s+terms|"
+                r"kamuya\s+açıklanmamış|içsel\s+bilgi|özel\s+durum\s+açıklaması\s+(?:öncesi|yapılmadan)"
         r"|birleşme\s+görüşme|devralma\s+görüşme|hisse\s+devri\s+görüşme|halka\s+arz\s+(?:hazırlığı|planı)"
         r"|\binsider\b|term\s+sheet|niyet\s+mektubu|\bLOI\b"
     ),
     "Personel özlük / sicil bilgisi": (
-        r"özlük\s+dosyası|sicil\s+(?:raporu|notu)|performans\s+değerlendirme(?:si)?|disiplin\s+soruşturması"
+        r"personnel\s+file|performance\s+review|disciplinary\s+(?:hearing|investigation)|payslip|salary\s+slip|"
+                r"özlük\s+dosyası|sicil\s+(?:raporu|notu)|performans\s+değerlendirme(?:si)?|disiplin\s+soruşturması"
         r"|maaş\s+bordrosu|ücret\s+bordrosu"
     ),
 }

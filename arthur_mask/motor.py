@@ -22,11 +22,12 @@ from .tanimlayicilar import (
     UNVANLAR, rol_ismi_mi, turk_tanimlayicilari,
 )
 from .turkce import anahtar, kelime_desenine_cevir, tr_kucuk
+from .uluslararasi import uluslararasi_tanimlayicilar
 
 STANDART = {
     "PERSON", "TR_TUZEL_KISI", "TR_NATIONAL_ID", "TR_VKN", "IBAN_CODE", "TR_TELEFON",
     "EMAIL_ADDRESS", "TR_ADRES", "TR_DOSYA_NO", "TR_LICENSE_PLATE", "TR_MERSIS",
-    "TR_SICIL_NO", "TR_DOGUM_TARIHI", "CREDIT_CARD", "IP_ADDRESS",
+    "TR_SICIL_NO", "TR_DOGUM_TARIHI", "CREDIT_CARD", "IP_ADDRESS", "TR_PASAPORT",
 }
 PROFILLER = {
     "standart": STANDART,
@@ -47,13 +48,14 @@ TUR_ADLARI = {
     "TR_MERSIS": "MERSİS",
     "TR_SICIL_NO": "SİCİL_NO",
     "TR_DOGUM_TARIHI": "DOĞUM_TARİHİ",
+    "TR_PASAPORT": "PASAPORT",
     "CREDIT_CARD": "KART",
     "IP_ADDRESS": "IP",
     "TR_MAHKEME": "MAHKEME",
     "LOCATION": "YER",
 }
 
-SAYISAL = {"TR_NATIONAL_ID", "TR_VKN", "IBAN_CODE", "TR_TELEFON", "TR_MERSIS", "CREDIT_CARD", "TR_LICENSE_PLATE"}
+SAYISAL = {"TR_PASAPORT", "TR_NATIONAL_ID", "TR_VKN", "IBAN_CODE", "TR_TELEFON", "TR_MERSIS", "CREDIT_CARD", "TR_LICENSE_PLATE"}
 
 # Yüksek mahkeme ve kurum kararlarına yapılan atıflar maskelenmez: bunlar kamuya açık
 # içtihattır ve maskelenirse hukuki analiz ile atıf doğrulaması imkânsızlaşır.
@@ -65,6 +67,17 @@ ICTIHAT_ATIF_IZI = re.compile(
     r"|\bBAM\b|\bBİM\b|\bB\.\s*No\b|Bireysel\s+Başvuru|Uyuşmazlık\s+Mahkemesi|AİHM|Sayıştay"
 )
 ATIF_PENCERESI = 90
+
+# Yayımlanmış İngiliz/ABD/AB içtihat atıfları: "Smith v Jones [2019] EWHC 1234 (Comm)",
+# "Hadley v. Baxendale (1854) 9 Exch 341", "Doe v. Roe, 410 U.S. 113 (1973)". Taraf adları maskelenmez.
+_TARAF = r"[A-Z][\w&.'’-]*(?:\s+(?:[A-Z][\w&.'’-]*|of|and|&|the|plc|Ltd\.?|Inc\.?|LLC)){0,6}"
+YABANCI_ATIF_DESENI = re.compile(
+    rf"(?<![\w]){_TARAF}\s+v\.?\s+{_TARAF},?\s*"
+    r"(?:\[\d{4}\]\s*(?:\d+\s+)?[A-Z][A-Za-z]{1,6}(?:\s+(?:Civ|Crim|Admin|Comm|Ch|QB|KB|Fam|Pat|TCC))?\s+\d+"
+    r"|\(\d{4}\)\s*\d+\s+[A-Z][\w.]*(?:\s+[A-Z][\w.]*)?\s+\d+"
+    r"|\d+\s+(?:U\.S\.|S\.\s?Ct\.|F\.(?:\s?\d?d|\s?Supp\.(?:\s?\d?d)?)|A\.C\.|W\.L\.R\.|All\s+ER|E\.C\.R\.)\s+\d+"
+    r"|C-\d+/\d{2}|ECLI:[A-Z]{2}:[^\s]+)"
+)
 
 ALT_ESIK = 0.3
 SEMANTIK_ESIK = 0.4
@@ -123,6 +136,7 @@ class MaskeMotoru:
             CreditCardRecognizer(supported_language="tr"),
             IpRecognizer(supported_language="tr"),
             *turk_tanimlayicilari(),
+            *uluslararasi_tanimlayicilar(),
         ):
             kayit.add_recognizer(tanimlayici)
         if semantik is None:
@@ -144,7 +158,12 @@ class MaskeMotoru:
         adaylar = self._presidio(metin) + self._sozluk_bulgulari(metin)
         adaylar = self._izin_listesi_uygula(metin, adaylar)
         if self.ictihat_koruma:
-            adaylar = [b for b in adaylar if not self._ictihat_atfi_mi(metin, b)]
+            atiflar = [m.span() for m in YABANCI_ATIF_DESENI.finditer(metin)]
+            adaylar = [
+                b for b in adaylar
+                if not self._ictihat_atfi_mi(metin, b)
+                and not (b.kaynak != "sözlük" and any(a <= b.bas and b.son <= z for a, z in atiflar))
+            ]
 
         # Sızıntıya öncelik: semantik katmanın bulguları daha düşük eşikle maskelenir.
         kesin = [b for b in adaylar if b.skor >= self.esik or (b.kaynak == "GLiNER" and b.skor >= SEMANTIK_ESIK)]
