@@ -24,10 +24,10 @@ Kararlar 13.09.2026'da proje sahibiyle netleştirildi. Mimari gerekçe:
 | K15 | Denetim kaydı | Yalnız kırmızı hat onayları (gerçek değer yok) |
 | K16 | Lisans | ArthurLegal Proprietary Non-Commercial (büro ve şirket içi kullanım serbest) |
 | K17 | Depo | Özel; herkese açma kararı ileride |
+| K18 | NER modeli | **GLiNER PII** (`urchade/gliner_multi_pii-v1`, Apache-2.0); temiz lisans nedeniyle, isabeti daha yüksek ama eğitim verisi lisansı belirsiz akdeniz27 yerine |
 | K19 | Tespit politikası | Sızıntıya öncelik; gereksiz maskeleme kabul edilir |
 | K20 | Taranmış belge | Yerel OCR (RapidOCR PP-OCRv6 small); maskeli görüntü PDF'i; inceleme zorunlu |
 | K21 | Dil kapsamı | Türkçe + İngilizce (yabancı şirket ekleri, İngilizce taraf blokları, uluslararası kimlik/adres) |
-| K18 | NER modeli | **GLiNER PII** (`urchade/gliner_multi_pii-v1`, Apache-2.0); temiz lisans nedeniyle, isabeti daha yüksek ama eğitim verisi lisansı belirsiz akdeniz27 yerine |
 
 ## NER model ölçümü (13.09.2026)
 

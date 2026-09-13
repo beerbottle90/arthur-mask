@@ -79,8 +79,8 @@ eşik, sözlük veya model değiştiğinde ölçüm tekrarlanır.
 
 - Tespit olasılıksaldır; maskeli çıktı gönderilmeden önce avukat tarafından okunur.
 - Takma adlandırma kimliği gizler, içeriği gizlemez: benzersiz olay örgüsü kişiyi ele verebilir.
-- Ad sözlüğünde olmayan, bağlamsız ve normal yazımlı adlar (ör. yabancı adlar) kaçabilir;
-  semantik katman (yerel Türkçe NER) Faz 1'de eklenecek.
+- Kural katmanı tek başına bağlamsız yabancı adları ve lakapları kaçırabilir; bunları yerel
+  semantik katman (`arthur-mask[semantik]`, GLiNER PII) yakalar. Ölçümler: docs/faz-1-sartname.md.
 - UDF biçimi açık bir şartnameye değil gözlemlenen dosyalara dayanır; üretilen dosyalar
   UYAP Doküman Editörü'nde açılarak teyit edilmelidir.
 - Word görselleri ve gömülü nesneler maskelenmez (rapor uyarır). Eski `.doc` desteklenmez.
