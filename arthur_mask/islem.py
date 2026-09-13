@@ -44,6 +44,8 @@ class Islem:
         self._motor: Optional[MaskeMotoru] = None
         self._motor_kilidi = threading.Lock()
         self._motor_hazir = threading.Event()
+        # Claude'un kullanıcıyı yönlendirebilmesi için yerel arayüz adresi (köprü başlatınca atanır).
+        self.arayuz_adresi = "http://127.0.0.1:47831/"
         # Onay bekleyen belgelerin özgün metni ve bulguları yalnız bellekte durur (diske yazılmaz).
         self._bekleyen: Dict[tuple, tuple] = {}
 
@@ -69,7 +71,10 @@ class Islem:
     def _aktif(self) -> str:
         klasor = self.depo.aktif_dosya
         if not klasor:
-            raise IslemHatasi("Arthur Mask'te etkin bir dosya seçilmedi. Önce arayüzden dosya seçin.")
+            raise IslemHatasi(
+                f"Arthur Mask'te henüz dosya seçilmedi. Avukattan Arthur Mask'i açıp ({self.arayuz_adresi}) "
+                "bir dosya seçmesini ve belgeyi bırakmasını isteyin."
+            )
         return klasor
 
     # -- belge işleme (arayüz) -----------------------------------------------------------
@@ -217,7 +222,11 @@ class Islem:
                 "parca_sayisi": max(1, -(-len(k["maskeli_metin"]) // MCP_PARCA_KARAKTER)),
                 "hazirlanma": k["olusturma"],
             })
-        return {"belgeler": liste, "not": "Yalnız durum='hazir' olan belgeler getirilebilir."}
+        return {
+            "belgeler": liste,
+            "not": "Yalnız durum='hazir' olan belgeler getirilebilir.",
+            "arayuz": self.arayuz_adresi,
+        }
 
     def mcp_belge_getir(self, kimlik: str, parca: int = 1) -> Dict:
         klasor = self._aktif()
@@ -228,7 +237,7 @@ class Islem:
         if kayit["durum"] != DURUM_HAZIR:
             raise IslemHatasi(
                 f"{kimlik} henüz Claude'a hazır değil (durum: {kayit['durum']}). "
-                "Avukatın Arthur Mask'te incelemeyi tamamlaması gerekir."
+                f"Avukatın Arthur Mask'te ({self.arayuz_adresi}#belge={kimlik}) incelemeyi tamamlaması gerekir."
             )
         metin = kayit["maskeli_metin"]
         parca_sayisi = max(1, -(-len(metin) // MCP_PARCA_KARAKTER))

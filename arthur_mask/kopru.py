@@ -102,6 +102,7 @@ def main(argv: Optional[list] = None) -> int:
 
     yerel = YerelSunucu(islem, port=args.port, kurtarma_kodu=kurtarma_kodu(anahtar), kopru=not args.yalniz_arayuz)
     yerel.baslat()
+    islem.arayuz_adresi = yerel.adres
 
     if args.yalniz_arayuz:
         print(f"Arthur Mask arayüzü: {yerel.adres}  (durdurmak için Ctrl+C)", file=sys.stderr)
