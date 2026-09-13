@@ -1,5 +1,7 @@
 """Taranmış belge: yerel OCR, metin maskeleme ve görüntüye kalıcı etiket basma."""
 
+from pathlib import Path
+
 import pytest
 
 rapidocr = pytest.importorskip("rapidocr")
@@ -19,7 +21,8 @@ SATIRLAR = [
 
 
 def _tarama(yol, bicim):
-    font = ImageFont.truetype("C:/Windows/Fonts/times.ttf", 34)
+    yollar = ("C:/Windows/Fonts/times.ttf", "/System/Library/Fonts/Supplemental/Times New Roman.ttf")
+    font = ImageFont.truetype(next((y for y in yollar if Path(y).exists()), yollar[0]), 34)
     img = Image.new("RGB", (1654, 700), "white")
     ciz = ImageDraw.Draw(img)
     for i, satir in enumerate(SATIRLAR):

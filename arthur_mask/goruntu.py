@@ -179,6 +179,16 @@ def maskeli_goruntu(sayfa: Sayfa, degisiklikler: Sequence[Tuple[int, int, str]],
     return temiz
 
 
+def _sabit_genislikli_yazi(ImageFont, boyut: int):
+    """Windows: Consolas; macOS: Menlo (her ikisinde Türkçe harfler var)."""
+    for ad in ("consola.ttf", "/System/Library/Fonts/Menlo.ttc"):
+        try:
+            return ImageFont.truetype(ad, boyut)
+        except OSError:
+            continue
+    raise OSError("Sabit genişlikli yazı tipi yok")
+
+
 def _etiket_bas(goruntu, kutu, etiket: str) -> None:
     from PIL import Image, ImageDraw, ImageFont
 
@@ -187,7 +197,7 @@ def _etiket_bas(goruntu, kutu, etiket: str) -> None:
     boyut = max(8, int(boy * 0.8))
     while True:
         try:
-            yazi = ImageFont.truetype("consola.ttf", boyut)
+            yazi = _sabit_genislikli_yazi(ImageFont, boyut)
         except OSError:
             yazi = ImageFont.load_default()
             break
