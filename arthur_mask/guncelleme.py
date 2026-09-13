@@ -19,7 +19,10 @@ from .anahtar import uygulama_klasoru
 gunluk = logging.getLogger("arthur_mask.guncelleme")
 
 SURUM_ADRESI = "https://api.github.com/repos/beerbottle90/ArthurLegal/releases?per_page=15"
-KURULUM_DESENI = re.compile(r"^ArthurMask-Kurulum-(\d+)\.(\d+)\.(\d+)\.exe$")
+# Kalıcı indirme bağlantısı için dosya adı sürümsüzdür (ArthurMask-Kurulum.exe); sürüm o zaman
+# sürüm başlığından okunur ("Arthur Mask 1.0.0 — Windows kurulum dosyası").
+KURULUM_DESENI = re.compile(r"^ArthurMask-Kurulum(?:-(\d+\.\d+\.\d+))?\.exe$")
+BASLIK_SURUMU = re.compile(r"Arthur Mask\s+v?(\d+\.\d+\.\d+)")
 YENILEME_SANIYE = 24 * 3600
 
 _sonuc: Optional[Dict] = None
@@ -37,8 +40,10 @@ def en_yeni(surumler_json) -> Optional[Dict]:
             continue
         for ek in surum.get("assets", []):
             m = KURULUM_DESENI.match(ek.get("name", ""))
-            if m:
-                aday = {"surum": ".".join(m.groups()), "adres": ek.get("browser_download_url"),
+            baslik = BASLIK_SURUMU.search(f"{surum.get('name') or ''} {surum.get('body') or ''}")
+            numara = (m.group(1) if m else None) or (baslik.group(1) if baslik else None)
+            if m and numara:
+                aday = {"surum": numara, "adres": ek.get("browser_download_url"),
                         "sayfa": surum.get("html_url")}
                 if en_iyi is None or _surum(aday["surum"]) > _surum(en_iyi["surum"]):
                     en_iyi = aday

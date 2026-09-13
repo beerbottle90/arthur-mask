@@ -47,3 +47,7 @@ def test_en_yeni_kurulum_dosyasi_secilir():
     ]
     assert guncelleme.en_yeni(surumler) == {"surum": "1.10.0", "adres": "b", "sayfa": "s2"}
     assert guncelleme.en_yeni([{"assets": []}]) is None
+    kalici = [{"name": "Arthur Mask 1.2.3 — Windows kurulum dosyası", "html_url": "s",
+               "assets": [{"name": "ArthurMask-Kurulum.exe", "browser_download_url": "k"}]}]
+    assert guncelleme.en_yeni(kalici) == {"surum": "1.2.3", "adres": "k", "sayfa": "s"}
+    assert guncelleme.en_yeni([{"name": "başka", "assets": [{"name": "ArthurMask-Kurulum.exe"}]}]) is None
