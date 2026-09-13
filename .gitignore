@@ -17,3 +17,6 @@ dist/
 sozluk.yaml
 sozluk*.yaml
 !ornekler/sozluk.ornek.yaml
+
+# model ölçüm ortamı
+.venv-olcum/
