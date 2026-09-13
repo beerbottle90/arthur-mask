@@ -26,8 +26,12 @@ TALIMAT = (
     "ek getirirken kesme işareti kullan: {{KİŞİ-01}}'in.\n"
     "3) Etiketlerin gerçek değerini tahmin etmeye ya da yeniden kurmaya çalışma.\n"
     "4) İçtihat/mevzuat araştırma sorgularına etiket yazma.\n"
-    "5) Nihai taslağı arthur_mask_teslim ile teslim et; avukat onu çözülmüş hâliyle görür.\n"
-    "6) Belge 'hazir' değilse avukattan Arthur Mask'te incelemeyi tamamlamasını iste."
+    "5) Avukatın yüklediği belgeyi düzeltmek/revize etmek için arthur_mask_belgeyi_revize_et kullan: değişiklikler "
+    "özgün düzene (çift sütunlu tablolar, biçim) Word izli değişiklik olarak işlenir. Her değişiklikte 'eski' metni "
+    "belgeden birebir ve tek paragraf/hücre içinden kopyala. Çift dilli belgede her iki dil sütununu da ayrı ayrı revize et.\n"
+    "6) Yeni bir belge (görüş, cetvel, dilekçe) yazıyorsan arthur_mask_teslim kullan; Markdown tablo ve başlıklar "
+    "Word'e tablo ve başlık olarak aktarılır. Kaynak belge çift dilliyse yeni belgeyi de aynı dillerde, iki sütunlu tabloyla yaz.\n"
+    "7) Belge 'hazir' değilse avukattan Arthur Mask'te incelemeyi tamamlamasını iste."
 )
 
 
@@ -36,9 +40,11 @@ def sunucu_olustur(islem: Islem) -> MCPServer:
 
     def _hata_sar(islev, *args, **kwargs):
         try:
-            return islev(*args, **kwargs)
+            yanit = islev(*args, **kwargs)
         except IslemHatasi as hata:
-            return {"hata": str(hata)}
+            yanit = {"hata": str(hata)}
+        # Her yanıt, hata iletileri dahil, Claude'a gitmeden önce çıkış kapısından geçer.
+        return islem.mcp_cikis(islev.__name__, yanit)
 
     @mcp.tool(
         name="arthur_mask_belgeler",
@@ -58,6 +64,19 @@ def sunucu_olustur(islem: Islem) -> MCPServer:
     )
     def arthur_mask_belge_getir(kimlik: str, parca: int = 1) -> dict:
         return _hata_sar(islem.mcp_belge_getir, kimlik, parca)
+
+    @mcp.tool(
+        name="arthur_mask_belgeyi_revize_et",
+        title="Yüklenen belgeyi düzeni koruyarak revize et",
+        description=(
+            "Avukatın yüklediği Word/UDF belgesine değişiklikleri işler; tablo, çift sütun ve biçim korunur. "
+            "Word'de değişiklikler izli (kabul/ret edilebilir) olur. degisiklikler: [{'eski': belgedeki birebir metin "
+            "(tek paragraf ya da hücre), 'yeni': yerine gelecek metin, 'hepsi': true ise her geçişte}]. "
+            "Etiketleri ({{KİŞİ-01}}) koru. Yanıtta gerçek değer bulunmaz."
+        ),
+    )
+    def arthur_mask_belgeyi_revize_et(kimlik: str, degisiklikler: list[dict], baslik: str = "revizyon", izli: bool = True) -> dict:
+        return _hata_sar(islem.mcp_revize, kimlik, degisiklikler, baslik, izli)
 
     @mcp.tool(
         name="arthur_mask_teslim",

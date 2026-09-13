@@ -7,6 +7,7 @@
     maskeli\\<id>.<uzantı>   maskeli belge kopyası (30 gün sonra silinir)
     cevaplar\\               Claude'un teslim ettiği, yerelde çözülmüş taslaklar
     kirmizi-hat.jsonl       yalnız kırmızı hat onayları (gerçek değer yok)
+    claude-giden.jsonl      Claude'a gönderilen her araç yanıtı (çıkış kapısından geçmiş, maskeli)
 
 Claude Desktop birden fazla köprü süreci başlatabilir; kasa ve durum yazımları
 dosya kilidiyle sıralanır.
@@ -101,6 +102,14 @@ class Depo:
                 veri["cevap_sayisi"] = len(list((yol / "cevaplar").glob("*.json")))
                 sonuc.append(veri)
         return sonuc
+
+    def benzersiz_ad(self, ad: str) -> str:
+        """Belge adından türetilen dosya adı var olan bir dosyayla çakışırsa '(2)', '(3)' eklenir."""
+        taban = klasor_adi(ad)
+        aday, sira = taban, 2
+        while (self.kok / aday / "dosya.json").exists():
+            aday, sira = f"{taban[:74]} ({sira})", sira + 1
+        return aday
 
     def dosya_olustur(self, ad: str) -> str:
         klasor = klasor_adi(ad)
@@ -213,6 +222,20 @@ class Depo:
         with kilit(yol):
             with yol.open("a", encoding="utf-8") as f:
                 f.write(json.dumps({"zaman": simdi(), **kayit}, ensure_ascii=False) + "\n")
+
+    def giden_kaydet(self, klasor: str, kayit: Dict) -> None:
+        """Claude'a gönderilen araç yanıtlarının yerel kaydı (çıkış kapısından geçmiş, maskeli hâli)."""
+        yol = self.dosya_yolu(klasor) / "claude-giden.jsonl"
+        with kilit(yol):
+            with yol.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(kayit, ensure_ascii=False) + "\n")
+
+    def gidenler(self, klasor: str, en_fazla: int = 200) -> List[Dict]:
+        yol = self.dosya_yolu(klasor) / "claude-giden.jsonl"
+        if not yol.exists():
+            return []
+        satirlar = yol.read_text(encoding="utf-8").splitlines()[-en_fazla:]
+        return [json.loads(s) for s in reversed(satirlar) if s.strip()]
 
     def temizle(self, gun: int = SAKLAMA_GUNU) -> int:
         """Süresi dolan maskeli ara kopyaları siler; çözülmüş cevaplar ve kasa kalır."""

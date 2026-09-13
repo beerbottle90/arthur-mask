@@ -18,58 +18,58 @@
       <p class="alt">ArthurLegal · belgeler bu bilgisayardan çıkmadan maskelenir · v{{SURUM}}</p>
     </div>
   </div>
-  <div class="cipler" role="status" aria-live="polite">
-    <span class="durum" id="kopru-durumu">Bağlanıyor…</span>
+  <nav class="menu" aria-label="Menü">
+    <span class="durum" id="kopru-durumu" role="status" aria-live="polite">Bağlanıyor…</span>
     <span class="durum" id="koruma-durumu" hidden></span>
-  </div>
+    <button type="button" class="menu-dugme" id="rehber-ac">Nasıl çalışır</button>
+    <button type="button" class="menu-dugme" id="kurtarma-ac">Kurtarma anahtarı<span id="kurtarma-rozet" class="rozet" hidden title="Henüz saklanmadı"></span></button>
+  </nav>
 </header>
+
+<dialog id="rehber" class="pencere" aria-labelledby="rehber-baslik">
+  <h2 id="rehber-baslik">Nasıl çalışır</h2>
+  <ol class="adimlar">
+    <li><strong>Belgeyi bırakın.</strong> Kişisel veriler bu bilgisayarda etiketlenir: <span class="etiket">{{KİŞİ-01}}</span>. İlk belge yeni bir dosya açar; adı belgeden alınır.</li>
+    <li><strong>Claude'a söyleyin.</strong> Claude Desktop'taki ArthurLegal projesine gösterilen komutu yapıştırın. Belgeyi Claude'a ayrıca eklemeyin.</li>
+    <li><strong>Cevabı açın.</strong> Claude'un taslağı burada gerçek adlarla Word ya da UDF olarak açılır.</li>
+    <li><strong>Denetleyin.</strong> "Claude'a giden" bölümünde Claude'a gönderilen her yanıtın maskeli hâlini görür, tek tıkla sızıntı denetimi yaparsınız.</li>
+  </ol>
+  <p class="not">Takma adlandırma anonimleştirme değildir: sözleşmenin konusu ve ticari içerik maskelenmez.</p>
+  <form method="dialog" class="eylem-satiri"><button>Tamam</button></form>
+</dialog>
+
+<dialog id="kurtarma" class="pencere" aria-labelledby="kurtarma-baslik">
+  <h2 id="kurtarma-baslik">Kurtarma anahtarı</h2>
+  <p>Etiketlerin gerçek değerleri bu bilgisayarda şifreli kasalarda durur. Kasaları Windows hesabınız açar.</p>
+  <p>Bilgisayar değişirse ya da Windows yeniden kurulursa kasaları <strong>yalnız bu anahtar</strong> açar. Bir kez yazdırın ya da büroda güvenli bir yerde saklayın. Kimseyle paylaşmayın; Claude'a da yazmayın.</p>
+  <div id="kurtarma-kod" class="kurtarma-kod" hidden></div>
+  <p id="kurtarma-saklandi" class="basari" hidden>✓ Saklandı olarak işaretlendi.</p>
+  <div class="eylem-satiri">
+    <button type="button" id="kurtarma-goster">Anahtarı göster</button>
+    <button type="button" id="kurtarma-kopyala" class="ikincil" hidden>Kopyala</button>
+    <button type="button" id="kurtarma-onay" class="ikincil" hidden>Sakladım</button>
+    <form method="dialog"><button class="ikincil">Kapat</button></form>
+  </div>
+</dialog>
 
 <main class="duzen">
   <aside class="yan">
     <section class="panel" aria-labelledby="dosyalar-baslik">
       <h2 id="dosyalar-baslik">Dosyalar</h2>
       <ul id="dosya-listesi" class="liste"></ul>
-      <form id="yeni-dosya" class="yeni-dosya">
-        <label for="yeni-dosya-ad" class="gizli">Yeni dosya adı</label>
-        <input id="yeni-dosya-ad" placeholder="Yeni dosya (ör. 2026-014 alacak)" maxlength="80" required>
-        <button type="submit">Ekle</button>
-      </form>
-    </section>
-
-    <section id="kurtarma" class="panel kurtarma" hidden aria-labelledby="kurtarma-baslik">
-      <h2 id="kurtarma-baslik">Kurtarma anahtarı</h2>
-      <p>Bilgisayar değişirse ya da Windows yeniden kurulursa kasaları yalnız bu anahtar açar. Bir kez yazdırın ya da ortakta saklayın.</p>
-      <div id="kurtarma-kod" class="kurtarma-kod" hidden></div>
-      <div class="eylem-satiri">
-        <button type="button" id="kurtarma-goster">Anahtarı göster</button>
-        <button type="button" id="kurtarma-kopyala" class="ikincil" hidden>Kopyala</button>
-        <button type="button" id="kurtarma-onay" class="ikincil" hidden>Sakladım</button>
-      </div>
-    </section>
-
-    <section class="panel rehber" aria-labelledby="rehber-baslik">
-      <h2 id="rehber-baslik">Nasıl çalışır</h2>
-      <ol class="adimlar">
-        <li><strong>Belgeyi bırakın.</strong> Kişisel veriler bu bilgisayarda etiketlenir: <span class="etiket">{{KİŞİ-01}}</span></li>
-        <li><strong>Claude'a söyleyin.</strong> Claude Desktop'taki ArthurLegal projesinde komutu yapıştırın.</li>
-        <li><strong>Cevabı açın.</strong> Taslak burada gerçek adlarla, Word ya da UDF olarak açılır.</li>
-      </ol>
+      <button type="button" id="yeni-dosya" class="ikincil tam">+ Yeni dosya</button>
+      <p class="not">Yeni dosyanın adı, bıraktığınız ilk belgeden alınır.</p>
     </section>
   </aside>
 
   <section class="icerik">
-    <div id="secim-yok" class="bos">
-      <strong>Hoş geldiniz.</strong>
-      <span>Başlamak için soldan bir dosya seçin ya da ilk dosyanızı ekleyin.</span>
+    <div id="birak" class="birak" tabindex="0" role="button" aria-describedby="birak-ipucu">
+      <strong id="birak-baslik">Belgeyi buraya bırakın</strong>
+      <span id="birak-ipucu"></span>
+      <input id="dosya-sec" type="file" accept=".docx,.udf,.pdf,.txt,.md,.jpg,.jpeg,.png,.tif,.tiff" hidden multiple>
     </div>
 
     <div id="calisma" hidden>
-      <div id="birak" class="birak" tabindex="0" role="button" aria-describedby="birak-ipucu">
-        <strong>Belgeyi buraya bırakın</strong>
-        <span id="birak-ipucu">Word · UDF · PDF · taranmış görüntü · metin — belge bu bilgisayardan çıkmaz</span>
-        <input id="dosya-sec" type="file" accept=".docx,.udf,.pdf,.txt,.md,.jpg,.jpeg,.png,.tif,.tiff" hidden multiple>
-      </div>
-
       <section class="panel" aria-labelledby="belgeler-baslik">
         <h2 id="belgeler-baslik">Belgeler</h2>
         <ul id="belge-listesi" class="liste belgeler"></ul>
@@ -86,18 +86,25 @@
       </section>
 
       <section class="panel" aria-labelledby="cevaplar-baslik">
-        <div class="baslik-satiri">
-          <h2 id="cevaplar-baslik">Cevaplar</h2>
-          <label class="anahtar"><input type="checkbox" id="maskeli-gorunum"> Claude'un gördüğü hâli</label>
-        </div>
+        <h2 id="cevaplar-baslik">Cevaplar</h2>
         <ul id="cevap-listesi" class="liste cevaplar"></ul>
+      </section>
+
+      <section class="panel giden" aria-labelledby="giden-baslik">
+        <div class="baslik-satiri">
+          <h2 id="giden-baslik">Claude'a giden</h2>
+          <button type="button" id="denetle" class="ikincil">Sızıntı denetimi yap</button>
+        </div>
+        <p id="giden-ozet" class="not ust-bosluksuz"></p>
+        <div id="denetim-sonucu" hidden></div>
+        <ul id="giden-listesi" class="liste gidenler"></ul>
       </section>
     </div>
   </section>
 </main>
 
 <footer class="alt-bilgi">
-  Claude'a yalnız maskeli metin gider. Takma adlandırma anonimleştirme değildir; taslağı göndermeden önce okuyun.
+  Claude'a yalnız maskeli metin gider; her yanıt gönderilmeden önce kasadaki gerçek değerlere karşı yeniden taranır.
 </footer>
 </body>
 </html>

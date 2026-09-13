@@ -152,3 +152,56 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .eylem-satiri.sol { margin-top: 8px; }
 .aday .tur { font-family: var(--baslik-fontu); font-size: 11px; color: var(--altin-acik); }
 .gizli-deger { filter: blur(0); }
+
+/* -- v3: üst menü, pencereler, adsız dosya, cevap sekmeleri, Claude'a giden -------------------- */
+.menu { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.menu-dugme {
+  background: transparent; color: var(--krem); border: 1px solid var(--lacivert-3); font-weight: 500;
+  position: relative; font-size: 13px; padding: 5px 12px;
+}
+.menu-dugme:hover { background: var(--lacivert-3); border-color: var(--altin); }
+.rozet {
+  position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--altin); box-shadow: 0 0 0 2px var(--lacivert);
+}
+.pencere {
+  max-width: 560px; width: calc(100% - 32px); background: var(--lacivert-2); color: var(--krem);
+  border: 1px solid var(--altin); border-radius: 12px; padding: 20px 22px;
+}
+.pencere::backdrop { background: rgba(5, 10, 18, .7); }
+.pencere p { font-size: 14px; color: var(--krem-soluk); margin: 0 0 10px; }
+.pencere p strong { color: var(--krem); }
+.pencere .adimlar { font-size: 14px; margin-bottom: 12px; }
+.pencere form { margin: 0; }
+.basari { color: var(--yesil) !important; }
+button.tam { width: 100%; margin-top: 10px; }
+#yeni-dosya.aktif { border-color: var(--altin); background: var(--lacivert-3); }
+.birak.hatali span { color: var(--kirmizi); }
+.ust-bosluksuz { margin-top: 0; }
+.cevap-alt { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.sekmeler { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.sekme {
+  background: transparent; color: var(--krem-soluk); border: 1px solid var(--lacivert-3); font-weight: 500;
+  font-size: 12px; padding: 3px 10px; border-radius: 999px;
+}
+.sekme[aria-selected="true"] { color: var(--lacivert); background: var(--altin); border-color: var(--altin); }
+.sekme:hover { background: var(--lacivert-3); color: var(--krem); }
+.sekme[aria-selected="true"]:hover { background: var(--altin-acik); color: var(--lacivert); }
+.not.satir-ici { margin: 0 0 0 8px; }
+.cevap .ad .cip { margin-left: 6px; font-weight: 400; }
+.sorunlar { font-size: 13px; color: var(--sari); }
+.giden { border-color: var(--lacivert-3); }
+.giden .baslik-satiri h2 { margin-bottom: 8px; }
+.gidenler { margin-top: 10px; }
+.giden-kayit { background: var(--lacivert); border: 1px solid var(--lacivert-3); border-radius: 8px; padding: 8px 12px; }
+.giden-kayit summary { cursor: pointer; font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.giden-kayit .onizleme { margin-top: 8px; }
+.denetim { border-radius: 8px; padding: 10px 14px; margin: 8px 0; font-size: 13px; }
+.denetim p { margin: 4px 0; color: var(--krem-soluk); }
+.denetim.temiz { border: 1px solid var(--yesil); background: rgba(127, 196, 154, .08); }
+.denetim.temiz strong { color: var(--yesil); }
+.denetim.bulgu { border: 1px solid var(--kirmizi); background: rgba(224, 104, 92, .08); }
+.denetim.bulgu > strong { color: var(--kirmizi); }
+.bulgu-listesi { margin: 8px 0 0 18px; padding: 0; }
+.bulgu-listesi ul { margin: 4px 0 8px 18px; padding: 0; }
+.denetim mark { background: var(--sari); color: var(--lacivert); border-radius: 3px; padding: 0 3px; }

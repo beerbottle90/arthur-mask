@@ -170,23 +170,96 @@ _ILISKILER = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>"""
 
 
-def metinden_docx(metin: str, hedef: Path) -> None:
-    """Düz metinden sade bir .docx üretir (ör. geri açılmış yapay zekâ taslağı)."""
-    paragraflar = []
-    for satir in metin.replace("\r\n", "\n").split("\n"):
-        if satir == "\f":
-            paragraflar.append('<w:p><w:r><w:br w:type="page"/></w:r></w:p>')
+_YAZI = '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>'
+_TABLO_AYRAC = re.compile(r"^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$")
+
+
+def _runlar(metin: str, boyut: int = 24, kalin: bool = False) -> str:
+    """Satır içi **kalın** işaretini Word run'larına çevirir."""
+    metin = XML_GECERSIZ.sub("", metin)
+    runlar = []
+    for i, parca in enumerate(re.split(r"\*\*(.+?)\*\*", metin)):
+        if not parca:
             continue
-        satir = XML_GECERSIZ.sub("", satir)
-        paragraflar.append(
-            '<w:p><w:r><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/>'
-            f'<w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">{html.escape(satir, quote=False)}</w:t></w:r></w:p>'
-        )
+        rpr = f"<w:rPr>{_YAZI}{'<w:b/>' if kalin or i % 2 else ''}<w:sz w:val=\"{boyut}\"/></w:rPr>"
+        runlar.append(f'<w:r>{rpr}<w:t xml:space="preserve">{html.escape(parca, quote=False)}</w:t></w:r>')
+    return "".join(runlar)
+
+
+def _paragraf(metin: str, boyut: int = 24, kalin: bool = False, girinti: int = 0) -> str:
+    ppr = f'<w:pPr><w:ind w:left="{girinti}" w:hanging="{min(girinti, 283)}"/></w:pPr>' if girinti else ""
+    return f"<w:p>{ppr}{_runlar(metin, boyut, kalin)}</w:p>"
+
+
+def _tablo(satirlar) -> str:
+    sutun = max(len(s) for s in satirlar)
+    genislik = int(9638 / sutun)  # A4 metin alanı (twip)
+    kenar = "".join(f'<w:{k} w:val="single" w:sz="4" w:space="0" w:color="999999"/>'
+                    for k in ("top", "left", "bottom", "right", "insideH", "insideV"))
+    xml = [f'<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>{kenar}</w:tblBorders>'
+           '<w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>'
+           + f'<w:gridCol w:w="{genislik}"/>' * sutun + "</w:tblGrid>"]
+    for no, satir in enumerate(satirlar):
+        xml.append("<w:tr>")
+        for hucre in satir + [""] * (sutun - len(satir)):
+            paragraflar = "".join(_paragraf(p.strip(), 22, kalin=False)
+                                  for p in re.split(r"<br\s*/?>", hucre)) or "<w:p/>"
+            xml.append(f'<w:tc><w:tcPr><w:tcW w:w="{genislik}" w:type="dxa"/></w:tcPr>{paragraflar}</w:tc>')
+        xml.append("</w:tr>")
+    xml.append("</w:tbl><w:p/>")
+    return "".join(xml)
+
+
+def _tablo_satiri(satir: str):
+    icerik = satir.strip()
+    if icerik.startswith("|"):
+        icerik = icerik[1:]
+    if icerik.endswith("|") and not icerik.endswith("\|"):
+        icerik = icerik[:-1]
+    return [h.replace("\|", "|").strip() for h in re.split(r"(?<!\)\|", icerik)]
+
+
+def metinden_docx(metin: str, hedef: Path) -> None:
+    """Metinden .docx üretir. Markdown yapısı Word yapısına çevrilir:
+    tablolar (| a | b |) gerçek tablo, # başlıklar, - / 1. listeler, **kalın**, \f sayfa sonu.
+    Markdown olmayan satırlar olduğu gibi (baştaki boşluklar korunarak) paragraf olur.
+    """
+    satirlar = metin.replace("\r\n", "\n").split("\n")
+    govde_parcalari, i = [], 0
+    while i < len(satirlar):
+        satir = satirlar[i]
+        if satir == "\f":
+            govde_parcalari.append('<w:p><w:r><w:br w:type="page"/></w:r></w:p>')
+            i += 1
+            continue
+        # Tablo: ardışık | satırları; ikinci satır ayraçsa başlık satırı kabul edilir.
+        if satir.lstrip().startswith("|") and i + 1 < len(satirlar) and (
+            _TABLO_AYRAC.match(satirlar[i + 1]) or satirlar[i + 1].lstrip().startswith("|")
+        ):
+            tablo = []
+            while i < len(satirlar) and satirlar[i].lstrip().startswith("|"):
+                if not _TABLO_AYRAC.match(satirlar[i]):
+                    tablo.append(_tablo_satiri(satirlar[i]))
+                i += 1
+            if tablo:
+                govde_parcalari.append(_tablo(tablo))
+            continue
+        baslik = re.match(r"^(#{1,6})\s+(.*)$", satir)
+        liste = re.match(r"^\s*[-*•]\s+(.*)$", satir)
+        if baslik:
+            duzey = len(baslik.group(1))
+            govde_parcalari.append(_paragraf(baslik.group(2), boyut=max(24, 34 - 3 * duzey), kalin=True))
+        elif liste:
+            govde_parcalari.append(_paragraf("• " + liste.group(1), girinti=567))
+        else:
+            govde_parcalari.append(_paragraf(satir) if satir else "<w:p/>")
+        i += 1
     govde = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'
-        + "".join(paragraflar)
-        + "</w:body></w:document>"
+        + "".join(govde_parcalari)
+        + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" '
+        'w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>'
     )
     with zipfile.ZipFile(hedef, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("[Content_Types].xml", _ICERIK_TURLERI)

@@ -131,7 +131,9 @@ class _Isleyici(BaseHTTPRequestHandler):
             if yontem == "GET" and parcalar == ["dosyalar"]:
                 return self._json(200, {"dosyalar": islem.depo.dosyalar(), "aktif": islem.depo.aktif_dosya})
             if yontem == "POST" and parcalar == ["dosyalar"]:
-                klasor = islem.depo.dosya_olustur(self._govde_json().get("ad", "").strip() or "Adsız dosya")
+                govde = self._govde_json()
+                ad = govde.get("ad", "").strip() or "Adsız dosya"
+                klasor = islem.depo.dosya_olustur(islem.depo.benzersiz_ad(ad) if govde.get("benzersiz") else ad)
                 islem.depo.aktif_dosya = klasor
                 return self._json(201, {"klasor": klasor})
             if yontem == "POST" and parcalar == ["aktif"]:
@@ -158,6 +160,10 @@ class _Isleyici(BaseHTTPRequestHandler):
                 if kaynak == "belgeler" and len(parcalar) == 4 and yontem == "DELETE":
                     islem.arayuz_belge_sil(klasor, parcalar[3])
                     return self._json(200, {"silindi": parcalar[3]})
+                if kaynak == "gidenler" and yontem == "GET":
+                    return self._json(200, islem.arayuz_gidenler(klasor))
+                if kaynak == "denetim" and yontem == "POST":
+                    return self._json(200, islem.arayuz_denetle(klasor))
                 if kaynak == "cevaplar" and yontem == "GET":
                     return self._json(200, {"cevaplar": islem.arayuz_cevaplar(klasor)})
                 if kaynak == "maskeli-dosyasi" and yontem == "GET":

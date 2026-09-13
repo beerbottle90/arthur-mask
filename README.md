@@ -28,7 +28,9 @@ açar. Hiçbir veri dışarı gönderilmez.
 | PDF | Metin katmanı maskelenip metin olarak yazılır |
 | Taranmış belge / fotoğraf | Yerel OCR (RapidOCR PP-OCRv6); metin maskelenir, etiketler sayfa görüntüsüne kalıcı basılır, çıktı üstverisiz görüntü PDF'i; avukat incelemesi zorunlu |
 | İngilizce | Yabancı şirket ekleri, İngilizce unvan/taraf/imza blokları, UK/US/AB adresleri, uluslararası telefon, pasaport; yayımlanmış İngiliz/ABD içtihat atıfları korunur |
-| Claude köprüsü | Claude Desktop MCP (belgeler / belge_getir / teslim) + yerel AL arayüzü, tek süreç |
+| Claude köprüsü | Claude Desktop MCP (belgeler / belge_getir / belgeyi_revize_et / teslim) + yerel AL arayüzü, tek süreç |
+| Yapı ve revizyon | Word tabloları (ör. AZ \| EN çift sütun) Claude'a Markdown tablo olarak gider; revizyonlar özgün belgeye izli değişiklik olarak işlenir |
+| Çıkış kapısı | Claude'a giden her yanıt, gönderilmeden önce kasadaki bütün gerçek değerlere karşı (aksan, büyük/küçük harf, ayraç farkı gözetmeden) yeniden taranır ve etiketlenir; gönderilenler dosyada kaydedilir, arayüzden sızıntı denetimi yapılır. Uçtan uca test köprünün ham stdout baytlarını tarar |
 | Geri açma | Bozulmuş etiketleri tolere eder (`{{KISI-1}}`); Türkçe ek uyumu: `{{KİŞİ-01}}'in` → `Ayşe KARA'nın` |
 | Kasa | Scrypt + Fernet ile şifreli, dosya (matter) başına; belgeler arası tutarlı etiket |
 
@@ -78,6 +80,9 @@ eşik, sözlük veya model değiştiğinde ölçüm tekrarlanır.
 ## Sınırlar
 
 - Tespit olasılıksaldır; maskeli çıktı gönderilmeden önce avukat tarafından okunur.
+- Çıkış kapısı yalnız kasada bulunan (en az bir kez tespit edilmiş) değerleri tanır; hiç tespit edilmemiş
+  bir ad için güvence tespit katmanı ve avukat incelemesidir. Sohbete doğrudan yazılan ya da Claude'a
+  ayrıca eklenen belgeler Arthur Mask'ten geçmez.
 - Takma adlandırma kimliği gizler, içeriği gizlemez: benzersiz olay örgüsü kişiyi ele verebilir.
 - Kural katmanı tek başına bağlamsız yabancı adları ve lakapları kaçırabilir; bunları yerel
   semantik katman (`arthur-mask[semantik]`, GLiNER PII) yakalar. Ölçümler: docs/faz-1-sartname.md.

@@ -74,11 +74,28 @@ def _ocr_ile_ac(yol: Path) -> Belge:
     return Belge(yol, metin, uyarilar, yazici, ocr=True)
 
 
+def markdown_sadelestir(metin: str) -> str:
+    """UYAP editörü tablo ve biçim işaretlerini desteklemediği için Markdown sade metne iner."""
+    import re
+
+    satirlar = []
+    for satir in metin.split("\n"):
+        if re.match(r"^\|?\s*:?-{3,}", satir.strip()):
+            continue
+        if satir.lstrip().startswith("|"):
+            hucreler = [h.strip() for h in satir.strip().strip("|").split("|")]
+            satir = "    ".join(h.replace("<br>", " ") for h in hucreler)
+        satir = re.sub(r"^#{1,6}\s+", "", satir)
+        satir = re.sub(r"^\s*[-*]\s+", "• ", satir)
+        satirlar.append(satir.replace("**", ""))
+    return "\n".join(satirlar)
+
+
 def metinden_yaz(metin: str, hedef: Path) -> None:
-    """Düz metni hedef uzantıya göre UDF, DOCX veya metin olarak yazar."""
+    """Metni hedef uzantıya göre UDF, DOCX veya metin olarak yazar (DOCX'te Markdown yapısı korunur)."""
     uzanti = hedef.suffix.lower()
     if uzanti == ".udf":
-        udf.metinden_udf(metin, hedef)
+        udf.metinden_udf(markdown_sadelestir(metin), hedef)
     elif uzanti == ".docx":
         docx.metinden_docx(metin, hedef)
     else:
