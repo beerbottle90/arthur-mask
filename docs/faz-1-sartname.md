@@ -24,6 +24,7 @@ Kararlar 13.09.2026'da proje sahibiyle netleştirildi. Mimari gerekçe:
 | K15 | Denetim kaydı | Yalnız kırmızı hat onayları (gerçek değer yok) |
 | K16 | Lisans | ArthurLegal Proprietary Non-Commercial (büro ve şirket içi kullanım serbest) |
 | K17 | Depo | Özel; herkese açma kararı ileride |
+| K19 | Tespit politikası | Sızıntıya öncelik; gereksiz maskeleme kabul edilir |
 | K18 | NER modeli | **GLiNER PII** (`urchade/gliner_multi_pii-v1`, Apache-2.0); temiz lisans nedeniyle, isabeti daha yüksek ama eğitim verisi lisansı belirsiz akdeniz27 yerine |
 
 ## NER model ölçümü (13.09.2026)
@@ -55,6 +56,23 @@ kısmen uyduğunu gösterir. Gizli sette kalan başlıca açıklar: tek başına
 (Memo, Can), baş harfler (A.Ö.R.), Türkçe karaktersiz OCR metni (ayse yilmaz), büyük
 harfli kısaltmalı adresler (MAH./CAD.), etiketsiz dosya numaraları. Üretim güveni için gerçek
 belge seti ön şart olmaya devam eder.
+
+### Sızıntıya öncelik politikası (K19, 13.09.2026)
+
+Proje sahibi, gereksiz maskelemeyi göze alarak sızıntıya öncelik verilmesini seçti. Model
+bulguları yalnız kesin yanlışlarda (rol ismi, kamu kurumu) elenir; OCR, baş harf, konuşmacı
+ve tek başına ilk ad kuralları eklendi. Önceki iki set bu ayarda görüldüğü için nihai ölçüm
+**üçüncü gizli sette** (`ner_test_3.txt`, 352 ifade, farklı belge türleri) tek seferde yapıldı:
+
+| Sistem | Sızıntı | Kişi R / P | Fazla maskeleme | 20 sayfa |
+|---|---|---|---|---|
+| Yalnız kurallar | 0.78 | 0.69 / 0.91 | 10 | 1 sn |
+| Ham GLiNER | 0.78 | 0.91 / 0.85 | 63 | 28 sn |
+| **Ürün hattı** | **0.95** | 0.94 / 0.91 | 34 | 34 sn |
+
+Kalan açıklar: tek başına soyadı ("Sezer"), küçük harfli kullanıcı adları ("deniz.t"),
+alışılmadık bağlamda dosya numarası, ISO biçimli tarih, sıfır yerine "O" harfli OCR metni.
+Bu set de artık görülmüştür; sonraki ayarlar yeni bir gizli setle ölçülür.
 
 ## Kapsam
 
