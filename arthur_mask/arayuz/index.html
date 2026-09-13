@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="am-belirtec" content="{{BELIRTEC}}">
+<title>Arthur Mask</title>
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="stil.css">
+<script src="uygulama.js" defer></script>
+</head>
+<body>
+<header class="ust">
+  <div class="marka">
+    <img src="logo.png" alt="" width="36" height="36">
+    <div>
+      <h1>ARTHUR MASK</h1>
+      <p class="alt">ArthurLegal · takma adlandırma kapısı · v{{SURUM}}</p>
+    </div>
+  </div>
+  <div class="durum" id="durum" role="status">Bağlanıyor…</div>
+</header>
+
+<main class="duzen">
+  <aside class="panel dosyalar" aria-labelledby="dosyalar-baslik">
+    <h2 id="dosyalar-baslik">Dosyalar</h2>
+    <ul id="dosya-listesi" class="liste"></ul>
+    <form id="yeni-dosya" class="yeni-dosya">
+      <label for="yeni-dosya-ad" class="gizli">Yeni dosya adı</label>
+      <input id="yeni-dosya-ad" placeholder="Yeni dosya adı (ör. 2026-014 alacak)" maxlength="80" required>
+      <button type="submit">Ekle</button>
+    </form>
+    <p class="not">Etiketler dosya bazında tutarlıdır: aynı kişi dosyanın bütün belgelerinde aynı etiketi alır.</p>
+  </aside>
+
+  <section class="icerik">
+    <div id="secim-yok" class="bos">Başlamak için soldan bir dosya seçin ya da yeni dosya ekleyin.</div>
+
+    <div id="calisma" hidden>
+      <div id="birak" class="birak" tabindex="0" role="button" aria-describedby="birak-ipucu">
+        <strong>Belgeyi buraya bırakın</strong>
+        <span id="birak-ipucu">.docx · .udf · .pdf · .txt — belge bu bilgisayardan çıkmaz</span>
+        <input id="dosya-sec" type="file" accept=".docx,.udf,.pdf,.txt,.md" hidden multiple>
+      </div>
+
+      <section class="panel" aria-labelledby="belgeler-baslik">
+        <h2 id="belgeler-baslik">Belgeler</h2>
+        <ul id="belge-listesi" class="liste belgeler"></ul>
+        <p class="not">Claude Desktop'taki ArthurLegal projesinde şunu yazın:
+          <code id="ornek-komut">Arthur Mask'teki belge-1'i incele</code></p>
+      </section>
+
+      <section id="inceleme" class="panel inceleme" hidden aria-labelledby="inceleme-baslik">
+        <h2 id="inceleme-baslik">İnceleme</h2>
+        <div id="inceleme-icerik"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="cevaplar-baslik">
+        <div class="baslik-satiri">
+          <h2 id="cevaplar-baslik">Cevaplar</h2>
+          <label class="anahtar"><input type="checkbox" id="maskeli-gorunum"> Maskeli görünüm</label>
+        </div>
+        <ul id="cevap-listesi" class="liste cevaplar"></ul>
+      </section>
+    </div>
+  </section>
+</main>
+
+<footer class="alt-bilgi">
+  Claude'a yalnız maskeli metin gider. Takma adlandırma anonimleştirme değildir; çıktıyı göndermeden önce okuyun.
+</footer>
+</body>
+</html>

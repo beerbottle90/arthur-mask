@@ -1,0 +1,185 @@
+# ner_test_en.txt — held-out TEST set: PII detection in English and mixed English–Turkish legal documents.
+# All people, companies, addresses and identifiers are fictional. Gold spans: {{LABEL|exact text}}.
+# Conventions: titles (Mr., Ms., Dr., Prof., Sir, Av., Esq., KC) and possessive 's are outside KİŞİ spans; DOSYA_NO covers the identifier only, not "Claim No." / "Case No."; published case citations carry no spans.
+# --- Share purchase agreement ---
+THIS SHARE PURCHASE AGREEMENT is dated 14 March 2025 and made BETWEEN: (1) {{ŞİRKET|Bosphorus Crest Holdings B.V.}}, a company incorporated in the Netherlands with its registered office at {{ADRES|Herengracht 412, 1017 BZ Amsterdam, the Netherlands}} (the "Seller"); and (2) {{ŞİRKET|Kestrel Ridge Capital LLP}}, a limited liability partnership registered in England and Wales whose registered office is at {{ADRES|22 Finsbury Circus, London EC2M 7EB, United Kingdom}} (the "Purchaser").
+The Seller is the legal and beneficial owner of 12,500,000 shares in {{ŞİRKET|Anadolu Rüzgar Enerji Üretim A.Ş.}}, a joint stock company registered with the Istanbul Trade Registry under number 845123, having its seat at {{ADRES|Büyükdere Cad. No: 185, Kat 7, Levent, 34394 Şişli/İstanbul, Türkiye}} (the "Company").
+İşbu Sözleşme / This Agreement shall be governed by the laws of England and Wales, and any dispute shall be finally resolved under the ICC Rules of Arbitration seated in London.
+The Purchaser's Guarantor, {{ŞİRKET|Kestrel Ridge Group Holdings Limited}}, irrevocably guarantees the due performance by the Purchaser of its obligations, and {{ŞİRKET|Kestrel Ridge}} shall procure that the Consideration is paid on Completion.
+Clause 7.3 (Warranties): The Seller warrants that, save as Disclosed, no Material Adverse Change has occurred since the Accounts Date.
+Signed for and on behalf of {{ŞİRKET|BOSPHORUS CREST HOLDINGS B.V.}} By: ____________ Name: {{KİŞİ|Pieter-Jan van der Heijden}} Title: Managing Director
+Signed for and on behalf of {{ŞİRKET|KESTREL RIDGE CAPITAL LLP}} By: ____________ Name: {{KİŞİ|John A. Whitaker}} Title: Designated Member
+Witnessed by: {{KİŞİ|ELIF NUR KARAKAŞ}}, Trainee Solicitor, {{ŞİRKET|Harrow & Vale LLP}}, {{ADRES|1 Bishopsgate Plaza, London EC2N 4AJ}}
+Initialled on each page by {{KİŞİ|J.A.W.}} and {{KİŞİ|P.J.v.d.H.}}
+Schedule 1 — The Sellers: 1. {{KİŞİ|Orhan Sabri Kılınç}} (4,000 shares); 2. {{KİŞİ|Melek Kılınç}} (3,500 shares); 3. {{KİŞİ|Barış Kılınç}} (2,500 shares); 4. {{ŞİRKET|Kılınç Aile Holding A.Ş.}} (10,000 shares).
+Sellers' Representative: {{KİŞİ|Barış Kılınç}}, {{EPOSTA|baris.kilinc@kilincholding.com.tr}}, {{TELEFON|+90 533 604 21 18}}.
+Buyer: {{ŞİRKET|Rotterdam Maritime Ventures N.V.}}, {{ADRES|Wilhelminakade 91, 3072 AP Rotterdam, the Netherlands}}, represented by {{KİŞİ|Maarten Jansen}} and {{KİŞİ|Floor Visser}}.
+Conditions Precedent were satisfied on the Closing Date and the Escrow Agent released the Deferred Consideration to the Sellers' Account.
+The closing meeting will take place at the Levent offices; the Warranty and Indemnity Insurance Policy shall be bound at Signing.
+# --- NDA ---
+MUTUAL NON-DISCLOSURE AGREEMENT between {{ŞİRKET|Nordlicht Analytics GmbH}}, {{ADRES|Maximilianstraße 35, 80539 München, Germany}}, and {{ŞİRKET|Ege Yazılım Teknolojileri Ltd. Şti.}}, {{ADRES|Kazım Dirik Mah. 372 Sok. No: 14/3, 35030 Bornova/İzmir, Türkiye}}.
+"Confidential Information" means all information disclosed by a Disclosing Party to the Receiving Party, including the Pulse Insight platform roadmap and the HaleGuard Pro 3 source code.
+Notices to {{ŞİRKET|Nordlicht}} shall be addressed to Dr. {{KİŞİ|Katharina Weißenborn}}, General Counsel ({{EPOSTA|k.weissenborn@nordlicht-analytics.de}}; {{TELEFON|+49 89 2154 7730}}), and notices to {{ŞİRKET|Ege Yazılım}} to Mr. {{KİŞİ|Oğuzhan Tekin}} ({{EPOSTA|oguzhan.tekin@egeyazilim.com.tr}}; {{TELEFON|+90 232 462 18 90}}).
+IN WITNESS WHEREOF: For {{ŞİRKET|Nordlicht Analytics GmbH}}: {{KİŞİ|Maximilian von Stetten}}, Geschäftsführer; For {{ŞİRKET|Ege Yazılım Teknolojileri Ltd. Şti.}}: {{KİŞİ|Zeynep Aydogan}}, Müdür.
+# --- Employment contract ---
+EMPLOYMENT CONTRACT / İŞ SÖZLEŞMESİ — This contract is entered into between {{ŞİRKET|Marmara Logistics Solutions A.Ş.}} (the "Employer") and {{KİŞİ|Carlos Eduardo Ruiz Navarro}}, a Spanish national born on {{DOĞUM_TARİHİ|22 July 1986}}, holder of passport no. {{PASAPORT|PAF482913}} (the "Employee").
+The Employee's residential address is {{ADRES|Bağdat Caddesi No: 312 Daire 9, Caddebostan, 34728 Kadıköy/İstanbul}}, and his mobile number is {{TELEFON|+90 532 418 77 05}}.
+The Employee shall report to the Chief Operating Officer, currently {{KİŞİ|Hakan Yıldırım}}, or to such other person as the Board may designate from time to time.
+The monthly gross salary shall be paid into the Employee's account {{IBAN|TR33 0006 2001 2345 0067 8901 23}} no later than the fifth Business Day of each month.
+Clause 12 (Non-Competition): For a period of twelve (12) months following the Termination Date, the Employee shall not engage in any Restricted Business within Türkiye.
+Signed: {{KİŞİ|C. E. Ruiz Navarro}} / For the Employer: {{KİŞİ|Sevgi Özdemir-Baran}}, HR Director
+# --- Loan facility agreement ---
+USD 45,000,000 TERM LOAN FACILITY AGREEMENT dated 3 June 2024 between {{ŞİRKET|Tigris Energy Holdings Ltd}} as Borrower, {{ŞİRKET|Aldgate Merchant Bank PLC}} as Arranger and Original Lender, and {{ŞİRKET|Castellane Trust Services S.A.}} as Agent and Security Agent.
+Borrower's disbursement account: {{IBAN|GB60HRVB40512877341209}}; Agent's collection account: {{IBAN|FR14 2004 1010 0505 0001 3M02 606}}.
+Agent's contact: {{KİŞİ|Amélie Durand-Lefèvre}}, Loan Agency Desk, {{ADRES|18 rue de la Chaussée-d'Antin, 75009 Paris, France}}, tel. {{TELEFON|+33 1 42 68 51 09}}, {{EPOSTA|agency.desk@castellane-trust.fr}}.
+Clause 22.1 (Events of Default): Each of the events set out in this Clause 22 is an Event of Default, including any Change of Control of an Obligor.
+The Obligors' Agent shall deliver a Compliance Certificate signed by two directors, being {{KİŞİ|Rashid bin Khalfan Al-Mansoori}} and {{KİŞİ|Wei Zhang}}, within 120 days of each Financial Year end.
+{{ŞİRKET|Aldgate}} may assign its rights to any Affiliate, including {{ŞİRKET|Aldgate Capital Markets Inc.}}, without the consent of the Borrower.
+The Guarantor, {{KİŞİ|Friedrich Wilhelm Baumann}}, born {{DOĞUM_TARİHİ|March 3, 1958}} in Stuttgart, holder of German passport {{PASAPORT|CF7J2K9L1}}, gives the guarantee in Clause 18.
+# --- Lease ---
+THIS LEASE is made on 1 October 2025 between {{ŞİRKET|Harcourt Property Investments Limited}} (Landlord) and {{ŞİRKET|Pera Textiles UK Ltd}} (Tenant) in respect of the premises at {{ADRES|Unit 4, Riverside Business Park, 77 Wandle Road, London SW18 1DW}}.
+The Tenant's guarantor is Mr. {{KİŞİ|Murat Can Erdoğan}} of {{ADRES|Flat 12, 9 Belsize Park Gardens, London NW3 4LB}}, date of birth {{DOĞUM_TARİHİ|03/11/1979}}.
+Rent of £96,000 per annum shall be paid quarterly in advance on the Usual Quarter Days to the Landlord's account {{IBAN|GB29 NWBK 6016 1331 9268 19}}.
+Landlord's managing agent: {{ŞİRKET|Pembury Hale & Co.}}, attn. {{KİŞİ|Siobhan O'Brien}} MRICS, {{TELEFON|+44 20 7946 0831}}, {{EPOSTA|sobrien@pemburyhale.co.uk}}.
+Schedule 3 — Rights Reserved: the right for the Landlord and all persons authorised by it to enter the Premises on reasonable notice.
+Kiraya Veren / Landlord: {{KİŞİ|Nurettin Güleryüz}}; Kiracı / Tenant: {{ŞİRKET|Nordwind Consulting GmbH}} İstanbul Şubesi / Istanbul Branch.
+Kiracı, kira bedelini Kiraya Veren'in {{IBAN|TR270006400000163004512877}} numaralı hesabına yatıracaktır / The Tenant shall pay the rent into the Landlord's account no. {{IBAN|TR27 0006 4000 0016 3004 5128 77}}.
+# --- Distribution agreement ---
+EXCLUSIVE DISTRIBUTION AGREEMENT between {{ŞİRKET|Lombardi Macchine Agricole S.p.A.}}, {{ADRES|Via Emilia Ovest 1120, 41123 Modena, Italy}} ("Supplier") and {{ŞİRKET|Konya Agro Makina Sanayi ve Ticaret A.Ş.}} ("Distributor").
+The Products are the TerraForza T-series tractors and AquaMist irrigation units described in Annex A; the Territory is Türkiye, Azerbaijan and Georgia.
+Supplier's representative: Ing. {{KİŞİ|Giovanni Battista Ferraro}} ({{EPOSTA|gb.ferraro@lombardi-macchine.it}}, {{TELEFON|+39 059 882 4410}}); Distributor's representative: {{KİŞİ|Mehmet Ali Konuk}} ({{TELEFON|+90 332 251 40 60}}).
+Payments to {{ŞİRKET|Lombardi}} shall be made to {{IBAN|DE41 5001 0517 0123 4567 89}} or to such other account as {{ŞİRKET|Lombardi}} notifies in writing.
+Delivery DAP Mersin Port (Incoterms 2020); the Distributor's Bank shall issue a Standby Letter of Credit in favour of the Supplier.
+# --- Request for arbitration ---
+REQUEST FOR ARBITRATION — ICC Case No. {{DOSYA_NO|27845/HBH}} — Claimant: {{ŞİRKET|Anatolian Cement Industries A.Ş.}}; Respondent: {{ŞİRKET|Hellenic Aggregates Trading S.A.}}
+Claimant is represented by Av. {{KİŞİ|Selin Kocabaş}} and Av. {{KİŞİ|Burak Şahin}} of {{ŞİRKET|Kocabaş Şahin Avukatlık Ortaklığı}}, {{ADRES|Maslak Mah. Eski Büyükdere Cad. No: 9, 34485 Sarıyer, Istanbul}}.
+Respondent is represented by {{KİŞİ|Dimitrios Papadakis}} and {{KİŞİ|Eleni Georgiou}}, {{ŞİRKET|Papadakis Georgiou LLP}}, {{ADRES|25 Vasilissis Sofias Avenue, 106 74 Athens, Greece}}.
+The dispute arises out of a Supply Agreement dated 9 January 2021, clause 19 of which provides for ICC arbitration seated in Geneva under Swiss law.
+Claimant nominates as co-arbitrator Prof. Dr. {{KİŞİ|Ayşe Gül Tanrıverdi}}, {{ADRES|Barbaros Bulvarı No: 145, Beşiktaş, 34349 Istanbul}}, {{EPOSTA|agtanriverdi@tanriverdi-law.com}}.
+Claimant relies on Brantwood Shipping Ltd v Castellan Marine Inc [2019] EWHC 1234 (Comm) and Orsolya Holdings SA v Meridian Petroleum Corp [2020] EWCA Civ 1789.
+A related ISTAC matter, Arbitration No. {{DOSYA_NO|2025/117}}, is pending between the same parties before the Istanbul Arbitration Centre.
+The Emergency Arbitrator application was registered under ISTAC reference {{DOSYA_NO|ISTAC-EA-2025/009}}.
+The Tribunal is composed of Prof. {{KİŞİ|Hélène Vasseur}} (President), Mr. {{KİŞİ|Takeshi Morimoto}} and Dr. {{KİŞİ|Cemile Sarıgül}}; the Tribunal Secretary is {{KİŞİ|Lukas Brandstätter}}.
+Procedural Order No. 2 in ICC Case No. {{DOSYA_NO|27845/HBH}} fixed the hearing for 12–16 October 2026 at the ICC Hearing Centre in Paris.
+LCIA Arbitration No. {{DOSYA_NO|255931}}: {{ŞİRKET|Pontus Grain Traders S.A.}} v {{ŞİRKET|Chernomor Bulk Terminals LLC}} — Statement of Defence due 30 November 2025.
+See also Aksoy Tekstil AŞ v Hartwell Fabrics Ltd [2022] EWHC 889 (Comm) at [45]–[52], and Yargıtay 11. HD, E. 2020/1234, K. 2021/5678, both of which the Tribunal should follow.
+# --- Witness statement (English High Court) ---
+Claim No. {{DOSYA_NO|CL-2024-000123}} IN THE HIGH COURT OF JUSTICE, BUSINESS AND PROPERTY COURTS OF ENGLAND AND WALES, COMMERCIAL COURT (KBD)
+BETWEEN: {{ŞİRKET|MERIDIAN BLUE SHIPPING LIMITED}} Claimant — and — (1) {{ŞİRKET|KARADENİZ DENİZCİLİK A.Ş.}} (2) {{KİŞİ|KEMAL ONUR ALTINTAŞ}} Defendants
+FIRST WITNESS STATEMENT OF {{KİŞİ|FATMA NİLÜFER ÇELİKKOL}}
+I, {{KİŞİ|Fatma Nilüfer Çelikkol}}, of {{ADRES|Cumhuriyet Mah. Halaskargazi Cad. No: 48 D: 6, 34371 Şişli, Istanbul, Turkey}}, will say as follows:
+I am the finance director of the First Defendant ("{{ŞİRKET|Karadeniz}}") and I make this statement in support of the Defendants' application to set aside the default judgment.
+On 17 August 2023 I met Mr {{KİŞİ|Altıntaş}} and Captain {{KİŞİ|Viktor Sergeyevich Morozov}} at the offices of {{ŞİRKET|Meridian Blue}} in Piraeus.
+Captain {{KİŞİ|Morozov}}, whose Russian passport number I later saw recorded as {{PASAPORT|75 4829163}}, told me that the vessel had been arrested at Constanța.
+I was copied on an email from {{EPOSTA|legal@meridianblue-shipping.com}} forwarding a letter signed by {{KİŞİ|Harriet Smith-Jones}}, whom I understood to be {{ŞİRKET|Meridian Blue}}'s in-house counsel.
+At the hearing on 4 March 2024 the learned Judge refused the adjournment, and the Master later reserved the costs of the application.
+Counsel for the Claimant relied on Harlow Grain Co v Stavros Navigation SA [2016] EWCA Civ 482, which in my view does not apply.
+Statement of Truth: I believe that the facts stated in this witness statement are true. Signed: {{KİŞİ|F. N. Çelikkol}} Dated: 11 April 2024
+Witness list: {{KİŞİ|Yevgenia Kuznetsova}} (Operations Manager, Novorossiysk); {{KİŞİ|Abdulaziz Al-Otaibi}} (Chartering); {{KİŞİ|Pooja Iyer}} (Accounts); {{KİŞİ|Zhou Xiaoming}} (Surveyor); {{KİŞİ|Salvatore D'Amico}} (Master).
+Ms {{KİŞİ|Iyer}} confirmed that the invoices were approved by {{KİŞİ|Vikram Malhotra}} before payment to {{ŞİRKET|Bharat Coastal Carriers Ltd}}.
+# --- US litigation ---
+UNITED STATES DISTRICT COURT, SOUTHERN DISTRICT OF NEW YORK — Case No. {{DOSYA_NO|1:25-cv-04417 (LGR)}} — {{ŞİRKET|BRIGHTWATER MARINE INSURANCE CORP.}}, Plaintiff, v. {{ŞİRKET|ÇAMLICA SHIPPING AND TRADING INC.}} and {{KİŞİ|DMITRI A. SOKOLOV}}, Defendants.
+The reasoning in Pelham Holdings LLC v. Ardent Re Corp., 921 F.3d 312 (2d Cir. 2019), and in Re Castlegate Securities Ltd [2021] EWHC 2210 (Ch), is directly on point.
+Counsel of record: {{KİŞİ|María Fernanda López García}} (Bar No. 5512093), {{ŞİRKET|Delgado Whitman LLP}}, {{ADRES|1201 Brickell Avenue, Suite 1800, Miami, FL 33131}}, {{TELEFON|(305) 555-0192}}, {{EPOSTA|mflopez@delgadowhitman.com}}.
+I, {{KİŞİ|Kwame Asante-Mensah}}, declare under penalty of perjury that I served the summons on Mr. {{KİŞİ|Sokolov}} at {{ADRES|2150 Ocean Parkway, Apt 6C, Brooklyn, NY 11223}} on 2 May 2025.
+# --- Board minutes ---
+MINUTES OF A MEETING OF THE BOARD OF DIRECTORS OF {{ŞİRKET|Gulf Horizon Petrochemicals FZE}} held at {{ADRES|Office 1407, Almas Crescent Tower, Cluster Q, Jumeirah Lake Towers, Dubai, United Arab Emirates}} on 2 February 2026
+PRESENT: {{KİŞİ|Omar Faisal Al-Hashemi}} (Chair), {{KİŞİ|Anand Krishnamurthy}}, {{KİŞİ|Li Na Chen}}, {{KİŞİ|Tuncay Bilgiç}}. IN ATTENDANCE: {{KİŞİ|Rebecca Thornbury}} (Company Secretary).
+The Chair noted that a quorum was present and that notice of the meeting had been duly given to all Directors.
+Mr {{KİŞİ|Krishnamurthy}} declared an interest in the proposed offtake contract with {{ŞİRKET|Sundaram Polymers Pvt. Ltd.}} and did not vote on the resolution.
+IT WAS RESOLVED that the Company enter into the Facility Agreement with {{ŞİRKET|Qasr Falcon Commercial Bank PJSC}} and that any two Directors be authorised to execute it.
+Ms {{KİŞİ|Chen}} to circulate the revised budget to {{EPOSTA|board@gulfhorizon-fze.ae}} by 16 February 2026. Action: {{KİŞİ|LNC}}/{{KİŞİ|RT}}.
+Dubai counterparty details: {{ŞİRKET|Gulf Horizon Petrochemicals FZE}}, account {{IBAN|AE24 0330 0000 1910 4567 890}}, contact {{TELEFON|+971 4 438 5520}} / {{TELEFON|+971 50 612 7784}}.
+Mr. {{KİŞİ|Khalid Abdulrahman Al-Suwaidi}} and Mrs. {{KİŞİ|Noura El-Sayed}} signed for {{ŞİRKET|Desert Rose Real Estate Development LLC}}, {{ADRES|Office 2204, Palm Meridian Tower 2, Sheikh Zayed Road, Dubai, UAE}}.
+# --- Due diligence memo ---
+PRIVILEGED & CONFIDENTIAL — DUE DILIGENCE MEMORANDUM — Project Tulip — To: {{KİŞİ|Julian Ashworth-Clarke}}, Partner; From: {{KİŞİ|Deniz Ergüven}}, Associate; Matter No. {{DOSYA_NO|HV-0457-2025}}
+The Target, {{ŞİRKET|Lale Gıda Sanayi A.Ş.}}, is 62% owned by {{KİŞİ|Ismail Hakki Sevinc}} (TCKN {{TCKN|28471630540}}) and 38% by his sister {{KİŞİ|Gulsen Sevinc Arslan}} (TCKN {{TCKN|51904382754}}).
+The Target's main subsidiary, {{ŞİRKET|Lale Lojistik Ltd. Şti.}}, leases a warehouse at {{ADRES|Gebze Organize Sanayi Bölgesi, 1600. Sokak No: 1606, 41400 Gebze/Kocaeli}} from an entity controlled by Mr {{KİŞİ|Sevinç}}.
+Litigation: the Target is defendant in an employment claim before the Istanbul 12th Labour Court (File No. {{DOSYA_NO|2023/845 Esas}}) brought by a former warehouse supervisor, {{KİŞİ|Rıza Doğan}}.
+No merger control filing has been made to the Turkish Competition Authority; see Law No. 4054 on the Protection of Competition, Article 7, and the Communiqué No. 2010/4.
+Company vehicles registered to the Target include plates {{PLAKA|34 LGS 612}} and {{PLAKA|41 AB 2087}}; a third vehicle, {{PLAKA|06 KRT 45}}, is registered to Mr {{KİŞİ|Sevinç}} personally.
+The UK sales office leases a van registered {{PLAKA|LK21 BHF}} from {{ŞİRKET|Fleetway Vehicle Leasing Ltd}}.
+Key contracts reviewed: supply agreement with {{ŞİRKET|Hollandia Dairy Ingredients N.V.}} (change of control, cl. 14.2) and packaging agreement with {{ŞİRKET|Vistula Packaging Sp. z o.o.}} (exclusivity, cl. 3).
+Red flag: the Seller's disclosure letter omits the guarantee given by the Target in favour of {{ŞİRKET|Sevinç Yatırım Holding A.Ş.}}, signed by {{KİŞİ|İ. H. Sevinç}} alone.
+# --- Email chains ---
+From: {{KİŞİ|Mark Pellegrini}} <{{EPOSTA|mark.pellegrini@harrowvale.com}}>
+Sent: Tuesday, 9 September 2025 18:42
+To: {{KİŞİ|Can Öztürk}} <{{EPOSTA|can.ozturk@ozturkkaya.av.tr}}>; Cc: {{KİŞİ|Priya Raghunathan}} <{{EPOSTA|priya.raghunathan@harrowvale.com}}>
+Subject: RE: Project Tulip – SPA mark-up / Claim No. {{DOSYA_NO|CL-2025-000418}}
+Hi {{KİŞİ|Can}}, Thanks for turning the draft around so quickly. {{KİŞİ|Priya}} and I have reviewed the W&I section and have a few comments on the Purchaser's proposed de minimis.
+Can you also confirm whether {{KİŞİ|Emre}} has spoken to the client about the escrow? We can't sign until the Escrow Agreement is agreed.
+Best regards, {{KİŞİ|Mark}}
+{{KİŞİ|Mark Pellegrini}} · Partner · {{ŞİRKET|Harrow & Vale LLP}} · {{ADRES|1 Bishopsgate Plaza, London EC2N 4AJ}} · T: {{TELEFON|+44 20 3890 5512}} · M: {{TELEFON|+44 7700 900 418}}
+This email and any attachments are confidential and may be privileged. If you are not the intended recipient, please notify the sender immediately. {{ŞİRKET|Harrow & Vale LLP}} is a limited liability partnership registered in England and Wales and is authorised and regulated by the Solicitors Regulation Authority.
+-----Original Message----- From: {{KİŞİ|Can Öztürk}} Sent: 8 September 2025 23:10 Dear {{KİŞİ|Mark}}, Please find attached our comments on the SPA. Kind regards, {{KİŞİ|Can}}
+Av. {{KİŞİ|Can Öztürk}}, LL.M. · Managing Partner · {{ŞİRKET|Öztürk Kaya Avukatlık Ortaklığı}} · {{ADRES|Levent Loft 2, Büyükdere Cad. No: 201 D: 84, 34394 Levent, İstanbul}} · {{TELEFON|+90 212 283 45 67}} · {{EPOSTA|can.ozturk@ozturkkaya.av.tr}}
+Bu e-posta ve ekleri gizlidir ve yalnızca muhatabına yöneliktir. This e-mail is confidential and intended solely for the addressee.
+Hi {{KİŞİ|Mark}}, Quick one — {{KİŞİ|Sergei}} from the lender's side ({{KİŞİ|Sergei Volkov}}, {{EPOSTA|s.volkov@aldgatebank.co.uk}}) wants a call tomorrow at 10:00. Can we use {{TELEFON|+44 20 7123 4498}}? Cheers, {{KİŞİ|Hannah}}
+{{KİŞİ|Hannah Liebermann}} · Senior Associate · {{ŞİRKET|Harrow & Vale LLP}} · {{TELEFON|+44 20 3890 5530}}
+Hello all — for the US side, please contact {{KİŞİ|Tyler J. McAllister}}, Esq., {{ŞİRKET|Carrow Brandt & Lowell LLP}}, {{ADRES|450 Lexington Avenue, 31st Floor, New York, NY 10017}}, {{TELEFON|+1 (212) 555-0147}}, {{EPOSTA|tmcallister@carrowbrandt.com}}.
+Thanks {{KİŞİ|Tyler}} — looping in Dr. {{KİŞİ|Yusuf Al-Rashid}} from {{ŞİRKET|Sahara Crest Investments LLC}}, who will join the Delaware workstream. Best, {{KİŞİ|Olga}}
+Hi {{KİŞİ|Olivia}}, attaching the signed signature pages from {{KİŞİ|Hamza}} and Dr. {{KİŞİ|Wagner}}. Could you send them to {{KİŞİ|Rosa}} at the notary's office? Thanks, {{KİŞİ|Ahmet}}
+{{KİŞİ|Ahmet Serdar Uçar}} · Kıdemli Avukat / Senior Associate · {{ŞİRKET|Uçar Bilgin Hukuk Bürosu}} · {{TELEFON|+90 (212) 356 70 80}} · {{EPOSTA|ahmet.ucar@ucarbilgin.av.tr}}
+Dear Sir or Madam, We act for {{ŞİRKET|Silverline Freight Forwarding Ltd}} in connection with invoices that remain unpaid. Yours faithfully, {{ŞİRKET|Brookes Tennant Solicitors LLP}}
+Dear Ms {{KİŞİ|O'Connell-Burke}}, Further to our call, our client, {{ŞİRKET|Thames Valley Aggregates Limited}}, will accept service at {{ADRES|Suite 3, 14 Market Place, Reading RG1 2EG}}. Yours sincerely, {{KİŞİ|Graham P. Lindqvist}}
+Merhaba {{KİŞİ|Selin}} Hanım, the Respondent's counsel ({{EPOSTA|d.papadakis@papadakisgeorgiou.gr}}, {{TELEFON|+30 210 724 8816}}) has asked for a two-week extension. Saygılarımla, {{KİŞİ|Burak}}
+Thanks {{KİŞİ|Burak}} Bey — please tell {{KİŞİ|Dimitrios}} we agree, subject to the Tribunal's approval. {{KİŞİ|S.K.}}
+# --- LinkedIn-style bios ---
+{{KİŞİ|Nilay Başaran Whitfield}} — Partner, Energy & Infrastructure at {{ŞİRKET|Harrow & Vale LLP}} · ex-{{ŞİRKET|Pinecrest Advisory Group}} · LL.M. (Harvard) · Istanbul & London
+About: Before joining {{ŞİRKET|Harrow & Vale}}, {{KİŞİ|Nilay}} spent eight years advising sponsors on renewable projects in Türkiye and the Caucasus, including the 450 MW Kuzey Rüzgar wind farm.
+{{KİŞİ|Rajesh Venkataraman}}, FCA — CFO at {{ŞİRKET|Mumbai Harbour Infra Pte. Ltd.}} (Singapore) · Board member, {{ŞİRKET|Coromandel Solar Holdings}} · Speaker at Infrastructure Investor Asia 2025
+{{KİŞİ|Jean-Baptiste Moreau-Laurent}} · 2nd · Associate Counsel at {{ŞİRKET|Vauclair Énergies S.A.S.}} · Paris, Île-de-France · 500+ connections
+{{KİŞİ|Liu Yang}} — Head of Legal, {{ŞİRKET|Shenzhen Brightway Electronics Co., Ltd.}} · Previously at {{ŞİRKET|Jinhai Capital Management Ltd}} · Mandarin, English, Turkish
+Sir {{KİŞİ|Edmund Hargreaves-Pole}} KC — independent arbitrator, FCIArb; sits regularly in ICC, LCIA and ISTAC proceedings; formerly a Deputy High Court Judge.
+Dr. rer. nat. {{KİŞİ|Ingrid Solberg}} is not a lawyer; she is the technical expert appointed by {{ŞİRKET|Nordkapp Subsea AS}} in the pipeline dispute.
+# --- KYC / onboarding forms ---
+CLIENT ONBOARDING FORM (INDIVIDUAL) — Full name: {{KİŞİ|Aleksandra Nikolaevna Petrova}} · Date of birth: {{DOĞUM_TARİHİ|1984-05-19}} · Nationality: Russian · Passport No.: {{PASAPORT|72 1590384}} · Expiry: 2031-08-02
+Residential address: {{ADRES|Leninsky Prospekt 45, Apt 118, Moscow 119334, Russia}} · Mobile: {{TELEFON|+7 916 482 30 17}} · Email: {{EPOSTA|a.petrova1984@mailbox-ru.example}}
+Source of wealth: sale of shares in {{ŞİRKET|Volga Timber Export OOO}} (2019) · Politically Exposed Person: No · Risk rating: Medium
+CLIENT ONBOARDING FORM (CORPORATE) — Entity name: {{ŞİRKET|Dragon Pearl Trading Pte. Ltd.}} · Registered address: {{ADRES|80 Robinson Road, #17-02, Singapore 068898}} · UBO: {{KİŞİ|Tan Mei Ling}} (passport {{PASAPORT|K4830291M}})
+Authorised signatory: {{KİŞİ|Muhammad Hafiz bin Abdullah}}, born {{DOĞUM_TARİHİ|9 December 1977}}, Malaysian passport {{PASAPORT|A38214957}}.
+Beneficial owner #2: {{KİŞİ|HANS-JÜRGEN KÖHLER}}, DOB {{DOĞUM_TARİHİ|14.02.1969}}, German passport {{PASAPORT|C01X00T47}}, address {{ADRES|Königsallee 88, 40212 Düsseldorf, Germany}}
+Bank details for refunds: account holder {{KİŞİ|Hans-Jürgen Köhler}}, IBAN {{IBAN|DE03 1005 0000 0764 2198 35}}, BIC NRDLDEM1XXX.
+KYC reviewer: {{KİŞİ|G.T.}} (Compliance) — screening completed against the OFAC SDN List, the UK HM Treasury list and the EU consolidated list; no match.
+Turkish individual client: {{KİŞİ|Şükrü Hamdi Yazıcıoğlu}}, T.C. Kimlik No: {{TCKN|63728194000}}, doğum tarihi / date of birth: {{DOĞUM_TARİHİ|01.07.1962}}, address {{ADRES|Atatürk Bulvarı No: 127/15, Kavaklıdere, 06680 Çankaya/Ankara}}.
+Emergency contact: {{KİŞİ|Beatriz Oliveira Santos}} ({{TELEFON|+351 912 345 678}}), sister-in-law.
+US client: {{KİŞİ|Brandon Keith Alvarez}}, DOB {{DOĞUM_TARİHİ|11/23/1990}}, US passport {{PASAPORT|567890123}}, {{ADRES|3417 Maple Grove Drive, Plano, TX 75023}}, {{TELEFON|+1 972 555 0164}}, {{EPOSTA|b.alvarez90@alvarezfamily.example}}.
+UK client: {{KİŞİ|Chloe Beaumont-Ashby}}, British passport number {{PASAPORT|533218704}}, date of birth {{DOĞUM_TARİHİ|6 August 1993}}, previous surname Ashby.
+Copy of {{KİŞİ|Selçuk Yaman}}'s Turkish passport ({{PASAPORT|U18473920}}) was certified by {{KİŞİ|Elizabeth Crane}}, Solicitor, on 20 June 2025.
+Chinese investors {{KİŞİ|Huang Jianguo}} and {{KİŞİ|Wang Xiuying}} signed for {{ŞİRKET|Ningbo Oriental Pipe Fittings Co., Ltd.}}; Mr {{KİŞİ|Huang}}'s passport no. {{PASAPORT|E83920175}} was verified by video call.
+Indian director: {{KİŞİ|Ananya Subramanian}}, {{ŞİRKET|Kaveri Pharma Exports Private Limited}}, {{ADRES|Plot 17, MIDC Industrial Area, Andheri East, Mumbai 400093, India}}, {{TELEFON|+91 22 6712 4400}}.
+# --- Invoices ---
+INVOICE No. INV-2025-0912 — From: {{ŞİRKET|Harrow & Vale LLP}}, {{ADRES|1 Bishopsgate Plaza, London EC2N 4AJ}}, VAT Reg. GB 123 4567 89 — To: {{ŞİRKET|Kestrel Ridge Capital LLP}} — Re: Project Tulip, Matter No. {{DOSYA_NO|HV-0457-2025}}
+Professional fees ({{KİŞİ|J. Ashworth-Clarke}}, 12.5h @ £950; {{KİŞİ|D. Ergüven}}, 31.0h @ £520): £28,995.00 plus VAT.
+Please remit to {{ŞİRKET|Harrow & Vale LLP}} Client Account at {{ŞİRKET|Midland Albion Bank plc}}, IBAN {{IBAN|GB59 BARC 2032 5347 8105 62}}, quoting reference HV0457.
+FATURA / INVOICE — Satıcı / Seller: {{ŞİRKET|Pera Tekstil San. ve Tic. A.Ş.}}, {{ADRES|Merkez Mah. Deve Kaldırım Cad. No: 22, 34200 Bağcılar/İstanbul}}, V.D. Bağcılar 7240098311 — Alıcı / Buyer: {{ŞİRKET|Pera Textiles UK Ltd}}
+Banka / Bank: TL hesap {{IBAN|TR76 0004 6000 7188 8000 1234 56}}; EUR hesap {{IBAN|TR830000100090100123456700}}; USD hesap {{IBAN|TR05 0011 1000 0000 0987 6543 21}}.
+For queries please contact {{KİŞİ|Gizem}} in accounts on {{TELEFON|0212 445 63 20}} or {{EPOSTA|muhasebe@peratekstil.com.tr}}.
+Invoice issued by {{ŞİRKET|Rhine Delta Freight B.V.}} to {{ŞİRKET|Silverline Freight Forwarding Ltd}}; pay to {{IBAN|NL91ABNA0417164300}}, attn. {{KİŞİ|Sanne de Vries-Bakker}}.
+Swiss supplier remittance: {{ŞİRKET|Alpenrand Präzision AG}}, {{ADRES|Bahnhofstrasse 21, 8001 Zürich, Switzerland}}, {{IBAN|CH62 0483 5087 6543 2100 9}}.
+UK subcontractor: {{ŞİRKET|Wexford & Lyle Engineering Ltd}}, sort code 40-05-15, IBAN {{IBAN|GB53MIDL40051571234567}}, contact {{KİŞİ|Declan Fitzgerald}} ({{EPOSTA|d.fitzgerald@wexfordlyle.co.uk}}).
+German freight agent: {{ŞİRKET|Hansa Kontor Spedition GmbH & Co. KG}}, IBAN {{IBAN|DE92 2004 0060 0526 0159 00}}, {{TELEFON|+49 40 3861 2240}}.
+Fraud alert: the beneficiary account quoted in the spoofed payment instruction was {{IBAN|GB12 NWBK 6016 1331 9268 19}}, which differs from the Landlord's genuine account.
+The spoofed email was sent from {{EPOSTA|accounts@pemburyhale-co.uk}} and signed "{{KİŞİ|S. O'Brien}}", but Ms {{KİŞİ|O'Brien}} denies sending it.
+# --- Notarised power of attorney (certified translation) ---
+CERTIFIED ENGLISH TRANSLATION — POWER OF ATTORNEY (VEKALETNAME)
+I, the undersigned {{KİŞİ|Hatice Kübra Demirtaş}}, Turkish citizen, T.R. Identity No. {{TCKN|40295816320}}, born on {{DOĞUM_TARİHİ|28 February 1971}}, residing at {{ADRES|Nispetiye Cad. Gül Sitesi B Blok D: 14, 34337 Etiler, Beşiktaş, Istanbul}}, hereby appoint
+Attorney-at-law {{KİŞİ|Mehmet Emin Karaca}}, registered with the Istanbul Bar Association, of {{ŞİRKET|Karaca & Partners Law Office}}, to represent me before all courts, enforcement offices and land registry directorates in the Republic of Türkiye,
+and to sell and transfer my apartment at {{ADRES|Moda Cad. No: 88 D: 3, Caferağa Mah., 34710 Kadıköy/İstanbul}} to {{KİŞİ|Stefan Ionescu}}, Romanian passport no. {{PASAPORT|059123874}}, and to collect the sale price.
+Notarial certificate: signed in my presence by the principal, whose identity was verified from her identity card. Notary Public {{KİŞİ|Orhan Kılıçaslan}}, Istanbul, 5 May 2025.
+Translator's certificate: I, {{KİŞİ|Leyla Aksoy-Brennan}}, sworn translator, certify that this is a true and complete translation of the Turkish original. Tel: {{TELEFON|+90 216 330 12 45}}
+Apostille issued by the District Governorate of Kadıköy under the Hague Convention of 5 October 1961.
+# --- Bilingual clauses ---
+İşbu Sözleşme, {{ŞİRKET|Doğu Akdeniz Liman İşletmeciliği A.Ş.}} ("Şirket") ile {{KİŞİ|Antonio Rossi}} arasında akdedilmiştir. / This Agreement is entered into between {{ŞİRKET|Doğu Akdeniz Liman İşletmeciliği A.Ş.}} (the "Company") and {{KİŞİ|Antonio Rossi}}.
+Madde 1 – Tanımlar / Article 1 – Definitions: "Gizli Bilgi" / "Confidential Information" has the meaning given in Article 8.
+Uyuşmazlıklar İstanbul Tahkim Merkezi (İSTAÇ) Tahkim Kuralları uyarınca çözülecektir / Disputes shall be resolved under the ISTAC Arbitration Rules, and the seat of arbitration shall be Istanbul.
+Tebligat adresleri / Notice addresses: Şirket için / for the Company: {{ADRES|Liman Yolu No: 3, 33020 Akdeniz/Mersin}}; Çalışan için / for the Employee: {{ADRES|Via dei Mille 14, 80121 Napoli, Italy}}.
+Taraflar arasındaki yazışmalar {{EPOSTA|hukuk@doguakdenizliman.com.tr}} ve {{EPOSTA|antonio.rossi@rossi-consulting.it}} adreslerine yapılacaktır / Correspondence shall be sent to the above e-mail addresses.
+# --- Other jurisdictions and mixed traps ---
+Maître {{KİŞİ|Bertrand Chevalier}} of {{ŞİRKET|Chevalier Rousseau & Associés SELARL}}, {{ADRES|42 avenue Montaigne, 75008 Paris}}, acts as French counsel to the Seller.
+Avv. {{KİŞİ|Francesca Lo Russo}} and Dott. {{KİŞİ|Marco De Santis}} of {{ŞİRKET|De Santis Lo Russo Studio Legale Associato}} will deliver the Italian law opinion.
+{{KİŞİ|José Antonio Martínez de la Fuente}}, Consejero Delegado of {{ŞİRKET|Ibérica Solar Desarrollos S.L.}}, {{ADRES|Calle de Serrano 88, 28006 Madrid, Spain}}, {{EPOSTA|ja.martinez@ibericasolar.es}}.
+The Director shall ensure that the Board approves the Annual Budget before the Commencement Date, and the Purchaser's Solicitors shall hold the Completion Deliverables to order.
+{{ŞİRKET|Bosphorus Crest}} and {{ŞİRKET|Kestrel Ridge}} agree that the Long Stop Date is extended to 31 December 2025 by this side letter countersigned by {{KİŞİ|P. J. van der Heijden}}.
+The Seller's Guarantor, {{KİŞİ|Olumide Adeyemi-Cole}}, born {{DOĞUM_TARİHİ|17 Ekim 1975}} in Lagos, holds Nigerian passport {{PASAPORT|B03847261}}.
+Mr {{KİŞİ|Ó Súilleabháin}} and Ms {{KİŞİ|Nguyễn Thị Lan}} attended on behalf of {{ŞİRKET|Emerald Isle Aviation Leasing DAC}}.
