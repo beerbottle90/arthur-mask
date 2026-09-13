@@ -1,0 +1,212 @@
+# ner_test_gizli.txt — held-out PII NER test set (Turkish legal documents), fully fictional
+# Format: one passage per line; gold spans {{LABEL|exact text}}; lines starting with # are comments.
+# Labels: KİŞİ, ŞİRKET, ADRES, TELEFON, EPOSTA, TCKN, IBAN, DOSYA_NO, PLAKA, DOĞUM_TARİHİ
+# Honorifics (Av., Dr., Bey, Hanım, Mr.) and apostrophe suffixes stay outside KİŞİ spans.
+# Published decision citations (Yargıtay/Danıştay/AYM/BAM/Kurul) are intentionally unmarked.
+
+# === 1. KİRA SÖZLEŞMESİ ===
+KİRA SÖZLEŞMESİ
+Kiraya Veren: {{KİŞİ|Hatice Gülbahar Eminoğlu}}, T.C. Kimlik No: {{TCKN|36761414596}}, {{DOĞUM_TARİHİ|14.02.1958}} doğumlu, adres: {{ADRES|Feneryolu Mah. Bağdat Cad. No:212 D:7 Kadıköy/İstanbul}}
+Kiracı: {{KİŞİ|Levan Beridze}}, Gürcistan uyruklu, {{DOĞUM_TARİHİ|1991}} doğumlu, tel. {{TELEFON|+90 553 207 41 86}}, e-posta: {{EPOSTA|levan.beridze91@gmail.com}}
+Kiralanan: {{ADRES|Moda Mah. Şair Nefi Sok. No:9 Daire:4 Kadıköy/İstanbul}} adresindeki 2+1 mesken.
+Aylık kira bedeli 38.500,00 TL olup her ayın 5'ine kadar kiraya verenin {{IBAN|TR61 0001 0058 6820 2056 2168 29}} numaralı hesabına ödenecektir.
+Kefil: {{KİŞİ|Nino Kapanadze}}, T.C. Kimlik No: {{TCKN|93739889084}}; kefil, TBK m. 584 uyarınca eşi {{KİŞİ|Giorgi Kapanadze}}'nin yazılı rızasını ibraz etmiştir.
+Kiracı otopark için {{PLAKA|34 LBR 719}} plakalı aracı bildirmiş, site yöneticisi {{KİŞİ|Cengiz}} Bey bilgilendirilmiştir.
+Kiralananın Deniz manzaralı olduğu, Güneş Enerjisi panellerinin ortak alanda bulunduğu ve Umut Sokağı tarafındaki girişin kullanılmadığı tespit edilmiştir.
+Kira artışı TÜFE on iki aylık ortalamasını geçemez; uyuşmazlıkta İstanbul Anadolu Mahkemeleri ve İcra Daireleri yetkilidir.
+
+# === 2. TAPU / RESMİ SENET ===
+T.C. KADIKÖY TAPU MÜDÜRLÜĞÜ — RESMİ SENET — Yevmiye No: 18842
+Satıcı {{KİŞİ|Mehmet Şükrü Altınbaş}} ({{TCKN|55777508228}}), maliki olduğu 1142 ada 18 parseldeki 11 numaralı bağımsız bölümü alıcı {{KİŞİ|Derya Karslıoğlu-Wendt}}'e ({{TCKN|50772509386}}) 6.750.000 TL bedelle satmıştır.
+Alıcı adına vekaleten Av. {{KİŞİ|Oğuz Han Tekinalp}} işlem yapmış olup satıcı eşi {{KİŞİ|Nevin}} Hanım aile konutu şerhine muvafakat etmiştir.
+Tapu harcı, alıcının {{ŞİRKET|Marmara Kıyı Katılım Bankası A.Ş.}} nezdindeki {{IBAN|TR820006205048724348596503}} numaralı hesabından tahsil edilmiştir.
+
+# === 3. BOŞANMA DİLEKÇESİ (UYAP başlıkları) ===
+İSTANBUL ANADOLU 7. AİLE MAHKEMESİ HAKİMLİĞİ'NE
+DOSYA NO : {{DOSYA_NO|2026/1184}} ESAS
+DAVACI : {{KİŞİ|SEVGÜL ARIKAN KORKMAZ}} - T.C. KİMLİK NO: {{TCKN|61092452818}}
+VEKİLİ : AV. {{KİŞİ|BERİVAN ZENGİN}} - {{ADRES|MECİDİYEKÖY MAH. BÜYÜKDERE CAD. NO:88 K:5 ŞİŞLİ/İSTANBUL}} - {{EPOSTA|berivan.zengin@hs02.kep.tr}}
+DAVALI : {{KİŞİ|ONUR KORKMAZ}} - T.C. KİMLİK NO: {{TCKN|70449819068}} - {{ADRES|YEŞİLBAĞLAR MAH. 1071. SOK. NO:3 D:12 PENDİK/İSTANBUL}}
+KONU : TMK m. 166/1 uyarınca boşanmaya, müşterek çocuk {{KİŞİ|Ela}}'nın velayetinin davacıya verilmesine ve nafakaya karar verilmesi talebidir.
+AÇIKLAMALAR : Taraflar 2014 yılında evlenmiş olup bu evlilikten {{DOĞUM_TARİHİ|03.09.2017}} doğumlu {{KİŞİ|Ela Korkmaz}} dünyaya gelmiştir.
+Davalı, müvekkilin kız kardeşi {{KİŞİ|Tuba}} ile annesi {{KİŞİ|Nazmiye Arıkan}}'a yönelik tehdit mesajlarını {{TELEFON|0 (542) 318 90 27}} numaralı hattan göndermiştir.
+Davalının {{ŞİRKET|Korkmaz Oto Ekspertiz Ltd. Şti.}} unvanlı şirketteki payları ile {{PLAKA|34 FK 2261}} plakalı araç edinilmiş mal niteliğindedir.
+Yargıtay 2. Hukuk Dairesi'nin 2019/3312 E., 2019/9870 K. sayılı kararında belirtildiği üzere ekonomik şiddet de ağır kusur olarak değerlendirilmelidir.
+Tedbir nafakasının müvekkilin {{IBAN|TR170004607583264120369943}} numaralı hesabına her ayın 1'inde yatırılmasını talep ederiz.
+Tanıklar: {{KİŞİ|Gönül Yılmazer}} ({{ADRES|Kozyatağı Mah. Değirmen Sok. No:17 D:2 Ataşehir/İstanbul}}) ve {{KİŞİ|Hasan Rıza Doğrul}}.
+Davalı "Deniz Kuvvetleri'ndeki tayinim çıkınca çocuğu da alıp giderim" diyerek müvekkili sürekli baskı altında tutmuştur.
+SONUÇ VE İSTEM : Yukarıda açıklanan nedenlerle davanın kabulüne karar verilmesini vekaleten saygıyla arz ederiz.
+
+# === 4. İŞ MAHKEMESİ — TANIK BEYANI ===
+T.C. BAKIRKÖY 14. İŞ MAHKEMESİ — ESAS NO: {{DOSYA_NO|2025/902}} — CELSE TUTANAĞI
+Tanık {{KİŞİ|Rojhat Demirtaşoğlu}} usulen yemin ettirildi; açık kimliği: {{DOĞUM_TARİHİ|1988}} doğumlu, T.C. Kimlik No {{TCKN|93180679968}}, davacıyla akrabalığı yok.
+Tanık beyanında: "Davacı {{KİŞİ|Serkan}} ile aynı vardiyada çalışırdık, ustabaşı {{KİŞİ|Kara Rıza}} lakaplı {{KİŞİ|Rıza Karataş}} fazla mesaileri deftere yazmazdı" dedi.
+"{{ŞİRKET|Trakya Döküm Makina San. ve Tic. A.Ş.}}'nin Hadımköy fabrikasında haftada altı gün 08.00-20.00 arası çalışıyorduk, servisimiz {{PLAKA|34 HD 5507}} plakalı minibüstü."
+"İnsan kaynaklarından {{KİŞİ|Pınar}} Hanım bordroları imzalatırdı; imzalamayanı müdür {{KİŞİ|Mustafa Emre Uçar}} işten çıkarmakla tehdit ederdi."
+Davalı vekili Av. {{KİŞİ|İlkim Sarıgül}}'ün sorusu üzerine tanık, işverene karşı {{DOSYA_NO|2025/611}} esas sayılı kendi alacak davasının derdest olduğunu beyan etti.
+Mahkeme, Yargıtay 22. HD 2016/15890 E., 2018/2204 K. sayılı içtihadı uyarınca husumetli tanık beyanının yan delillerle desteklenmesi gerektiğini tutanağa geçirdi.
+Hakim, tanığın beyanının okunarak imzasının alınmasına karar verdi.
+
+# === 5. CEZA SORUŞTURMASI — ŞÜPHELİ İFADE TUTANAĞI ===
+T.C. ANTALYA CUMHURİYET BAŞSAVCILIĞI — Soruşturma No: {{DOSYA_NO|2026/48213}}
+Adı Soyadı: {{KİŞİ|Yusuf Ziya Al-Hamdani}}   Baba Adı: {{KİŞİ|Abdulkadir}}   Ana Adı: {{KİŞİ|Fatma Zehra}}   Doğum Yeri/Tarihi: Şanlıurfa / {{DOĞUM_TARİHİ|21.06.1979}}
+T.C. Kimlik No: {{TCKN|22016671364}} — Adres: {{ADRES|Güzeloba Mah. 2231 Sok. Palmiye Sitesi B Blok No:4 Muratpaşa/Antalya}} — Tel: {{TELEFON|05324187709}}
+Müdafii Av. {{KİŞİ|Candan Özyiğit}} hazır olduğu halde şüpheliye CMK m. 147 uyarınca hakları hatırlatıldı.
+Şüpheli savunmasında: "Olay günü {{PLAKA|07 AYZ 48}} plakalı aracımla Lara'dan dönüyordum; müşteki {{KİŞİ|Olga Smirnova}} ile {{ŞİRKET|Lara Sahil Turizm Otelcilik A.Ş.}}'deki işim sayesinde tanıştım" dedi.
+"Müştekiye {{IBAN|TR880004603762583982997209}} numaralı hesaptan gönderilen 240.000 TL'yi arkadaşı {{KİŞİ|Dmitriy}} için istemişti; paranın {{KİŞİ|Artyom Volkov}}'a gittiğini sonradan öğrendim."
+"{{KİŞİ|Abu Haydar}} diye bilinen şahsı tanımam, adını ilk kez kolluktaki ifademde duydum; {{KİŞİ|Y.Z.A.}} takma adlı hesap da bana ait değildir."
+Cumhuriyet savcısı tarafından ek soru yöneltilmedi; ifade okunarak imza altına alındı.
+Aydın Valiliği'nden gelen yazı ile Barış Pınarı Harekâtı dönemine ait yurt dışı çıkış kayıtları soruşturma dosyasına eklenmiştir.
+
+# === 6. İCRA TAKİP TALEBİ ===
+TAKİP TALEBİ (Örnek No: 7 — Genel Haciz Yoluyla İlamsız Takip)
+İcra Dairesi: İzmir 9. İcra Dairesi — Dosya No: {{DOSYA_NO|2026/17745}} Esas
+Alacaklı: {{ŞİRKET|Egeport Gıda Pazarlama ve Dış Ticaret Ltd. Şti.}} — Vergi No: 3310045218 — {{ADRES|Kemalpaşa OSB Mah. Ansızca Cad. No:41 Kemalpaşa/İzmir}}
+Alacaklı Vekili: Av. {{KİŞİ|Tuğçe Nur Balcıoğlu}} — {{EPOSTA|tugce.balcioglu@hs04.kep.tr}} — {{TELEFON|+90 (232) 464 12 58}}
+Borçlu 1: {{KİŞİ|Cemil Hakkari}} ({{TCKN|80440401810}}) — {{ADRES|Alsancak Mah. 1453 Sok. No:22/5 Konak/İzmir}}
+Borçlu 2: {{ŞİRKET|Hakkari Market Zincirleri A.Ş.}} — Mersis No: 0456123987000017
+Alacağın tutarı: 1.284.600,00 TL asıl alacak ile işlemiş faizden ibaret olup tahsil edilen paralar {{IBAN|TR050001504475781676837042}} numaralı hesaba aktarılacaktır.
+Alacağın dayanağı: 03.02.2026 tarihli fatura ve borçlu şirket yetkilisi {{KİŞİ|Recep}} Bey'in imzasını taşıyan cari hesap mutabakatı.
+
+# === 7. NOTER İHTARNAMESİ ===
+BEYOĞLU 27. NOTERLİĞİ VASITASIYLA — İHTARNAME
+İHTAR EDEN: {{KİŞİ|Gülizar Aksoy-Hofmann}} — {{ADRES|Cihangir Mah. Susam Sok. No:31 D:2 Beyoğlu/İstanbul}}
+MUHATAP: {{ŞİRKET|Boğaziçi Yapı Taahhüt İnşaat A.Ş.}} Yönetim Kurulu Başkanı {{KİŞİ|Recai Dumlupınar}} dikkatine — {{EPOSTA|bogaziciyapi@hs01.kep.tr}}
+Sayın {{KİŞİ|Dumlupınar}}, 12.01.2024 tarihli Kat Karşılığı İnşaat Sözleşmesi uyarınca en geç 30.06.2026 tarihinde teslimi gereken bağımsız bölümler hâlâ teslim edilmemiştir.
+Tebliğden itibaren 30 gün içinde 1.150.000 TL gecikme cezasının {{IBAN|TR23 0003 2007 4849 9746 2987 40}} IBAN numaralı hesabıma ödenmesini, aksi halde yasal yollara başvuracağımı ihtar ederim.
+Ek: Şantiye şefi {{KİŞİ|Anıl}}'ın {{TELEFON|0 212 293 61 04}} numaralı hattan verdiği taahhüdün ses kaydı dökümü.
+
+# === 8. ŞİRKET GENEL KURUL TUTANAĞI ===
+{{ŞİRKET|KAPADOKYA TERMAL YATIRIM ANONİM ŞİRKETİ}}'NİN 2025 YILINA AİT OLAĞAN GENEL KURUL TOPLANTI TUTANAĞI
+Toplantı 14.04.2026 günü saat 10.00'da {{ADRES|Kayseri Cad. No:118 Ürgüp/Nevşehir}} adresinde, Nevşehir Ticaret İl Müdürlüğü'nün görevlendirdiği Bakanlık Temsilcisi {{KİŞİ|Selahattin Gürbüz}} gözetiminde yapılmıştır.
+Toplantı Başkanlığına {{KİŞİ|Aslıhan Keskinoğlu}}, tutanak yazmanlığına {{KİŞİ|Harun Reşit Özbilgin}}, oy toplama memurluğuna {{KİŞİ|Ekin Yalçınkaya}} seçildi.
+50.000.000 TL sermayenin 42.300.000 TL'si temsil edilmiş; pay sahibi {{ŞİRKET|Anatolian Wellness Holdings B.V.}} adına {{KİŞİ|Pieter-Jan Van den Broeck}} vekaleten katılmıştır.
+Yönetim kurulu üyeliklerine {{KİŞİ|Mahmut Nedim Arslantürk}} ({{TCKN|49183201996}}), {{KİŞİ|Sophie Clarke-Aydın}} ve {{KİŞİ|Kerem Aslan}} üç yıl süreyle seçildiler.
+Bağımsız denetçi olarak {{ŞİRKET|Erciyes Bağımsız Denetim ve YMM A.Ş.}}'nin seçilmesine oybirliğiyle karar verildi.
+Dilek ve temennilerde pay sahibi {{KİŞİ|Saniye}} Hanım, Güneş Enerjisi santrali yatırımında büyük ortağın aslan payını aldığını ileri sürdü.
+Başka söz alan olmadığından toplantıya son verildi. Toplantı Başkanı — Yazman — Oy Toplama Memuru — Bakanlık Temsilcisi
+
+# === 9. KVKK İLGİLİ KİŞİ BAŞVURUSU CEVABI ===
+Konu: 6698 sayılı Kanun'un 11. maddesi kapsamındaki başvurunuz hakkında
+Sayın {{KİŞİ|Ferhat Zilan}},
+{{ŞİRKET|Anatolia Sağlık Hizmetleri A.Ş.}} olarak, 02.07.2026 tarihinde {{EPOSTA|ferhatzilan@yandex.com}} adresinden iletilen başvurunuz incelenmiştir.
+Kayıtlarımızda adınıza {{TCKN|17963808260}} T.C. kimlik numarası, {{DOĞUM_TARİHİ|09.12.1983}} doğum tarihi, {{TELEFON|0544 902 13 67}} cep telefonu ve {{ADRES|Bağlar Mah. Kırmızı Gül Sok. No:6 D:1 Bağlar/Diyarbakır}} adres bilgisi bulunmaktadır.
+Muayene kayıtlarınızda hekim olarak Dr. {{KİŞİ|Şilan Aydemir}} ve Uzm. Dr. {{KİŞİ|Metin Ağaoğlu}} yer almakta olup yakınınız olarak {{KİŞİ|Hêvî Zilan}} bildirilmiştir.
+Verileriniz hizmet aldığımız {{ŞİRKET|Dicle Bulut Bilişim Teknolojileri Ltd. Şti.}} sunucularında saklanmakta olup yurt dışına aktarım yapılmamaktadır.
+Kişisel Verileri Koruma Kurulu'nun 27.02.2020 tarihli ve 2020/173 sayılı kararı çerçevesinde, silme talebiniz yasal saklama süreleri dolduğunda yerine getirilecektir.
+Veri Sorumlusu İrtibat Kişisi: {{KİŞİ|Melike Tunçbilek}} — {{EPOSTA|kvkk@anatoliasaglik.com.tr}} — {{TELEFON|0 (412) 228 40 90}}
+
+# === 10. E-POSTA ZİNCİRİ (TR/EN) ===
+From: {{KİŞİ|Thomas Weissmann}} <{{EPOSTA|t.weissmann@lindqvist-marine.de}}>
+To: {{KİŞİ|Burcu Şen}} <{{EPOSTA|burcu.sen@karadere-lojistik.com.tr}}>; Cc: {{KİŞİ|Nigar Cəfərova}} <{{EPOSTA|n.jafarova@caspiantrade.az}}>
+Subject: RE: RE: Demurrage claim – MV Deniz Yıldızı / {{ŞİRKET|Karadere Lojistik Ticaret A.Ş.}}
+Hi {{KİŞİ|Burcu}}, as discussed with {{KİŞİ|Nigar}} yesterday, {{ŞİRKET|Lindqvist Marine Solutions GmbH}} cannot accept the laytime calculation prepared by Mr. {{KİŞİ|Okonkwo}}.
+Please call me on {{TELEFON|+49 40 3861 2270}} before Friday. Best regards, {{KİŞİ|T.W.}}
+> {{KİŞİ|Burcu Şen}} yazdı: Merhaba {{KİŞİ|Thomas}}, arabuluculuk büro no {{DOSYA_NO|2026/3308}} dosyasında ilk toplantı 22 Eylül'de; arabulucu Av. {{KİŞİ|Levent Köseoğlu}} ({{TELEFON|0212 219 44 80}}).
+>> {{KİŞİ|Nigar Cəfərova}} wrote: Please wire the deposit of USD 85,000 on behalf of {{ŞİRKET|Caspian Trade Partners MMC}} to our Turkish account {{IBAN|TR160006708674835726113549}}.
+>> Our Baku office contact is {{KİŞİ|Rəşad Hüseynov}}; his colleague {{KİŞİ|Elvin}} will send the bill of lading.
+
+# === 11. WHATSAPP DÖKÜMÜ (delil klasörü) ===
+[14.05.2026 21:43] {{KİŞİ|Memo}}: abi {{KİŞİ|Cano}} yine gelmedi şantiyeye, ben {{KİŞİ|Hüseyin}} abiye söyledim
+[14.05.2026 21:45] {{KİŞİ|Hüseyin Çakırtaş}}: tamam {{KİŞİ|Mehmet}} sen {{PLAKA|06 BKL 42}} plakalı kamyoneti al sabah 7de Etimesgut'a geç
+[14.05.2026 21:47] {{KİŞİ|Memo}}: ok. {{KİŞİ|Gökhan}}'ın numarası değişmiş bu arada {{TELEFON|0505 441 77 88}}
+[14.05.2026 22:02] {{TELEFON|+90 531 670 29 14}}: Ben {{KİŞİ|Cano}}, annemi hastaneye götürdüm, {{KİŞİ|Umut}} usta biliyor
+[14.05.2026 22:03] {{KİŞİ|Hüseyin Çakırtaş}}: umut ediyorum yarın gelirsin yoksa yevmiyeni {{KİŞİ|Şafak}}'a veririm
+[15.05.2026 07:12] {{KİŞİ|Memo}}: abi konum attım {{ADRES|Şehit Osman Avcı Mah. 1234. Cad. No:5 Etimesgut/Ankara}}
+[15.05.2026 07:13] {{KİŞİ|Memo}}: <Medya dahil edilmedi>
+
+# === 12. MICROSOFT TEAMS DÖKÜMÜ (veri ihlali) ===
+[10:14] {{KİŞİ|Aylin Özkan-Richter}} (Legal, {{ŞİRKET|Nordwind Energie Türkiye A.Ş.}}): {{KİŞİ|Can}}, KVKK ihlal bildirim formunu bugün gönderiyoruz değil mi?
+[10:16] {{KİŞİ|Can Ertuğrul Bayındır}}: Evet. Sızan kayıtlar arasında {{KİŞİ|Zeynep Ulusoy}} ({{TCKN|89048858842}}) ve {{KİŞİ|Oktay Berk}} var; ikisine de {{EPOSTA|bildirim@nordwind-energie.com.tr}} üzerinden yazacağız.
+[10:17] {{KİŞİ|Aylin Özkan-Richter}}: OK. {{KİŞİ|Friedrich}} da cc'de olsun, Hamburg'daki DPO. Kurum'a bildirim 72 saat içinde yapılmalı.
+[10:19] {{KİŞİ|Can Ertuğrul Bayındır}}: Sızıntı Güneş Enerjisi projesinin tedarikçi portalından olmuş, {{ŞİRKET|Solarkent Mühendislik Ltd. Şti.}} erişim loglarını paylaşacak.
+[10:20] {{KİŞİ|A.Ö.R.}}: Tamam, {{KİŞİ|C.E.B.}} notu Excel'e işlesin.
+
+# === 13. BİLİRKİŞİ RAPORU ===
+BİLİRKİŞİ RAPORU — Ankara 5. Asliye Ticaret Mahkemesi — Dosya No: {{DOSYA_NO|2025/733}} Esas
+Bilirkişiler: SMMM {{KİŞİ|Necdet Karaboğa}} ve Makine Mühendisi {{KİŞİ|Elif Su Tanrıverdi}}
+Davacı {{ŞİRKET|Başkent Medikal Cihaz Sanayi Ltd. Şti.}} ile davalı {{ŞİRKET|Ostim Hassas Kalıp Makina A.Ş.}} arasındaki eser sözleşmesinden kaynaklanan uyuşmazlık incelenmiştir.
+Keşif {{ADRES|Ostim OSB Mah. 1203. Cad. No:27 Yenimahalle/Ankara}} adresindeki atölyede, davacı yetkilisi {{KİŞİ|Hülya Demirbilek}} ve davalı yetkilisi {{KİŞİ|Ali Osman Yurtsever}} huzurunda yapılmıştır.
+Davalı defterlerinde ödemelerin {{IBAN|TR480006404836934516211746}} ve {{IBAN|TR080013403711854870652747}} numaralı hesaplardan yapıldığı tespit edilmiştir.
+Teslimatlar {{PLAKA|06 AHT 391}} ve {{PLAKA|06-DR-8804}} plakalı araçlarla, 004471 ve 004472 numaralı irsaliyelerle gerçekleştirilmiştir.
+Yargıtay 11. HD 2021/5520 E., 2022/6614 K. ile İstanbul BAM 12. HD 2023/1402 E., 2024/980 K. sayılı kararlarında da ayıp ihbarının süresinde yapılması aranmıştır.
+Sonuç olarak davacının talep edebileceği bedel 612.480,00 TL olarak hesaplanmıştır. Takdir Sayın Mahkemenindir.
+
+# === 14. OCR HASARLI METİN (Türkçe karakter yok, küçük harf) ===
+davaci {{KİŞİ|ayse yilmaz}} vekili av. {{KİŞİ|kemal ozturk}} tarafindan davali {{KİŞİ|selcuk gungor}} aleyhine acilan alacak davasinin yapilan acik yargilamasi sonunda
+esas no {{DOSYA_NO|2024/1566}} karar no {{DOSYA_NO|2025/412}} davaci tc kimlik no {{TCKN|29335665098}} adres {{ADRES|cumhuriyet mah. ataturk bulvari no 45 d 8 cankaya ankara}}
+davali {{KİŞİ|selcuk gungor}}un {{PLAKA|06 ks 1907}} plakali araci uzerine haciz serhi konulmasina, davali dogum tarihi {{DOĞUM_TARİHİ|12 03 1987}}
+muvekkil {{KİŞİ|hacer}} hanim ozgur iradesiyle ibraname imzalamamistir, tanik {{KİŞİ|dursun ali kececi}} de bunu dogrulamistir
+davali sirket {{ŞİRKET|ozgur plastik sanayi ltd sti}} yetkilisi {{KİŞİ|nurettin bozdogan}} tel {{TELEFON|0312 385 60 14}} eposta {{EPOSTA|nbozdogan@ozgurplastik.com.tr}}
+odemeler iban {{IBAN|TR34 0001 2017 0615 0909 4338 55}} ve {{IBAN|tr760001106719640101289202}} hesaplarina yapilmistir
+yargitay 9. hd 2019/4521 e. 2020/1187 k. sayili karari da ayni yondedir
+
+# === 15. KARIŞIK TR-EN SÖZLEŞME HÜKÜMLERİ ===
+SHARE PURCHASE AGREEMENT / HİSSE DEVİR SÖZLEŞMESİ
+This Agreement is entered into by and between {{ŞİRKET|Harwood & Finch Capital Partners LLP}} ("Buyer") and {{KİŞİ|Oğuzhan Pektaş}}, T.C. Kimlik No {{TCKN|71383297209}} ("Seller").
+İşbu Sözleşme bir tarafta {{ŞİRKET|Harwood & Finch Capital Partners LLP}} ("Alıcı") ile diğer tarafta {{KİŞİ|Oğuzhan Pektaş}} ("Satıcı") arasında akdedilmiştir.
+Notices / Bildirimler: Buyer — attn. {{KİŞİ|Eleanor Whitcombe}}, {{ADRES|12 Aldermanbury Square, London EC2V 7HR}}, {{EPOSTA|e.whitcombe@harwoodfinch.co.uk}}; Seller — {{ADRES|Levent Mah. Çınar Sok. No:4 Beşiktaş/İstanbul}}, {{EPOSTA|opektas@hs05.kep.tr}}.
+The Purchase Price shall be paid to the Seller's account IBAN {{IBAN|TR23 0001 0005 3315 2456 8971 13}} held with {{ŞİRKET|Boğaz Yatırım Bankası A.Ş.}} / Satış bedeli Satıcı'nın anılan hesabına ödenecektir.
+Key Person / Kilit Personel: The Company shall procure that Dr. {{KİŞİ|Rana Al-Masri}} remains Chief Technology Officer for twenty-four (24) months following Closing.
+Seller's spouse {{KİŞİ|Dilan Pektaş}} (doğum tarihi / date of birth: {{DOĞUM_TARİHİ|17.08.1985}}) hereby consents to the transfer pursuant to Article 199 of the Turkish Civil Code.
+The company car with licence plate {{PLAKA|34 VRN 88}} shall be transferred to the Seller at book value. This Agreement is governed by Turkish law; disputes shall be settled by ISTAC arbitration.
+
+# === 16. TRAFİK KAZASI TESPİT TUTANAĞI ===
+A Aracı: {{PLAKA|35 YH 807}} — Sürücü: {{KİŞİ|Gürkan Soylu}} — Tel: {{TELEFON|0536 118 25 70}} — Sigorta: {{ŞİRKET|Körfez Sigorta A.Ş.}}
+B Aracı: {{PLAKA|35TR6613}} — Sürücü: {{KİŞİ|Maria Papadopoulou}} — Araç sahibi: {{ŞİRKET|Ege Filo Kiralama Hizmetleri A.Ş.}}
+Kaza yeri: {{ADRES|Mustafa Kemal Sahil Bulvarı No:210 Balçova/İzmir}} önü; B aracı sürücüsü kırmızı ışıkta geçtiğini kabul etmiştir.
+Olay yerine gelen İzmir İl Emniyet Müdürlüğü ekipleri ile Balçova Belediyesi zabıtası tutanağı imzalamamıştır.
+
+# === 17. MİRASÇILIK BELGESİ / VERASET ===
+Muris {{KİŞİ|Hamdi Kocabıyık}} (T.C. Kimlik No: {{TCKN|66382207734}}) 02.03.2026 tarihinde ölmüş olup mirasçıları eşi {{KİŞİ|Şerife Kocabıyık}}, çocukları {{KİŞİ|Nurhan Kocabıyık Er}} ve {{KİŞİ|Bayram Kocabıyık}}'tır.
+Murisin önceden ölen oğlu {{KİŞİ|Yaşar}}'ın altsoyu {{KİŞİ|Berkay Kocabıyık}} ile {{DOĞUM_TARİHİ|2009}} doğumlu {{KİŞİ|Elif Naz Kocabıyık}} halefiyet yoluyla mirasçı olmuştur.
+Küçük {{KİŞİ|Elif Naz}}'a annesi {{KİŞİ|Gülsüm Taşdelen}} yasal temsilci sıfatıyla vesayet makamı olan Sulh Hukuk Mahkemesi izniyle katılmıştır.
+
+# === 18. VEKALETNAME ===
+VEKALETNAME — Ben {{KİŞİ|Tamar Gelashvili}}, T.C. Kimlik No: {{TCKN|97769420567}}, {{DOĞUM_TARİHİ|05.05.1976}} doğumlu, {{ADRES|Hacı Kadın Mah. Tavşantaşı Sok. No:12 Fatih/İstanbul}} adresinde mukim,
+İstanbul Barosu avukatlarından Av. {{KİŞİ|Barış Pınar}}'ı, {{ŞİRKET|Haliç Tekstil Boya Apre San. A.Ş.}} ile aramdaki her türlü uyuşmazlıkta vekil tayin ettim.
+Vekil, Av. {{KİŞİ|Kübra Selvi-Nasır}}'ı tevkile yetkilidir. Vekilin iletişim bilgileri: {{TELEFON|0 (212) 511 73 36}}, {{EPOSTA|av.barispinar@hs03.kep.tr}}.
+
+# === 19. ARABULUCULUK SON TUTANAĞI ===
+ARABULUCULUK SON TUTANAĞI — Arabuluculuk Büro No: {{DOSYA_NO|2026/5127}} — Arabulucu Sicil No: 41876
+Başvurucu işçi {{KİŞİ|Tolunay Arıkboğa}} ({{DOĞUM_TARİHİ|1994}} doğumlu) ile işveren {{ŞİRKET|Mavi Hilal Tekstil Konfeksiyon San. Tic. Ltd. Şti.}} vekili Av. {{KİŞİ|Hêvîn Baran}} arasında anlaşma sağlanmıştır.
+Anlaşma bedeli 410.000 TL olup en geç 30.09.2026 tarihine kadar işçinin {{IBAN|TR890009903281870278088741}} IBAN numaralı hesabına ödenecektir.
+Taraflar işbu tutanağı arabulucu {{KİŞİ|Songül Eraslan}} huzurunda okuyarak imzalamıştır; Çalışma ve Sosyal Güvenlik Bakanlığı'na bildirim yapılacaktır.
+
+# === 20. İŞE İADE DAVA DİLEKÇESİ / SGK KAYITLARI ===
+Sosyal Güvenlik Kurumu hizmet dökümüne göre müvekkil {{KİŞİ|Elvin Məmmədli}}, {{ŞİRKET|Gebze Kimya Boya Sanayi A.Ş.}} işyerinde 01.03.2021-15.08.2025 tarihleri arasında çalışmıştır.
+Müvekkil, {{ADRES|Güzeller Mah. İnönü Cad. No:77 D:3 Gebze/Kocaeli}} adresinde ikamet etmekte olup {{TELEFON|0 262 642 18 05}} numaralı hattan ulaşılabilir.
+Fesih bildirimi, müvekkilin amiri {{KİŞİ|Oya Kılıçaslan}} tarafından {{EPOSTA|oya.kilicaslan@gebzekimya.com.tr}} adresinden, işe başlatılmayan meslektaşı {{KİŞİ|Batuhan}} ile aynı gün gönderilmiştir.
+Anayasa Mahkemesi'nin 2019/28154 başvuru numaralı kararı ile Danıştay İdari Dava Daireleri Kurulu'nun 2021/1886 E., 2023/402 K. sayılı kararı somut olaya uygulanamaz.
+Yargıtay 9. HD 2022/11073 E., 2022/14920 K. sayılı ilamında geçerli fesih için savunma alınması şartı açıkça vurgulanmıştır.
+
+# === 21. HACİZ TUTANAĞI / KARIŞIK ===
+İstanbul Anadolu 4. İcra Dairesi'nin {{DOSYA_NO|2025/40218}} Esas sayılı dosyasından borçlu {{KİŞİ|Kadir İnan Yüceler}}'in işyerinde fiili haciz yapılmıştır.
+Haciz adresi: {{ADRES|İçerenköy Mah. Kayışdağı Cad. Sümbül Apt. No:143 K:1 Ataşehir/İstanbul}}; hazır bulunan işçi {{KİŞİ|Songül}} Hanım borçlunun Bursa'da olduğunu beyan etti.
+Haczedilen {{PLAKA|16 BZ 4410}} plakalı Toyota Corolla marka araç yediemin {{ŞİRKET|Anadolu Yediemin Otoparkçılık Ltd. Şti.}}'ye teslim edilmiştir.
+Alacaklı vekili Av. {{KİŞİ|Metehan Ilgaz}} ve borçlu vekili Av. {{KİŞİ|Zerrin Gökalp-Şahin}} tutanağı birlikte imzalamıştır.
+Borçlunun eşi {{KİŞİ|Esra Yüceler}} ({{DOĞUM_TARİHİ|28.11.1990}} doğumlu) ev eşyalarının kendisine ait olduğunu ileri sürerek istihkak iddiasında bulunmuştur.
+
+# === 22. SERBEST SATIRLAR (tuzaklar ve yoğun satırlar) ===
+Dava dilekçesinin Aydın Valiliği, Deniz Kuvvetleri Komutanlığı ve Yıldız Teknik Üniversitesi Rektörlüğü'ne tebliğine karar verildi.
+Müvekkil {{KİŞİ|Ceylan Yıldız}}, bahar aylarında Irmak kenarındaki {{ŞİRKET|Irmak Kenarı Restoran İşletmeciliği Ltd. Şti.}} bünyesinde sigortasız çalıştırılmıştır.
+Keşif sırasında davacı {{KİŞİ|Mazlum}}, komşusu {{KİŞİ|Bahar Tekin}} ve bekçi {{KİŞİ|Kör Ahmet}} lakaplı {{KİŞİ|Ahmet Sevindik}} hazır bulundu.
+Ekler: {{KİŞİ|R.K.}} ile {{KİŞİ|S.A.K.}} arasındaki yazışmalar (Ek-3) ve {{KİŞİ|O.K.}}'ya ait hesap dökümü (Ek-4).
+Sanık {{KİŞİ|Mohammed Khalil Al-Sayegh}}'e Arapça tercüman {{KİŞİ|Nour El-Din Haddad}} vasıtasıyla iddianame okundu.
+Tanık {{KİŞİ|Svetlana Petrovna Orlova}}, {{DOĞUM_TARİHİ|1969}} doğumlu, çevirmen {{KİŞİ|Anna}} aracılığıyla beyanda bulundu.
+Müşteki {{KİŞİ|Jonathan Reed}}, kiralık aracın {{PLAKA|34 TK 0917}} plakalı olduğunu ve {{ŞİRKET|Bosphorus Premium Rent A Car Ltd. Şti.}}'den kiralandığını söyledi.
+Barış Pınarı Parkı yanında bulunan Güneş Enerjisi santraline ilişkin ÇED raporu Çevre, Şehircilik ve İklim Değişikliği Bakanlığı'nca onaylanmıştır.
+Hukuk Genel Kurulu'nun 2017/2312 E., 2021/455 K. sayılı kararı ile Danıştay 10. Daire'nin 2020/4410 E., 2023/1287 K. sayılı kararı birlikte değerlendirilmelidir.
+Davalı {{KİŞİ|Umut Deniz Sarıkaya}}'nın kardeşi {{KİŞİ|Deniz}}, olay tarihinde Umut Sokağı'ndaki evde bulunmadığını beyan etmiştir.
+Borçlular: {{KİŞİ|İsmail Hakkı Tunç}}, {{KİŞİ|Neslihan Tunç}}, {{KİŞİ|Oğuz Tunç}} — müşterek ve müteselsil sorumludur.
+Davacı {{KİŞİ|Gülten Oral-Başaran}}'ın cep telefonu {{TELEFON|0(533)7089142}}, e-posta adresi {{EPOSTA|gulten_basaran71@hotmail.com}} olup tebligatlar bu adreslere yapılabilir.
+Şikayetçi {{KİŞİ|Aynur}} Hanım'ın beyanına göre {{KİŞİ|Selim}} Bey, {{PLAKA|41 AEC 219}} plakalı araçla {{ADRES|Yenidoğan Mah. Kazım Karabekir Cad. No:15 İzmit/Kocaeli}} önünde bekliyordu.
+Sayın Hakim, müvekkil {{KİŞİ|Nazlı Ekinci}} {{DOĞUM_TARİHİ|02/04/2001}} doğum tarihli olup olay tarihinde reşittir.
+Karşı taraf {{ŞİRKET|Mezopotamya Hububat Tic. Ltd. Şti.}} ile {{ŞİRKET|Harran Ovası Pamuk İşleme A.Ş.}} arasındaki temlik sözleşmesi muvazaalıdır.
+Ödemeler {{IBAN|TR68 0006 2040 9023 8300 4110 15}} numaralı hesaba yapılmış olup bu hesabın {{KİŞİ|Berzan Aktaş}}'a ait olduğu anlaşılmıştır.
+Bu satırda kişisel veri bulunmamaktadır; Yargıtay 3. HD 2023/1987 E. sayılı dosyası emsal olarak gösterilmiştir.
+
+Ankara Batı 3. Asliye Ceza Mahkemesi'nin {{DOSYA_NO|2026/284}} Esas sayılı dosyasında sanık {{KİŞİ|Taylan Kurtoğlu}} hakkında hüküm açıklanmasının geri bırakılmasına karar verilmiştir.
+Sanığın sevk ettiği {{PLAKA|06 FHN 72}} plakalı araç, {{ŞİRKET|Başkent Lojistik ve Nakliyat A.Ş.}} adına kayıtlıdır.
+UYAP kaydında sanık {{KİŞİ|TAYLAN KURTOĞLU}}, ANNE ADI: {{KİŞİ|MÜZEYYEN}}, BABA ADI: {{KİŞİ|ŞÜKRÜ}}, DOĞUM TARİHİ: {{DOĞUM_TARİHİ|11.10.1996}} olarak görünmektedir.
+İhbar olunan {{ŞİRKET|Kuzey Ege Enerji Yatırımları A.Ş.}} temsilcisi {{KİŞİ|Dimitra Kalogeropoulou}} ile Türkiye irtibat sorumlusu {{KİŞİ|Kıvanç Oktar}} toplantıya katılmamıştır.

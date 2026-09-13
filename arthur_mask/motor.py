@@ -10,14 +10,17 @@ from presidio_analyzer.predefined_recognizers import (
     EmailRecognizer,
     IbanRecognizer,
     IpRecognizer,
-    SpacyRecognizer,
     TrLicensePlateRecognizer,
     TrNationalIdRecognizer,
 )
 
 from .nlp import TurkceNlpMotoru
 from .sozluk import Sozluk
-from .tanimlayicilar import SOYAD_OLMAYAN, TUZEL_KISI_IZI, turk_tanimlayicilari
+from . import semantik as semantik_modulu
+from .tanimlayicilar import (
+    ADLAR, BELIRSIZ_ADLAR, KAMU_KURUMU_IZI, KISI_OLMAYAN, SEKTOR_SOZCUKLERI, SOYAD_OLMAYAN, TUZEL_KISI_IZI,
+    UNVANLAR, rol_ismi_mi, turk_tanimlayicilari,
+)
 from .turkce import anahtar, kelime_desenine_cevir, tr_kucuk
 
 STANDART = {
@@ -98,9 +101,10 @@ class MaskeMotoru:
         profil: str = "standart",
         sozluk: Optional[Sozluk] = None,
         esik: float = 0.5,
-        ner_modeli: Optional[str] = None,
+        semantik: Optional[bool] = None,
         ictihat_koruma: bool = True,
     ):
+        """semantik: None = kuruluysa GLiNER katmanını aç; True = zorunlu; False = yalnız kurallar."""
         if profil not in PROFILLER:
             raise ValueError(f"Bilinmeyen profil: {profil} (seçenekler: {', '.join(PROFILLER)})")
         self.profil = profil
@@ -120,13 +124,16 @@ class MaskeMotoru:
             *turk_tanimlayicilari(),
         ):
             kayit.add_recognizer(tanimlayici)
-        if ner_modeli:
-            kayit.add_recognizer(
-                SpacyRecognizer(supported_language="tr", supported_entities=["PERSON", "LOCATION"])
-            )
+        if semantik is None:
+            semantik = semantik_modulu.kullanilabilir_mi()
+        if semantik:
+            if not semantik_modulu.kullanilabilir_mi():
+                raise RuntimeError('Semantik katman kurulu değil: pip install "arthur-mask[semantik]"')
+            kayit.add_recognizer(semantik_modulu.tanimlayici_olustur())
+        self.semantik = bool(semantik)
         self.analizci = AnalyzerEngine(
             registry=kayit,
-            nlp_engine=TurkceNlpMotoru(ner_modeli),
+            nlp_engine=TurkceNlpMotoru(),
             supported_languages=["tr"],
         )
 
@@ -156,13 +163,76 @@ class MaskeMotoru:
         )
         bulgular = []
         for s in sonuclar:
-            parca = metin[s.start:s.end]
+            bas, son = s.start, s.end
             kaynak = s.recognition_metadata.get("recognizer_name", "") if s.recognition_metadata else ""
+            # Presidio desenleri harf duyarsız çalışır; plakada harfler büyük olmalı ("11 ve 13" plaka değil).
+            if s.entity_type == "TR_LICENSE_PLATE" and not re.search(r"[A-Z]", metin[bas:son]):
+                continue
+            if kaynak == "GLiNER":
+                aralik = self._semantik_filtre(metin, s.entity_type, bas, son)
+                if not aralik:
+                    continue
+                bas, son = aralik
+            parca = metin[bas:son]
             bulgular.append(
-                Bulgu(s.start, s.end, s.entity_type, TUR_ADLARI.get(s.entity_type, s.entity_type),
+                Bulgu(bas, son, s.entity_type, TUR_ADLARI.get(s.entity_type, s.entity_type),
                       round(s.score, 2), parca, kanonik_deger(s.entity_type, parca), kaynak)
             )
         return bulgular
+
+    @staticmethod
+    def _semantik_filtre(metin: str, varlik: str, bas: int, son: int) -> Optional[Tuple[int, int]]:
+        """Model bulgusunu hukuk metnine göre daraltır ya da eler."""
+        # Baştaki noktalama/unvan ve sondaki noktalama modele aittir, ada değil ("Av. Kaan Er," → "Kaan Er").
+        while bas < son and metin[bas] in " \t.,;:('‘’\"":
+            bas += 1
+        m = re.match(rf"(?:(?:{UNVANLAR})\s*)+", metin[bas:son])
+        if m and varlik == "PERSON":
+            bas += m.end()
+        while son > bas and metin[son - 1] in " \t.,;:)'’\"":
+            son -= 1
+        parca = metin[bas:son]
+        if not parca.strip():
+            return None
+        kelimeler = [tr_kucuk(k).strip(".,:;'’") for k in parca.split()]
+        genel = [k for k in kelimeler if k in KISI_OLMAYAN or k in SOYAD_OLMAYAN or rol_ismi_mi(k)]
+
+        if varlik == "PERSON":
+            if KAMU_KURUMU_IZI.search(parca) or TUZEL_KISI_IZI.search(parca):
+                return None
+            # "davalının", "Başvurucunun", "Borçlu vekili": rol ismi, kişi adı değil.
+            if len(genel) == len(kelimeler) or rol_ismi_mi(kelimeler[0]):
+                return None
+            # Hiçbir sözcük büyük harfle başlamıyorsa (OCR metni) ad sözlüğü teyidi aranır.
+            if not any(k[:1].isupper() for k in parca.split()) and not any(
+                k in ADLAR or k in BELIRSIZ_ADLAR for k in kelimeler
+            ):
+                return None
+        elif varlik == "TR_TUZEL_KISI":
+            if KAMU_KURUMU_IZI.search(parca) or ICTIHAT_ATIF_IZI.search(parca):
+                return None
+            # "Davalı şirketin", "Ltd. Şti": özel ad taşımayan genel ifade.
+            ozel = [
+                k for k, ham in zip(kelimeler, parca.split())
+                if ham[:1].isupper() and k not in genel and not TUZEL_KISI_IZI.fullmatch(ham.strip(".,"))
+                and k.strip(".") not in {"a.ş", "aş", "ltd", "şti", "ltd.şti"}
+            ]
+            if not ozel:
+                return None
+        elif varlik == "TR_ADRES":
+            # Kapı numarası ya da en az iki yer birimi yoksa (yalnız "Özlem Sokak") adres sayılmaz.
+            birimler = len(re.findall(r"(?i)mahalle|mah\.|mh\.|sokak|sokağı|sk\.|cadde|cad\.|cd\.|bulvar|blv\.|sitesi|apt|blok", parca))
+            if not any(ch.isdigit() for ch in parca) and birimler < 2:
+                return None
+        elif varlik == "EMAIL_ADDRESS":
+            if "@" not in parca:
+                return None
+        elif varlik == "TR_DOGUM_TARIHI":
+            # Tarihler açık bırakılır; model bir tarihi doğum tarihi sanırsa bağlam aranır.
+            pencere = tr_kucuk(metin[max(0, bas - 40):min(len(metin), son + 20)])
+            if not re.search(r"doğum|doğumlu|d\.\s?t\.|yaşında", pencere):
+                return None
+        return bas, son
 
     def _sozluk_bulgulari(self, metin: str) -> List[Bulgu]:
         return [
@@ -189,8 +259,21 @@ class MaskeMotoru:
     def _yayilim(self, metin: str, kesin: List[Bulgu]) -> List[Bulgu]:
         """Tespit edilen ad ve unvanları belgenin geri kalanında da yakalar (eş-gönderim)."""
         ek: List[Bulgu] = []
-        kisiler = {b.kanonik: b for b in kesin if b.varlik == "PERSON"}
-        sirketler = {b.kanonik: b for b in kesin if b.varlik in ("TR_TUZEL_KISI", "SOZLUK")}
+
+        def yayilabilir(b: Bulgu) -> bool:
+            # Genel isim yayılırsa belge boyunca yanlış maskeleme çoğalır; yalnız özel ad niteliği taşıyanlar.
+            if b.kaynak == "sözlük":
+                return True
+            kelimeler = b.metin.split()
+            if len(b.metin) < 3 or not any(k[:1].isupper() for k in kelimeler):
+                return False
+            if b.varlik == "PERSON":
+                return not any(rol_ismi_mi(tr_kucuk(k).strip(".,'’")) for k in kelimeler)
+            # Şirkette tür eki ("Anonim Şirketi") doğaldır; ilk sözcük rol ismiyse ("Davalı şirketin") yayılmaz.
+            return not rol_ismi_mi(tr_kucuk(kelimeler[0]))
+
+        kisiler = {b.kanonik: b for b in kesin if b.varlik == "PERSON" and yayilabilir(b)}
+        sirketler = {b.kanonik: b for b in kesin if b.varlik in ("TR_TUZEL_KISI", "SOZLUK") and yayilabilir(b)}
 
         for ornek in list(kisiler.values()) + list(sirketler.values()):
             for m in kelime_desenine_cevir(ornek.metin).finditer(metin):
@@ -217,8 +300,15 @@ class MaskeMotoru:
             if b.varlik != "TR_TUZEL_KISI":
                 continue
             iz = TUZEL_KISI_IZI.search(b.metin)
-            kisa = b.metin[:iz.start()].strip() if iz else ""
-            if len(kisa.split()) >= 2:
+            govde = (b.metin[:iz.start()] if iz else b.metin).split()
+            kisalar = []
+            if iz and len(govde) >= 2:
+                kisalar.append(" ".join(govde))
+            # "Poyraz Enerji Üretim ve Ticaret A.Ş." → "Poyraz Enerji": sektör sözcüğüyle biten önekler.
+            for i in range(2, len(govde)):
+                if tr_kucuk(govde[i - 1]) in SEKTOR_SOZCUKLERI:
+                    kisalar.append(" ".join(govde[:i]))
+            for kisa in kisalar:
                 for m in kelime_desenine_cevir(kisa).finditer(metin):
                     ek.append(replace(b, bas=m.start(), son=m.end(), metin=m.group(), kaynak="yayılım (kısa unvan)"))
         return ek
@@ -240,7 +330,7 @@ class MaskeMotoru:
 
 def artik_tarama(metin: str) -> List[Tuple[int, str]]:
     """Maskeleme sonrası kaba güvenlik ağı: etiket dışında kalan numara/e-posta izleri."""
-    temiz = re.sub(r"\[[^\[\]\n]{1,40}_\d{1,5}\]", " ", metin)
+    temiz = re.sub(r"\{\{[^{}\n]{1,48}\}\}", " ", metin)
     izler = [
         (r"(?<!\d)[1-9]\d{10}(?!\d)", "11 haneli sayı (TCKN?)"),
         (r"(?<![\d/.,])\d{10}(?![\d/.,]\d)", "10 haneli sayı (VKN/telefon?)"),

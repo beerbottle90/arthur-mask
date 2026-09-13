@@ -130,6 +130,32 @@ KISI_OLMAYAN = {
     "bankası", "finans", "gayrimenkul", "pazarlama", "dış", "iç", "ithalat", "ihracat",
 }
 
+SEKTOR_SOZCUKLERI = {
+    "inşaat", "taahhüt", "sanayi", "lojistik", "gıda", "turizm", "yatırım", "danışmanlık",
+    "teknoloji", "elektrik", "petrol", "madencilik", "tekstil", "otomotiv", "sigorta",
+    "finans", "gayrimenkul", "pazarlama", "ithalat", "ihracat", "enerji", "kozmetik",
+    "mühendislik", "yazılım", "medya", "reklam", "ticaret", "nakliyat", "gemicilik", "kimya",
+    "ilaç", "sağlık", "eğitim", "mimarlık", "emlak", "holding", "grup", "logistik", "trading",
+}
+
+# Taraf ve rol isimlerinin kökleri: çekim ekli biçimleri ("davalının", "Borçluya") kişi adı değildir.
+ROL_KOKLERI = (
+    "davacı", "davalı", "müvekkil", "başvurucu", "başvuran", "işçi", "işveren", "borçlu", "alacaklı",
+    "kiracı", "kiralayan", "kiralanan", "kiraya", "müşteki", "şüpheli", "sanık", "mağdur", "katılan",
+    "tanık", "vekil", "muhatap", "keşideci", "lehtar", "şirket", "takip", "tebligat", "dükkân", "dükkan",
+    "işyeri", "taraf", "yüklenici", "idare", "alıcı", "satıcı", "kefil", "mirasçı", "muris", "savcı",
+    "hâkim", "hakim", "kâtib", "katib", "zabıt", "bilirkişi", "arabulucu", "noter", "avukat", "üye",
+    "başkan", "müdür", "yetkili", "temsilci", "çalışan", "personel", "abi", "abla", "hanım", "bey",
+    "kişi", "şahıs", "sözleşme", "kararı", "dilekçe",
+)
+
+
+def rol_ismi_mi(kelime: str) -> bool:
+    """Küçük harfe çevrilmiş sözcük bir rol isminin kendisi ya da kısa çekimli hâli mi."""
+    kelime = kelime.strip(".,:;'’")
+    return any(kelime.startswith(kok) and len(kelime) - len(kok) <= 6 for kok in ROL_KOKLERI)
+
+
 # Ad–SOYAD kalıbında soyadı sanılabilecek hukuk kısaltmaları ve büyük harfli sözcükler.
 SOYAD_OLMAYAN = {
     "hd", "hgk", "cgk", "ibk", "ibgk", "iddk", "vddk", "ygk", "bgk", "bam", "bim", "aym", "aihm", "aihs", "tbk",
@@ -244,6 +270,28 @@ class KisiTanimlayici(KuralTanimlayici):
         return bas, son
 
 
+class AnaBabaAdiTanimlayici(KuralTanimlayici):
+    """Nüfus kaydı kalıbı: "Ali ve Ayşe oğlu", "SÜLEYMAN ve HATİCE kızı" — iki ad ayrı bulgu olur."""
+
+    VARLIK = "PERSON"
+    _DESEN = re.compile(
+        rf"(?<![\w])({_HERHANGI_AD})[ \t]+(?:ve|VE)[ \t]+({_HERHANGI_AD})[ \t]+(?:oğlu|kızı|OĞLU|KIZI)(?![\w])"
+    )
+
+    def analyze(self, text, entities, nlp_artifacts=None):
+        sonuclar = []
+        for m in self._DESEN.finditer(text):
+            for grup in (1, 2):
+                if tr_kucuk(m.group(grup)) in KISI_OLMAYAN:
+                    continue
+                aciklama = AnalysisExplanation(
+                    recognizer=self.name, original_score=0.85, pattern_name="ana/baba adı",
+                    pattern=self._DESEN.pattern,
+                )
+                sonuclar.append(RecognizerResult(self.VARLIK, m.start(grup), m.end(grup), 0.85, aciklama))
+        return sonuclar
+
+
 def _adlari_yukle():
     yol = Path(__file__).with_name("veri") / "adlar.txt"
     kesin, belirsiz = set(), set()
@@ -264,6 +312,7 @@ AD_ARDINDAN_KISI_OLMAYAN = {
     "apartmanı", "sitesi", "plaza", "bulvarı", "grubu", "kulübü", "vakfı", "derneği", "ili", "ilçesi",
     "valiliği", "belediyesi", "havalimanı", "dönemi", "bayramı", "tatili", "yolu", "gazetesi",
     "yayınları", "petrol", "enerji", "sigorta", "ticaret", "yatırım", "kolejı", "koleji", "eczanesi",
+    "teknik", "enstitüsü", "fakültesi", "lisesi", "vakıf", "kuvvetleri", "pınarı", "enerjisi", "tv",
     "hanım", "bey", "hanımefendi", "beyefendi",
 }
 ILLER = {tr_kucuk(i) for i in (
@@ -308,10 +357,19 @@ class AdSozluguKisiTanimlayici(KuralTanimlayici):
             return None
         if len(kelimeler) == 1:
             return bas, son  # Hanım/Bey kalıbı
-        # Kişi olmayan sözcüğe gelince diziyi orada kes.
-        for i, (a, z) in enumerate(kelimeler[1:], start=1):
-            kelime = tr_kucuk(metin[a:z])
-            if kelime in AD_ARDINDAN_KISI_OLMAYAN or kelime in KISI_OLMAYAN or kelime in SOYAD_OLMAYAN:
+        # Dizinin hemen ardındaki sözcük de denetlenir ("Yıldız Teknik Üniversitesi").
+        sonraki = re.match(r"[ \t]+(\S+)", metin[son:son + 40])
+        adaylar = kelimeler + ([(son + sonraki.start(1), son + sonraki.end(1))] if sonraki else [])
+        # Kurum eki gelirse bütün dizi bir kurum/yer adıdır; diğer genel sözcükte dizi orada kesilir.
+        for i, (a, z) in enumerate(adaylar[1:], start=1):
+            kelime = tr_kucuk(metin[a:z]).strip(".,:;'’")
+            kelime_kok = re.split(r"['’]", kelime)[0]
+            if kelime_kok in AD_ARDINDAN_KISI_OLMAYAN and kelime_kok not in {"hanım", "bey", "hanımefendi", "beyefendi"}:
+                return None
+            if i < len(kelimeler) and (
+                kelime in KISI_OLMAYAN or kelime in SOYAD_OLMAYAN or rol_ismi_mi(kelime)
+                or kelime_kok in {"hanım", "bey", "hanımefendi", "beyefendi"}
+            ):
                 kelimeler = kelimeler[:i]
                 break
         # Sondaki il adı "İstanbul'da" gibi yer ekiyle geliyorsa ve en az iki ad kalıyorsa at.
@@ -438,7 +496,30 @@ class DogumTarihiTanimlayici(KuralTanimlayici):
             0.85,
             grup=1,
         ),
+        Desen(
+            "yazıyla tarih (doğum bağlamı)",
+            re.compile(
+                r"(?:Doğum\s+Tarihi|D\.\s?T\.|doğum\s+tarihi|doğumlu|doğdu)[^\n\d]{0,30}"
+                r"(\d{1,2}\s+(?:Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık|OCAK|ŞUBAT|MART|NİSAN|MAYIS|HAZİRAN|TEMMUZ|AĞUSTOS|EYLÜL|EKİM|KASIM|ARALIK)\s+(?:19|20)\d{2})"
+                r"|(\d{1,2}\s+(?:Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık|OCAK|ŞUBAT|MART|NİSAN|MAYIS|HAZİRAN|TEMMUZ|AĞUSTOS|EYLÜL|EKİM|KASIM|ARALIK)\s+(?:19|20)\d{2})(?=\s+(?:doğumlu|tarihinde\s+doğ))"
+            ),
+            0.85,
+            grup=0,
+        ),
+        Desen(
+            "yalnız yıl",
+            re.compile(r"(?<!\d)((?:19|20)\d{2})(?=\s+doğumlu)|(?:doğum\s+yılı|Doğum\s+Yılı)\s*[:.]?\s*((?:19|20)\d{2})"),
+            0.8,
+            grup=0,
+        ),
     )
+
+    def filtrele(self, metin, bas, son):
+        # Birleşik desenlerde yalnız tarih kısmını al.
+        m = re.search(r"\d{1,2}\s+\S+\s+(?:19|20)\d{2}|(?:19|20)\d{2}$|\d{1,2}[./-]\d{1,2}[./-](?:19|20)\d{2}", metin[bas:son])
+        if not m:
+            return None
+        return bas + m.start(), bas + m.end()
 
 
 # --- Adres -----------------------------------------------------------------------
@@ -464,12 +545,48 @@ class AdresTanimlayici(KuralTanimlayici):
             "mahalle/sokak + kapı no",
             re.compile(
                 rf"((?:[{BUYUK}0-9][\w.'’-]*[ \t]+){{1,4}}(?:{_YER_BIRIMI})[^\n]{{0,150}}?"
-                r"\bNo\s*[:.]?\s*\d+[A-Za-z]?(?:\s*/\s*\d+)?(?:\s*(?:D|Daire|Kat)\s*[:.]?\s*\d+)*"
+                r"\b(?:No|D|Daire)\s*[:.]?\s*\d+[A-Za-z]?(?:\s*/\s*\d+)?(?:\s*(?:D|Daire|Kat)\s*[:.]?\s*\d+)*"
                 rf"(?:[ \t]*[,/][ \t]*[{BUYUK}][{KUCUK}]+){{0,2}})"
             ),
             0.75,
             grup=1,
         ),
+        Desen(
+            "küçük harfli / OCR adres",
+            re.compile(
+                r"(?i)((?:[\wçğıöşü.'’-]+[ \t]+){1,3}(?:mahallesi|mah\.?|mh\.?)[ \t]+[^\n]{0,120}?"
+                r"\bno\b\s*[:.]?\s*\d+[a-z]?(?:\s*/\s*\d+)?(?:\s*(?:d|daire|kat)\s*[:.]?\s*\d+)*"
+                r"(?:[ \t]*[,/]?[ \t]*[a-zçğıöşü]{3,}){0,2})"
+            ),
+            0.65,
+            grup=1,
+        ),
+    )
+
+
+class TcknBaglamTanimlayici(KuralTanimlayici):
+    """Kimlik bağlamındaki 11 haneli sayı: kontrol basamağı tutmasa da (yazım/OCR hatası) maskelenir."""
+
+    VARLIK = "TR_NATIONAL_ID"
+    DESENLER = (
+        Desen(
+            "kimlik bağlamı",
+            re.compile(
+                r"(?i)(?:t\.?\s?c\.?\s*(?:kimlik)?\s*(?:no|numarası|nosu)?|tckn|kimlik\s+(?:no|numarası)|tc\s*no)"
+                r"\s*[:.]?\s*([1-9]\d{10})(?!\d)"
+            ),
+            0.75,
+            grup=1,
+        ),
+    )
+
+
+class TrIbanKalipTanimlayici(KuralTanimlayici):
+    """TR IBAN kalıbı: mod-97 tutmasa da (yazım hatası) hesap numarası sızmasın diye maskelenir."""
+
+    VARLIK = "IBAN_CODE"
+    DESENLER = (
+        Desen("TR + 24 hane", re.compile(r"(?<![\w])TR(?:[ \t]?\d){24}(?!\d)"), 0.7),
     )
 
 
@@ -490,7 +607,7 @@ class DosyaNoTanimlayici(KuralTanimlayici):
         Desen(
             "etiketli",
             re.compile(
-                r"(?:Dosya|Esas|Karar|Soruşturma|Hazırlık|İcra|Talimat|Başvuru|Büro|Arabuluculuk)"
+                r"(?:Dosya|Esas|Karar|Soruşturma|Hazırlık|İcra|Talimat|Başvuru|Büro|Arabuluculuk|İddianame|Takip)"
                 r"[ \t]*(?:No|Numarası|Nosu|Sayısı)[ \t]*[:.]?[ \t]*"
                 rf"({_YIL_SIRA}(?:[ \t]*(?:E|K|Esas|Karar)\b\.?)?)"
             ),
@@ -538,6 +655,7 @@ class MahkemeTanimlayici(KuralTanimlayici):
 def turk_tanimlayicilari() -> List[EntityRecognizer]:
     return [
         KisiTanimlayici(),
+        AnaBabaAdiTanimlayici(),
         AdSozluguKisiTanimlayici(),
         TuzelKisiTanimlayici(),
         VknTanimlayici(),
@@ -546,6 +664,8 @@ def turk_tanimlayicilari() -> List[EntityRecognizer]:
         SicilNoTanimlayici(),
         DogumTarihiTanimlayici(),
         AdresTanimlayici(),
+        TcknBaglamTanimlayici(),
+        TrIbanKalipTanimlayici(),
         DosyaNoTanimlayici(),
         MahkemeTanimlayici(),
     ]

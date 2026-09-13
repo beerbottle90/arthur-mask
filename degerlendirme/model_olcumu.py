@@ -50,7 +50,7 @@ def _bellek_mb() -> float:
 
 def sistem_kural() -> Callable[[str], List[Aralik]]:
     from arthur_mask.motor import MaskeMotoru
-    motor = MaskeMotoru()
+    motor = MaskeMotoru(semantik=False)
     return lambda metin: [(b.bas, b.son, b.tur) for b in motor.analiz(metin)[0]]
 
 
@@ -93,8 +93,16 @@ def sistem_btx24() -> Callable[[str], List[Aralik]]:
     return tespit
 
 
+def sistem_motor_semantik() -> Callable[[str], List[Aralik]]:
+    """Ürün hattı: kurallar + GLiNER + hukuk filtreleri + yayılım + çakışma çözümü."""
+    from arthur_mask.motor import MaskeMotoru
+    motor = MaskeMotoru(semantik=True)
+    return lambda metin: [(b.bas, b.son, b.tur) for b in motor.analiz(metin)[0]]
+
+
 SISTEMLER: Dict[str, Callable[[], Callable[[str], List[Aralik]]]] = {
     "kural": sistem_kural,
+    "motor_semantik": sistem_motor_semantik,
     "akdeniz27": sistem_akdeniz27,
     "gliner_pii": sistem_gliner,
     "btx24": sistem_btx24,

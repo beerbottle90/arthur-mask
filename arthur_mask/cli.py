@@ -37,7 +37,7 @@ def _motor(args, sozluk: Sozluk) -> MaskeMotoru:
         profil=args.profil,
         sozluk=sozluk,
         esik=args.esik,
-        ner_modeli=args.ner_modeli,
+        semantik={"otomatik": None, "acik": True, "kapali": False}[args.semantik],
         ictihat_koruma=not args.ictihat_atiflarini_da_maskele,
     )
 
@@ -124,7 +124,8 @@ def _ortak(p: argparse.ArgumentParser) -> None:
     p.add_argument("--sozluk", help="dosyaya özgü kişisel sözlük (YAML)")
     p.add_argument("--profil", default="standart", choices=sorted(PROFILLER))
     p.add_argument("--esik", type=float, default=0.5, help="maskeleme skor eşiği (varsayılan 0.5)")
-    p.add_argument("--ner-modeli", help="yerel Türkçe spaCy NER modeli yolu (deneysel)")
+    p.add_argument("--semantik", choices=["otomatik", "acik", "kapali"], default="otomatik",
+                   help="yerel GLiNER katmanı (otomatik: kuruluysa açık)")
     p.add_argument("--ictihat-atiflarini-da-maskele", action="store_true",
                    help="Yargıtay/Danıştay/AYM atıflarındaki esas-karar numaralarını da maskele")
 

@@ -24,23 +24,37 @@ Kararlar 13.09.2026'da proje sahibiyle netleştirildi. Mimari gerekçe:
 | K15 | Denetim kaydı | Yalnız kırmızı hat onayları (gerçek değer yok) |
 | K16 | Lisans | ArthurLegal Proprietary Non-Commercial (büro ve şirket içi kullanım serbest) |
 | K17 | Depo | Özel; herkese açma kararı ileride |
-| K18 | NER modeli | Üç aday yerelde ölçülür, sonuç tablosuyla karar verilir |
+| K18 | NER modeli | **GLiNER PII** (`urchade/gliner_multi_pii-v1`, Apache-2.0); temiz lisans nedeniyle, isabeti daha yüksek ama eğitim verisi lisansı belirsiz akdeniz27 yerine |
 
-## NER model adayları (ölçülecek)
+## NER model ölçümü (13.09.2026)
 
-| Aday | Ağırlık lisansı | Türkçe | Not |
-|---|---|---|---|
-| `akdeniz27/bert-base-turkish-cased-ner` | MIT | Türkçe haber verisiyle eğitilmiş (F1 0.96, haber) | Eğitim verisinin lisansı belirtilmemiş; büyük harfli UYAP başlıklarında davranışı ölçülecek |
-| `urchade/gliner_multi_pii-v1` | Apache-2.0 | Türkçe eğitimi yok (sıfır örnekli) | Presidio'da yerleşik `GLiNERRecognizer`; etiket adları serbest |
-| `BTX24/turkish-privacy-filter-pii` | Apache-2.0 | Türkçe, yalnız sentetik veri | Adres/TCKN/VKN dahil; CPU bellek ve süre ölçülecek |
+İki sentetik set, kuralları görmeyen ayrı ajanlarca yazıldı: **geliştirme** (`ner_bagimsiz.txt`,
+257 ifade; filtre ayarı bunda yapıldı) ve **gizli test** (`ner_test_gizli.txt`, 321 ifade;
+ayar bitene kadar açılmadı). Sızıntı oranı: işaretli ifadelerden, türü ne olursa olsun
+maskelenenlerin payı. Süre: ~60.000 karakterlik tek belge, CPU.
 
-Ticari olmayan kullanımla sınırlı (NC) lisanslı modeller elenir: bürolar aracı müvekkil
-işinde kullanır, NC şartı bu kullanımı tartışmalı kılar.
+Aday elemesi (geliştirme seti, ayar öncesi):
 
-Ölçüm ölçütleri: kısmi örtüşmeli recall (sızıntı), kişi precision, 20 sayfalık belgede CPU
-süresi, bellek, büyük harfli başlık ve normal yazımlı ad başarımı. Ölçüm seti kuralları
-yazan elden bağımsız, genişletilmiş bir sentetik hukuk metni setidir; gerçek belge seti
-onaydan sonra eklenir.
+| Aday | Sızıntı | Kişi R / P | 20 sayfa | Bellek | Sonuç |
+|---|---|---|---|---|---|
+| akdeniz27 BERT | 0.66 | 0.99 / 0.99 | 8 sn | 391 MB | En isabetli; eğitim verisi lisansı belirsiz → seçilmedi |
+| GLiNER PII | 0.86 | 0.98 / 0.84 | 26 sn | 1.4 GB | **Seçildi** (Apache-2.0) |
+| BTX24 | 0.68 | 0.48 / 0.72 | 642 sn | 3.7 GB | Elendi (gerçekçi metinde zayıf, çok yavaş) |
+
+Ürün hattı, gizli test seti:
+
+| Sistem | Sızıntı | Kişi R / P | Fazla maskeleme | 20 sayfa |
+|---|---|---|---|---|
+| Yalnız kurallar | 0.70 | 0.52 / 0.95 | 3 | 0.8 sn |
+| Ham GLiNER | 0.82 | 0.94 / 0.83 | 49 | 28 sn |
+| Kurallar + GLiNER + hukuk filtreleri | **0.91** | 0.89 / 0.95 | 19 | 32 sn |
+| Kurallar ∪ ham GLiNER (filtresiz) | 0.95 | 0.94 / 0.87 | 52 | 28 sn |
+
+Geliştirme setinde ürün hattı 0.98'di; gizli sette 0.91. Fark, ayarın geliştirme setine
+kısmen uyduğunu gösterir. Gizli sette kalan başlıca açıklar: tek başına ilk ad ve lakaplar
+(Memo, Can), baş harfler (A.Ö.R.), Türkçe karaktersiz OCR metni (ayse yilmaz), büyük
+harfli kısaltmalı adresler (MAH./CAD.), etiketsiz dosya numaraları. Üretim güveni için gerçek
+belge seti ön şart olmaya devam eder.
 
 ## Kapsam
 
