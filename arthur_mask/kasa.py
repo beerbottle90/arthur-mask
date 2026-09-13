@@ -50,6 +50,11 @@ class Kayit:
     anahtar: str
     degerler: List[str] = field(default_factory=list)
 
+    @property
+    def asil(self) -> str:
+        """Geri açmada yazılan değer: görülen en uzun (tam) biçim."""
+        return max(self.degerler, key=len)
+
 
 @dataclass
 class Kasa:
@@ -62,8 +67,32 @@ class Kasa:
         self._dizin = {(k.tur, k.anahtar): k.etiket for k in self.kayitlar.values()}
         self._katlanmis = {_etiket_anahtari(k.etiket): k for k in self.kayitlar.values()}
 
+    def _es_kayit(self, tur: str, varlik: str, anahtar: str) -> Optional[str]:
+        """Belgeler arası eş-gönderim: aynı şirketin kısa/uzun unvanı, aynı kişinin tek soyadı.
+
+        Yalnız tek bir aday varsa eşleştirir; belirsizlikte yeni etiket açılır.
+        """
+        yeni = anahtar.split()
+        adaylar = set()
+        for (k_tur, k_anahtar), etiket in self._dizin.items():
+            if k_tur != tur:
+                continue
+            mevcut = k_anahtar.split()
+            if varlik in ("TR_TUZEL_KISI", "SOZLUK"):
+                kisa, uzun = sorted((yeni, mevcut), key=len)
+                if len(kisa) >= 2 and uzun[:len(kisa)] == kisa:
+                    adaylar.add(etiket)
+            elif varlik == "PERSON" and len(mevcut) >= 2:
+                if len(yeni) == 1 and len(yeni[0]) >= 3 and yeni[0] == mevcut[-1]:
+                    adaylar.add(etiket)  # "kara" → "ayşe kara"
+                elif len(yeni) >= 2 and yeni[0] == mevcut[0] and yeni[-1] == mevcut[-1]:
+                    adaylar.add(etiket)  # "mehmet yılmaz" → "mehmet ali yılmaz"
+        return adaylar.pop() if len(adaylar) == 1 else None
+
     def etiket_al(self, tur: str, varlik: str, anahtar: str, deger: str) -> str:
-        etiket = self._dizin.get((tur, anahtar))
+        # Eş-gönderim eşleşmesi önbelleğe alınmaz: sonradan aynı soyadlı ikinci kişi gelirse
+        # belirsizlik her seferinde yeniden değerlendirilir (oturumdan bağımsız, belirlenimci).
+        etiket = self._dizin.get((tur, anahtar)) or self._es_kayit(tur, varlik, anahtar)
         if etiket is None:
             self.sayaclar[tur] = self.sayaclar.get(tur, 0) + 1
             etiket = etiket_olustur(tur, self.sayaclar[tur])

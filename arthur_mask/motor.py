@@ -102,6 +102,11 @@ class Bulgu:
 def kanonik_deger(varlik: str, metin: str) -> str:
     if varlik in SAYISAL:
         return "".join(ch for ch in metin.upper() if ch.isalnum())
+    if varlik == "TR_TUZEL_KISI":
+        # Tür eki kanonik anahtara girmez: "X İnşaat A.Ş." ile "X İnşaat Anonim Şirketi" aynı şirkettir.
+        iz = TUZEL_KISI_IZI.search(metin)
+        govde = metin[:iz.start()] if iz and iz.start() > 0 else metin
+        return anahtar(govde.strip(" ,.;:-&")) or anahtar(metin)
     return anahtar(metin)
 
 
@@ -391,3 +396,25 @@ def artik_tarama(metin: str) -> List[Tuple[int, str]]:
             bulunan.append((satir, aciklama))
     return bulunan
 
+
+
+_ARTIK_DESENLERI = [
+    (r"(?<![\d/.,])[1-9]\d{9,10}(?![\d/.,]\d)", "NUMARA"),
+    (r"\bTR\s?\d{2}(?:\s?\d{4}){2,5}(?:\s?\d{1,2})?", "IBAN"),
+    (r"[\w.+-]+@[\w-]+\.[\w.]+[A-Za-z]", "EPOSTA"),
+    (r"(?:\+90\s?|\b0)\(?5\d{2}\)?[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}\b", "TELEFON"),
+]
+
+
+def artik_adaylari(metin: str, bulgular: Iterable[Bulgu]) -> List[Bulgu]:
+    """Artık tarama izlerini avukatın karar verebileceği adaylara çevirir (özgün metinde, maskelenmemiş)."""
+    kapsanan = [(b.bas, b.son) for b in bulgular]
+    adaylar = []
+    for desen, tur in _ARTIK_DESENLERI:
+        for m in re.finditer(desen, metin):
+            if any(_ortusur(m.span(), k) for k in kapsanan):
+                continue
+            kapsanan.append(m.span())
+            adaylar.append(Bulgu(m.start(), m.end(), "ARTIK_" + tur, tur, 0.45, m.group(),
+                                 kanonik_deger("TR_NATIONAL_ID", m.group()), "artık tarama"))
+    return sorted(adaylar, key=lambda b: b.bas)

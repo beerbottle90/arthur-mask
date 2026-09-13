@@ -14,6 +14,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; }
 body {
   background: var(--lacivert);
@@ -122,3 +123,32 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .anahtar { font-size: 12px; color: var(--krem-soluk); display: flex; gap: 6px; align-items: center; }
 .cevap .metin { grid-column: 1 / span 2; }
 .alt-bilgi { padding: 12px 24px; font-size: 12px; color: var(--krem-soluk); border-top: 1px solid var(--lacivert-3); }
+
+/* -- v2: plug & play düzenlemeleri ---------------------------------------------------- */
+.cipler { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.durum::before { content: "●"; margin-right: 6px; }
+.yan { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.duzen > * { min-width: 0; }
+@media (max-width: 860px) {
+  .duzen { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  .ust { flex-wrap: wrap; }
+  .belge, .cevap { grid-template-columns: minmax(0, 1fr); }
+  .belge .eylemler, .cevap .eylemler { grid-column: 1; grid-row: auto; }
+}
+.bos { display: flex; flex-direction: column; gap: 6px; }
+.bos strong { font-family: var(--baslik-fontu); color: var(--altin); font-size: 16px; }
+.rehber p, .kurtarma p { font-size: 13px; color: var(--krem-soluk); margin: 0 0 10px; }
+.adimlar { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; color: var(--krem-soluk); }
+.adimlar strong { color: var(--krem); display: block; }
+.kurtarma { border-color: var(--altin); }
+.kurtarma-kod {
+  font-family: var(--baslik-fontu); font-size: 13px; letter-spacing: .05em; color: var(--altin-acik);
+  background: var(--lacivert); border: 1px dashed var(--altin); border-radius: 6px; padding: 8px 10px;
+  overflow-wrap: anywhere; margin-bottom: 8px;
+}
+.komut { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; font-size: 13px; color: var(--krem-soluk); }
+.komut code { font-size: 13px; padding: 4px 8px; }
+.inceleme textarea { width: 100%; display: block; margin-top: 8px; min-height: 64px; resize: vertical; }
+.eylem-satiri.sol { margin-top: 8px; }
+.aday .tur { font-family: var(--baslik-fontu); font-size: 11px; color: var(--altin-acik); }
+.gizli-deger { filter: blur(0); }

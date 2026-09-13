@@ -14,7 +14,7 @@ from typing import Optional
 from mcp.server.mcpserver import MCPServer
 
 from . import __version__
-from .anahtar import ana_anahtar
+from .anahtar import ana_anahtar, kurtarma_kodu
 from .depo import Depo
 from .islem import Islem, IslemHatasi
 from .sunucu import VARSAYILAN_PORT, YerelSunucu
@@ -93,13 +93,14 @@ def main(argv: Optional[list] = None) -> int:
     args = ap.parse_args(argv)
 
     _gunluk_ayarla()
-    islem = Islem(Depo(ana_anahtar()))
+    anahtar = ana_anahtar()
+    islem = Islem(Depo(anahtar))
     islem.motoru_arkaplanda_yukle()
     silinen = islem.depo.temizle()
     if silinen:
         logging.info("Süresi dolan %s maskeli ara kopya silindi.", silinen)
 
-    yerel = YerelSunucu(islem, port=args.port)
+    yerel = YerelSunucu(islem, port=args.port, kurtarma_kodu=kurtarma_kodu(anahtar), kopru=not args.yalniz_arayuz)
     yerel.baslat()
 
     if args.yalniz_arayuz:

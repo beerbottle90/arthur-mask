@@ -10,7 +10,10 @@ Güvenlik:
 import json
 import logging
 import mimetypes
+import os
 import secrets
+import subprocess
+import sys
 import threading
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -161,6 +164,14 @@ class _Isleyici(BaseHTTPRequestHandler):
                     return self._maskeli_dosyasi(klasor, parse_qs(adres.query).get("id", [""])[0])
                 if kaynak == "cevap-dosyasi" and yontem == "GET":
                     return self._cevap_dosyasi(klasor, parse_qs(adres.query).get("ad", [""])[0])
+            if yontem == "GET" and parcalar == ["kurtarma"]:
+                return self._json(200, self.uygulama.kurtarma_durumu(goster=True))
+            if yontem == "POST" and parcalar == ["kurtarma", "onay"]:
+                self.uygulama.kurtarma_onayla()
+                return self._json(200, self.uygulama.kurtarma_durumu(goster=False))
+            if yontem == "POST" and len(parcalar) == 3 and parcalar[0] == "dosyalar" and parcalar[2] == "cevap-ac":
+                govde = self._govde_json()
+                return self._json(200, self._cevap_ac(parcalar[1], govde.get("dosya", ""), bool(govde.get("klasorde"))))
             if yontem == "POST" and parcalar == ["coz"]:
                 govde = self._govde_json()
                 return self._json(200, islem.arayuz_coz(govde.get("metin", ""), govde.get("klasor")))
@@ -195,6 +206,19 @@ class _Isleyici(BaseHTTPRequestHandler):
         tur = "application/pdf" if yol.suffix == ".pdf" else "application/octet-stream"
         self._gonder(200, yol.read_bytes(), tur, {"Content-Disposition": f'inline; filename="{yol.name}"'})
 
+    def _cevap_ac(self, klasor: str, ad: str, klasorde: bool) -> dict:
+        """Çözülmüş taslağı varsayılan uygulamada (Word) açar ya da Explorer'da seçili gösterir."""
+        klasor_yolu = (self.uygulama.islem.depo.dosya_yolu(klasor) / "cevaplar").resolve()
+        yol = (klasor_yolu / ad).resolve()
+        if yol.parent != klasor_yolu or not yol.is_file() or yol.suffix == ".json":
+            raise IslemHatasi("Cevap dosyası bulunamadı.")
+        if sys.platform == "win32":
+            if klasorde:
+                subprocess.Popen(["explorer", "/select,", str(yol)])
+            else:
+                os.startfile(str(yol))  # noqa: S606 - yalnız cevaplar klasöründeki doğrulanmış dosya
+        return {"acildi": yol.name}
+
     def _cevap_dosyasi(self, klasor: str, ad: str) -> None:
         klasor_yolu = self.uygulama.islem.depo.dosya_yolu(klasor) / "cevaplar"
         yol = (klasor_yolu / ad).resolve()
@@ -208,15 +232,35 @@ class _Isleyici(BaseHTTPRequestHandler):
 
 class YerelSunucu:
     def __init__(self, islem: Islem, port: int = VARSAYILAN_PORT, belirtec: Optional[str] = None,
-                 eklenti_kokenleri: tuple = ()):
+                 eklenti_kokenleri: tuple = (), kurtarma_kodu: Optional[str] = None, kopru: bool = False):
         self.islem = islem
+        self.kurtarma_kodu = kurtarma_kodu
+        self.kopru = kopru
         self.port = port
         self.belirtec = belirtec or belirtec_al()
         self.eklenti_kokenleri = set(eklenti_kokenleri)
         self._httpd: Optional[ThreadingHTTPServer] = None
 
-    def durum(self) -> dict:
+    def _kurtarma_isareti(self):
+        return uygulama_klasoru() / "kurtarma-saklandi"
+
+    def kurtarma_durumu(self, goster: bool) -> dict:
         return {
+            "var": bool(self.kurtarma_kodu),
+            "saklandi": self._kurtarma_isareti().exists(),
+            "kod": self.kurtarma_kodu if goster else None,
+        }
+
+    def kurtarma_onayla(self) -> None:
+        self._kurtarma_isareti().write_text("1", encoding="utf-8")
+
+    def durum(self) -> dict:
+        from .goruntu import ocr_kullanilabilir_mi
+
+        return {
+            "kopru": self.kopru,
+            "ocr": ocr_kullanilabilir_mi(),
+            "kurtarma_saklandi": (not self.kurtarma_kodu) or self._kurtarma_isareti().exists(),
             "surum": __version__,
             "motor_hazir": self.islem.motor_hazir,
             "semantik": bool(self.islem._motor and self.islem._motor.semantik),

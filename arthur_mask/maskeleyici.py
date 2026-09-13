@@ -44,7 +44,7 @@ def geri_acma_degisiklikleri(metin: str, kasa: Kasa) -> Tuple[List[Degisiklik], 
         if kayit is None:
             bilinmeyen.add(etiket)
             continue
-        deger = kayit.degerler[0]
+        deger = kayit.asil
         if m.group(4):
             deger += m.group(3) + ek_uyumla(deger, m.group(4))
         degisiklikler.append((m.start(), m.end(), deger))

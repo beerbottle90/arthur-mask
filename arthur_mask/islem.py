@@ -17,7 +17,7 @@ from typing import Dict, List, Optional
 from . import belgeler
 from .depo import Depo, simdi
 from .maskeleyici import ETIKET_DESENI, maskele
-from .motor import Bulgu, MaskeMotoru, artik_tarama
+from .motor import Bulgu, MaskeMotoru, artik_adaylari, artik_tarama
 from .servis import geri_ac_metin, maskele_belge
 
 gunluk = logging.getLogger("arthur_mask")
@@ -29,6 +29,12 @@ TESLIM_BICIMLERI = {"docx": ".docx", "udf": ".udf", "txt": ".txt"}
 
 class IslemHatasi(Exception):
     pass
+
+
+def _etiket_turleri(degisiklikler) -> Dict[str, int]:
+    """Tür başına benzersiz etiket sayısı ({{KİŞİ-01}} üç kez geçse de 1 kişi)."""
+    etiketler = {d[2] for d in degisiklikler}
+    return dict(Counter(e[2:-2].rsplit("-", 1)[0] for e in etiketler))
 
 
 class Islem:
@@ -90,9 +96,11 @@ class Islem:
             # Onay sonrası yeniden yazım için belge yazıcısı ayrıştırılmış hâlde bellekte kalır;
             # geçici dosyanın silinmesi yazıcıyı etkilemez (UDF/DOCX içerikleri belleğe okundu).
 
+        # Artık tarama izleri de avukatın tek tıkla karar vereceği adaylara dönüşür.
+        supheli = list(sonuc.supheli) + artik_adaylari(belge.metin, list(sonuc.bulgular) + list(sonuc.supheli))
         if sonuc.kirmizi:
             durum = DURUM_KIRMIZI
-        elif sonuc.supheli or sonuc.artik or belge.ocr:  # OCR belgesi her zaman incelenir
+        elif supheli or sonuc.artik or belge.ocr:  # OCR belgesi her zaman incelenir
             durum = DURUM_ONAY
         else:
             durum = DURUM_HAZIR
@@ -107,17 +115,17 @@ class Islem:
             "ozet": hashlib.sha256(belge.metin.encode("utf-8")).hexdigest(),
             "maskeli_metin": sonuc.maskeli_metin,
             "etiket_sayisi": sonuc.etiket_sayisi,
-            "turler": dict(Counter(b.tur for b in sonuc.bulgular)),
+            "turler": _etiket_turleri(sonuc.degisiklikler),
             "kirmizi_hat": [{"kategori": u.kategori, "satirlar": u.satirlar} for u in sonuc.kirmizi],
             "artik": [{"satir": s, "aciklama": a} for s, a in sonuc.artik],
             "uyarilar": belge.uyarilar,
-            "supheli_sayisi": len(sonuc.supheli),
+            "supheli_sayisi": len(supheli),
             "ocr": belge.ocr,
             "maskeli_kopya": f"{belge_id}{belge.cikti_uzantisi}",
         }
         self.depo.belge_kaydet(klasor, kayit)
         if durum != DURUM_HAZIR:
-            self._bekleyen[(klasor, belge_id)] = (belge, list(sonuc.bulgular), list(sonuc.supheli))
+            self._bekleyen[(klasor, belge_id)] = (belge, list(sonuc.bulgular), supheli)
         return self._arayuz_belge(klasor, kayit)
 
     def _arayuz_belge(self, klasor: str, kayit: Dict) -> Dict:
@@ -129,7 +137,10 @@ class Islem:
              "baglam": bekleyen[0].metin[max(0, b.bas - 50):b.son + 50]}
             for i, b in enumerate(bekleyen[2])
         ] if bekleyen else []
-        gorunum["yeniden_yukleme_gerekli"] = kayit["durum"] != DURUM_HAZIR and not bekleyen
+        # Yalnız avukatın aday seçmesi gereken belgelerde: aday yoksa onay yeniden maskeleme gerektirmez.
+        gorunum["yeniden_yukleme_gerekli"] = (
+            kayit["durum"] != DURUM_HAZIR and not bekleyen and kayit.get("supheli_sayisi", 0) > 0
+        )
         return gorunum
 
     def arayuz_belgeler(self, klasor: str) -> List[Dict]:
@@ -155,7 +166,7 @@ class Islem:
                 belge.yaz(degisiklikler, kopya)
                 kayit["maskeli_metin"] = maskeli
                 kayit["etiket_sayisi"] = len({d[2] for d in degisiklikler})
-                kayit["turler"] = dict(Counter(b.tur for b in tum))
+                kayit["turler"] = _etiket_turleri(degisiklikler)
                 kayit["artik"] = [{"satir": s, "aciklama": a} for s, a in artik_tarama(maskeli)]
             # Kararlar dosya sözlüğüne yazılır; aynı soru bu dosyada bir daha sorulmaz.
             self.depo.sozluge_ekle(

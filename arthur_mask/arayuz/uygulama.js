@@ -1,10 +1,12 @@
 "use strict";
 
 const BELIRTEC = document.querySelector('meta[name="am-belirtec"]').content;
-const DURUM_ADI = { hazir: "Claude'a hazır", onay_bekliyor: "Onay bekliyor", kirmizi_hat: "Kırmızı hat" };
+const DURUM_ADI = { hazir: "Claude'a hazır", onay_bekliyor: "Onayınızı bekliyor", kirmizi_hat: "Kırmızı hat" };
+const BICIM_ADI = { docx: "Word'de aç", udf: "UYAP editöründe aç", txt: "Aç" };
 const ETIKET = /\{\{[^{}\s]{1,40}?-\d{1,5}\}\}/g;
+const IPUCU = "Word · UDF · PDF · taranmış görüntü · metin — belge bu bilgisayardan çıkmaz";
 
-const durum = { aktif: null, belgeler: [], cevaplar: [], acikInceleme: null, maskeliGorunum: false };
+const durum = { aktif: null, belgeler: [], cevaplar: [], acikInceleme: null, kaydir: false, maskeliGorunum: false };
 const $ = (id) => document.getElementById(id);
 
 async function api(yontem, yol, govde, ekBasliklar = {}) {
@@ -29,7 +31,7 @@ function el(etiket, ozellikler = {}, ...cocuklar) {
     else if (deger !== false && deger !== undefined) dugum.setAttribute(anahtar, deger);
   }
   for (const cocuk of cocuklar.flat()) {
-    if (cocuk === null || cocuk === undefined) continue;
+    if (cocuk === null || cocuk === undefined || cocuk === false) continue;
     dugum.append(cocuk instanceof Node ? cocuk : document.createTextNode(String(cocuk)));
   }
   return dugum;
@@ -48,31 +50,64 @@ function etiketliMetin(metin) {
   return parca;
 }
 
-function tarih(iso) {
-  return new Date(iso).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" });
+const tarih = (iso) => new Date(iso).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" });
+
+async function kopyala(metin, dugme) {
+  try {
+    await navigator.clipboard.writeText(metin);
+    const eski = dugme.textContent;
+    dugme.textContent = "Kopyalandı ✓";
+    setTimeout(() => { dugme.textContent = eski; }, 1500);
+  } catch { /* pano izni yoksa sessiz geç */ }
 }
 
-// -- durum ---------------------------------------------------------------------------------
+// -- durum ve kurtarma anahtarı ----------------------------------------------------------------
 async function durumuYenile() {
-  const kutu = $("durum");
+  const kopru = $("kopru-durumu");
+  const koruma = $("koruma-durumu");
   try {
     const d = await api("GET", "/api/durum");
-    kutu.className = "durum " + (d.motor_hazir ? "hazir" : "yukleniyor");
-    kutu.textContent = d.motor_hazir
-      ? `Hazır · ${d.semantik ? "kurallar + semantik" : "yalnız kurallar"}`
-      : "Model yükleniyor…";
+    kopru.className = "durum " + (d.kopru ? "hazir" : "yukleniyor");
+    kopru.textContent = d.kopru ? "Claude Desktop'a bağlı" : "Yalnız arayüz (Claude bağlı değil)";
+    koruma.hidden = false;
+    if (!d.motor_hazir) {
+      koruma.className = "durum yukleniyor";
+      koruma.textContent = "Koruma hazırlanıyor…";
+    } else {
+      const tam = d.semantik && d.ocr;
+      koruma.className = "durum " + (tam ? "hazir" : "yukleniyor");
+      koruma.textContent = tam ? "Tam koruma" : "Temel koruma";
+      koruma.title = `Kurallar${d.semantik ? " + yapay zekâ ad tespiti" : ""}${d.ocr ? " + taranmış belge okuma" : ""}`;
+    }
+    $("kurtarma").hidden = d.kurtarma_saklandi;
   } catch {
-    kutu.className = "durum hata";
-    kutu.textContent = "Bağlantı yok — Claude Desktop'u açın";
+    kopru.className = "durum hata";
+    kopru.textContent = "Bağlantı yok — Claude Desktop'u açın";
+    koruma.hidden = true;
   }
 }
+
+$("kurtarma-goster").addEventListener("click", async () => {
+  const { kod } = await api("GET", "/api/kurtarma");
+  const kutu = $("kurtarma-kod");
+  kutu.textContent = kod;
+  kutu.hidden = false;
+  $("kurtarma-goster").hidden = true;
+  $("kurtarma-kopyala").hidden = false;
+  $("kurtarma-onay").hidden = false;
+});
+$("kurtarma-kopyala").addEventListener("click", (o) => kopyala($("kurtarma-kod").textContent, o.target));
+$("kurtarma-onay").addEventListener("click", async () => {
+  await api("POST", "/api/kurtarma/onay");
+  $("kurtarma-kod").textContent = "";
+  $("kurtarma").hidden = true;
+});
 
 // -- dosyalar ---------------------------------------------------------------------------------
 async function dosyalariYukle() {
   const { dosyalar, aktif } = await api("GET", "/api/dosyalar");
   durum.aktif = aktif;
-  const liste = $("dosya-listesi");
-  liste.replaceChildren(...dosyalar.map((d) => el("li", {},
+  $("dosya-listesi").replaceChildren(...dosyalar.map((d) => el("li", {},
     el("button", {
       sinif: "dosya" + (d.klasor === aktif ? " aktif" : ""), type: "button",
       "aria-current": d.klasor === aktif ? "true" : false,
@@ -87,6 +122,7 @@ async function dosyalariYukle() {
 async function dosyaSec(klasor) {
   await api("POST", "/api/aktif", { klasor });
   durum.acikInceleme = null;
+  durum.belgeImza = durum.cevapImza = durum.incelemeImza = undefined;
   await dosyalariYukle();
 }
 
@@ -95,6 +131,7 @@ $("yeni-dosya").addEventListener("submit", async (olay) => {
   const girdi = $("yeni-dosya-ad");
   await api("POST", "/api/dosyalar", { ad: girdi.value });
   girdi.value = "";
+  durum.belgeImza = durum.cevapImza = durum.incelemeImza = undefined;
   await dosyalariYukle();
 });
 
@@ -116,11 +153,11 @@ async function yukle(dosyalar) {
       ipucu.textContent = `${dosya.name} maskeleniyor…`;
       const sonuc = await api("POST", `/api/dosyalar/${encodeURIComponent(durum.aktif)}/belgeler`,
         await dosya.arrayBuffer(), { "X-Dosya-Adi": encodeURIComponent(dosya.name) });
-      if (sonuc.durum !== "hazir") durum.acikInceleme = sonuc.id;
+      if (sonuc.durum !== "hazir") { durum.acikInceleme = sonuc.id; durum.kaydir = true; }
     }
-    ipucu.textContent = ".docx · .udf · .pdf · .jpg/.png · .txt — belge bu bilgisayardan çıkmaz";
+    ipucu.textContent = IPUCU;
   } catch (hata) {
-    ipucu.textContent = `Hata: ${hata.message}`;
+    ipucu.textContent = `Olmadı: ${hata.message}`;
   } finally {
     birak.classList.remove("isleniyor");
     await calismayiYenile();
@@ -146,17 +183,38 @@ async function calismayiYenile() {
   if (incelemeImza !== durum.incelemeImza) { durum.incelemeImza = incelemeImza; incelemeyiCiz(); }
 }
 
+const TUR_OKUNUR = {
+  "KİŞİ": "kişi", "ŞİRKET": "şirket", "ADRES": "adres", "TELEFON": "telefon", "EPOSTA": "e-posta",
+  "DOSYA_NO": "dosya no", "DOĞUM_TARİHİ": "doğum tarihi", "PASAPORT": "pasaport", "PLAKA": "plaka",
+  "NUMARA": "numara", "GİZLİ": "gizli ifade",
+};
+function turOzeti(turler) {
+  return Object.entries(turler).map(([t, n]) => `${n} ${TUR_OKUNUR[t] || t}`).join(", ");
+}
+
 function belgeleriCiz() {
   const hazir = durum.belgeler.find((b) => b.durum === "hazir");
-  $("ornek-komut").textContent = `Arthur Mask'teki ${hazir ? hazir.id : "belge-1"}'i incele`;
+  $("komut-kutusu").hidden = !hazir;
+  if (hazir) $("ornek-komut").textContent = `Arthur Mask'teki ${hazir.id}'i incele`;
+  if (!durum.belgeler.length) {
+    $("belge-listesi").replaceChildren(el("li", { sinif: "not" }, "Henüz belge yok. Yukarıdaki alana bir belge bırakın."));
+    return;
+  }
   $("belge-listesi").replaceChildren(...durum.belgeler.map((b) => el("li", { sinif: "belge" },
-    el("span", { sinif: "ad" }, `${b.id} · ${b.kaynak_ad} `, el("span", { sinif: `cip ${b.durum}` }, DURUM_ADI[b.durum])),
-    el("span", { sinif: "meta" }, `${tarih(b.olusturma)} · ${b.etiket_sayisi} etiket · ${Object.entries(b.turler).map(([t, n]) => `${t} ${n}`).join(", ") || "etiket yok"}`),
+    el("span", { sinif: "ad" }, `${b.kaynak_ad} `, el("span", { sinif: `cip ${b.durum}` }, DURUM_ADI[b.durum])),
+    el("span", { sinif: "meta" }, `${b.id} · ${tarih(b.olusturma)} · ${b.etiket_sayisi} etiket${b.etiket_sayisi ? ": " + turOzeti(b.turler) : ""}`),
     el("span", { sinif: "eylemler" },
-      el("button", { type: "button", sinif: b.durum === "hazir" ? "ikincil" : "", onclick: () => { durum.acikInceleme = b.id; durum.incelemeImza = `${b.id}:${b.durum}:${b.etiket_sayisi}`; incelemeyiCiz(); } },
+      el("button", { type: "button", sinif: b.durum === "hazir" ? "ikincil" : "", onclick: () => incelemeAc(b) },
         b.durum === "hazir" ? "Önizle" : "İncele"),
-      el("button", { type: "button", sinif: "ikincil", "aria-label": `${b.id} sil`, onclick: () => belgeSil(b.id) }, "Sil")),
+      el("button", { type: "button", sinif: "ikincil", "aria-label": `${b.kaynak_ad} sil`, onclick: () => belgeSil(b.id) }, "Sil")),
   )));
+}
+
+function incelemeAc(belge) {
+  durum.acikInceleme = belge.id;
+  durum.incelemeImza = `${belge.id}:${belge.durum}:${belge.etiket_sayisi}`;
+  durum.kaydir = true;
+  incelemeyiCiz();
 }
 
 async function belgeSil(id) {
@@ -170,17 +228,17 @@ function incelemeyiCiz() {
   const belge = durum.belgeler.find((b) => b.id === durum.acikInceleme);
   panel.hidden = !belge;
   if (!belge) return;
-  const icerik = $("inceleme-icerik");
-  const bolumler = [el("p", {}, `${belge.id} · ${belge.kaynak_ad} · `, el("span", { sinif: `cip ${belge.durum}` }, DURUM_ADI[belge.durum]))];
+  const bekliyor = belge.durum !== "hazir";
+  const bolumler = [el("p", {}, el("strong", {}, belge.kaynak_ad), " · ", el("span", { sinif: `cip ${belge.durum}` }, DURUM_ADI[belge.durum]))];
 
   for (const uyari of belge.uyarilar) bolumler.push(el("p", { sinif: "uyari" }, `⚠ ${uyari}`));
   if (belge.yeniden_yukleme_gerekli) {
-    bolumler.push(el("p", { sinif: "hata-mesaji" }, "Bu belgenin inceleme bilgisi bu oturumda yok. Belgeyi silip yeniden yükleyin."));
+    bolumler.push(el("p", { sinif: "hata-mesaji" }, "Bu belgenin inceleme bilgisi bu oturumda yok. Belgeyi silip yeniden bırakın."));
   }
 
   let gerekce = null;
-  if (belge.durum !== "hazir" && belge.kirmizi_hat.length) {
-    gerekce = el("textarea", { rows: "2", placeholder: "Gönderim gerekçesi (kayda geçer)", "aria-label": "Kırmızı hat gerekçesi" });
+  if (bekliyor && belge.kirmizi_hat.length) {
+    gerekce = el("textarea", { rows: "2", placeholder: "Neden yine de gönderiyorsunuz? (kayda geçer)", "aria-label": "Kırmızı hat gerekçesi" });
     bolumler.push(el("div", { sinif: "kirmizi-kutu" },
       el("strong", {}, "Kırmızı hat — maskelense de içerik gizlenmez"),
       el("ul", {}, belge.kirmizi_hat.map((k) => el("li", {}, `${k.kategori} (satır ${k.satirlar.slice(0, 8).join(", ")})`))),
@@ -188,8 +246,8 @@ function incelemeyiCiz() {
   }
 
   const secimler = [];
-  if (belge.durum !== "hazir" && belge.supheli.length) {
-    bolumler.push(el("h3", {}, `Şüpheli adaylar (${belge.supheli.length})`));
+  if (bekliyor && belge.supheli.length) {
+    bolumler.push(el("h3", {}, `Emin olunamayanlar (${belge.supheli.length}) — maskelensin mi?`));
     for (const aday of belge.supheli) {
       const ad = `aday-${belge.id}-${aday.sira}`;
       const maskele = el("input", { type: "radio", name: ad, value: "maskele", checked: "checked" });
@@ -198,24 +256,21 @@ function incelemeyiCiz() {
       const i = aday.baglam.indexOf(aday.metin);
       const baglam = i < 0 ? [aday.baglam] : [aday.baglam.slice(0, i), el("mark", {}, aday.metin), aday.baglam.slice(i + aday.metin.length)];
       bolumler.push(el("div", { sinif: "aday" },
-        el("div", { sinif: "secim" }, el("label", {}, maskele, "Maskele"), el("label", {}, birakRadyo, "Bırak")),
-        el("div", {}, el("strong", {}, aday.metin), ` · ${aday.tur} · ${aday.skor.toFixed(2)}`),
+        el("div", { sinif: "secim" }, el("label", {}, maskele, "Maskele"), el("label", {}, birakRadyo, "Açık bırak")),
+        el("div", {}, el("strong", {}, aday.metin), " ", el("span", { sinif: "tur" }, aday.tur)),
         el("div", { sinif: "baglam" }, "…", baglam, "…")));
     }
   }
-  if (belge.artik.length) {
-    bolumler.push(el("p", { sinif: "uyari" }, `Artık tarama: ${belge.artik.map((a) => `satır ${a.satir} ${a.aciklama}`).join("; ")}`));
-  }
 
-  bolumler.push(el("div", { sinif: "eylem-satiri" },
+  bolumler.push(el("div", { sinif: "eylem-satiri sol" },
     el("button", { type: "button", sinif: belge.ocr ? "" : "ikincil", onclick: () => maskeliKopyaAc(belge) },
-      belge.ocr ? "Maskeli sayfa görüntülerini kontrol et (PDF)" : "Maskeli kopyayı aç")));
-  bolumler.push(el("h3", {}, "Claude'a gidecek metin"));
+      belge.ocr ? "Maskeli sayfaları kontrol et (PDF)" : "Maskeli kopyayı aç")));
+  bolumler.push(el("h3", {}, "Claude'un göreceği metin"));
   bolumler.push(el("div", { sinif: "onizleme", tabindex: "0" }, etiketliMetin(belge.maskeli_metin)));
 
   const hata = el("p", { sinif: "hata-mesaji", role: "alert" });
   const eylemler = el("div", { sinif: "eylem-satiri" });
-  if (belge.durum !== "hazir") {
+  if (bekliyor) {
     eylemler.append(el("button", {
       type: "button",
       onclick: async (o) => {
@@ -232,30 +287,15 @@ function incelemeyiCiz() {
           o.target.disabled = false;
         }
       },
-    }, "Onayla ve Claude'a hazırla"));
+    }, "Onayla — Claude'a hazırla"));
   }
   eylemler.append(el("button", { type: "button", sinif: "ikincil", onclick: () => { durum.acikInceleme = null; durum.incelemeImza = ""; incelemeyiCiz(); } }, "Kapat"));
   bolumler.push(hata, eylemler);
-  icerik.replaceChildren(...bolumler);
-}
-
-// -- cevaplar --------------------------------------------------------------------------------------
-$("maskeli-gorunum").addEventListener("change", (o) => { durum.maskeliGorunum = o.target.checked; cevaplariCiz(); });
-
-function cevaplariCiz() {
-  const liste = $("cevap-listesi");
-  if (!durum.cevaplar.length) {
-    liste.replaceChildren(el("li", { sinif: "not" }, "Claude bir taslak teslim ettiğinde burada çözülmüş hâliyle görünür."));
-    return;
+  $("inceleme-icerik").replaceChildren(...bolumler);
+  if (durum.kaydir) {
+    durum.kaydir = false;
+    panel.scrollIntoView({ behavior: "smooth", block: "start" });
   }
-  liste.replaceChildren(...durum.cevaplar.map((c) => el("li", { sinif: "cevap" },
-    el("span", { sinif: "ad" }, c.baslik),
-    el("span", { sinif: "meta" }, `${tarih(c.olusturma)} · ${c.bicim.toUpperCase()} · ${c.cozulen} etiket çözüldü`,
-      c.bilinmeyen.length ? ` · ⚠ kasada olmayan: ${c.bilinmeyen.join(", ")}` : ""),
-    el("span", { sinif: "eylemler" }, el("button", { type: "button", onclick: () => indir(c) }, "İndir")),
-    el("div", { sinif: "metin onizleme", tabindex: "0" },
-      durum.maskeliGorunum ? etiketliMetin(c.maskeli_metin) : c.acik_metin),
-  )));
 }
 
 async function maskeliKopyaAc(belge) {
@@ -267,17 +307,38 @@ async function maskeliKopyaAc(belge) {
   setTimeout(() => URL.revokeObjectURL(adres), 60000);
 }
 
-async function indir(cevap) {
-  const yanit = await fetch(`/api/dosyalar/${encodeURIComponent(durum.aktif)}/cevap-dosyasi?ad=${encodeURIComponent(cevap.dosya)}`,
-    { headers: { "X-Arthur-Mask": BELIRTEC } });
-  if (!yanit.ok) return;
-  const baglanti = el("a", { href: URL.createObjectURL(await yanit.blob()), download: cevap.dosya });
-  document.body.append(baglanti);
-  baglanti.click();
-  setTimeout(() => { URL.revokeObjectURL(baglanti.href); baglanti.remove(); }, 1000);
+$("komut-kopyala").addEventListener("click", (o) => kopyala($("ornek-komut").textContent, o.target));
+
+// -- cevaplar --------------------------------------------------------------------------------------
+$("maskeli-gorunum").addEventListener("change", (o) => { durum.maskeliGorunum = o.target.checked; cevaplariCiz(); });
+
+function cevaplariCiz() {
+  const liste = $("cevap-listesi");
+  if (!durum.cevaplar.length) {
+    liste.replaceChildren(el("li", { sinif: "not" }, "Claude bir taslak teslim ettiğinde burada gerçek adlarla görünür ve tek tıkla açılır."));
+    return;
+  }
+  liste.replaceChildren(...durum.cevaplar.map((c) => el("li", { sinif: "cevap" },
+    el("span", { sinif: "ad" }, c.baslik),
+    el("span", { sinif: "meta" }, `${tarih(c.olusturma)} · ${c.bicim.toUpperCase()} · ${c.cozulen} etiket çözüldü`,
+      c.bilinmeyen.length ? ` · ⚠ tanınmayan etiket: ${c.bilinmeyen.join(", ")}` : ""),
+    el("span", { sinif: "eylemler" },
+      el("button", { type: "button", onclick: () => cevapAc(c, false) }, BICIM_ADI[c.bicim] || "Aç"),
+      el("button", { type: "button", sinif: "ikincil", onclick: () => cevapAc(c, true) }, "Klasörde göster")),
+    el("div", { sinif: "metin onizleme", tabindex: "0" },
+      durum.maskeliGorunum ? etiketliMetin(c.maskeli_metin) : c.acik_metin),
+  )));
+}
+
+async function cevapAc(cevap, klasorde) {
+  await api("POST", `/api/dosyalar/${encodeURIComponent(durum.aktif)}/cevap-ac`, { dosya: cevap.dosya, klasorde });
 }
 
 // -- başlangıç ---------------------------------------------------------------------------------------
+// Doğrudan bağlantı: #belge=belge-2 incelemeyi açar.
+const hashBelge = new URLSearchParams(location.hash.slice(1)).get("belge");
+if (hashBelge) durum.acikInceleme = hashBelge;
+
 durumuYenile();
 dosyalariYukle().catch(() => {});
 setInterval(durumuYenile, 5000);
