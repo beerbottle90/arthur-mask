@@ -157,6 +157,8 @@ class _Isleyici(BaseHTTPRequestHandler):
                     return self._json(200, {"silindi": parcalar[3]})
                 if kaynak == "cevaplar" and yontem == "GET":
                     return self._json(200, {"cevaplar": islem.arayuz_cevaplar(klasor)})
+                if kaynak == "maskeli-dosyasi" and yontem == "GET":
+                    return self._maskeli_dosyasi(klasor, parse_qs(adres.query).get("id", [""])[0])
                 if kaynak == "cevap-dosyasi" and yontem == "GET":
                     return self._cevap_dosyasi(klasor, parse_qs(adres.query).get("ad", [""])[0])
             if yontem == "POST" and parcalar == ["coz"]:
@@ -183,6 +185,15 @@ class _Isleyici(BaseHTTPRequestHandler):
         if tur.startswith("text/") or tur in ("application/javascript",):
             tur += "; charset=utf-8"
         self._gonder(200, veri, tur)
+
+    def _maskeli_dosyasi(self, klasor: str, belge_id: str) -> None:
+        depo = self.uygulama.islem.depo
+        kayit = depo.belge_oku(klasor, belge_id)
+        yol = depo.dosya_yolu(klasor) / "maskeli" / kayit.get("maskeli_kopya", "")
+        if not kayit.get("maskeli_kopya") or not yol.is_file():
+            return self._json(HTTPStatus.NOT_FOUND, {"hata": "Maskeli kopya yok ya da süresi doldu"})
+        tur = "application/pdf" if yol.suffix == ".pdf" else "application/octet-stream"
+        self._gonder(200, yol.read_bytes(), tur, {"Content-Disposition": f'inline; filename="{yol.name}"'})
 
     def _cevap_dosyasi(self, klasor: str, ad: str) -> None:
         klasor_yolu = self.uygulama.islem.depo.dosya_yolu(klasor) / "cevaplar"

@@ -92,7 +92,7 @@ class Islem:
 
         if sonuc.kirmizi:
             durum = DURUM_KIRMIZI
-        elif sonuc.supheli or sonuc.artik:
+        elif sonuc.supheli or sonuc.artik or belge.ocr:  # OCR belgesi her zaman incelenir
             durum = DURUM_ONAY
         else:
             durum = DURUM_HAZIR
@@ -112,6 +112,8 @@ class Islem:
             "artik": [{"satir": s, "aciklama": a} for s, a in sonuc.artik],
             "uyarilar": belge.uyarilar,
             "supheli_sayisi": len(sonuc.supheli),
+            "ocr": belge.ocr,
+            "maskeli_kopya": f"{belge_id}{belge.cikti_uzantisi}",
         }
         self.depo.belge_kaydet(klasor, kayit)
         if durum != DURUM_HAZIR:

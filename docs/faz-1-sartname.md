@@ -25,6 +25,8 @@ Kararlar 13.09.2026'da proje sahibiyle netleştirildi. Mimari gerekçe:
 | K16 | Lisans | ArthurLegal Proprietary Non-Commercial (büro ve şirket içi kullanım serbest) |
 | K17 | Depo | Özel; herkese açma kararı ileride |
 | K19 | Tespit politikası | Sızıntıya öncelik; gereksiz maskeleme kabul edilir |
+| K20 | Taranmış belge | Yerel OCR (RapidOCR PP-OCRv6 small); maskeli görüntü PDF'i; inceleme zorunlu |
+| K21 | Dil kapsamı | Türkçe + İngilizce (yabancı şirket ekleri, İngilizce taraf blokları, uluslararası kimlik/adres) |
 | K18 | NER modeli | **GLiNER PII** (`urchade/gliner_multi_pii-v1`, Apache-2.0); temiz lisans nedeniyle, isabeti daha yüksek ama eğitim verisi lisansı belirsiz akdeniz27 yerine |
 
 ## NER model ölçümü (13.09.2026)
@@ -73,6 +75,23 @@ ve tek başına ilk ad kuralları eklendi. Önceki iki set bu ayarda görüldü�
 Kalan açıklar: tek başına soyadı ("Sezer"), küçük harfli kullanıcı adları ("deniz.t"),
 alışılmadık bağlamda dosya numarası, ISO biçimli tarih, sıfır yerine "O" harfli OCR metni.
 Bu set de artık görülmüştür; sonraki ayarlar yeni bir gizli setle ölçülür.
+
+### İngilizce belgeler (13.09.2026)
+
+İngilizce ve karışık sözleşme/tahkim/yazışma setinde (`ner_test_en.txt`, 406 ifade, 99 şirket)
+ilk ölçüm: ürün hattı sızıntı **0.941**, kişi R 0.97, şirket R 0.94. Ölçüm, Presidio'nun
+yinelenen ayıklamasının semantik filtreden önce çalıştığı bir hatayı ortaya çıkardı
+(doğum tarihi recall 0.09); düzeltme sonrası **0.966** (bu set artık görülmüştür).
+
+### Taranmış belge ve fotoğraf (K20, 13.09.2026)
+
+Yerel OCR: RapidOCR + PP-OCRv6 small (Apache-2.0, ONNX). Sentetik 200 DPI taramada sayfa
+başına ~2 sn, karakter benzerliği 0.97; medium model 8 kat yavaş ve satır sırasında hatalı.
+Maskeli çıktı üstverisiz, metin katmansız görüntü PDF'idir; etiketler piksellere basılır ve
+kutular satır yüksekliğiyle orantılı payla genişletilir (ilk denemede OCR sözcük kutularının
+darlığı yüzünden harf kenarları görünüyordu). Maskeli PDF yeniden OCR'dan geçirildiğinde
+gerçek değer okunmadığı testle doğrulanır. OCR ile okunan her belge inceleme gerektirir.
+Kapsam dışı: el yazısı, imza, mühür, fotoğraf, karekod.
 
 ## Kapsam
 

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from arthur_mask import belgeler, cli
+from arthur_mask import belgeler, cli, goruntu
 from arthur_mask.kasa import PAROLA_DEGISKENI, Kasa
 from arthur_mask.servis import geri_ac_metin, maskele_belge
 
@@ -112,6 +112,8 @@ def test_pdf_metin_katmani_maskelenir(tmp_path, monkeypatch):
     kaynak = tmp_path / "karar.pdf"
     _pdf(kaynak, [f"DAVACI: Ayse KARA TCKN: {TCKN}", "Adres: Ornek Mahallesi Gul Sokak No:10 Besiktas/Istanbul"], bos_sayfa=True)
     monkeypatch.setenv(PAROLA_DEGISKENI, "test")
+    if goruntu.ocr_kullanilabilir_mi():
+        pytest.skip("OCR kuruluyken boş sayfalı PDF OCR yoluna gider (test_ocr.py kapsar).")
     assert cli.main(["maskele", str(kaynak)]) == 0
     maskeli = (tmp_path / "karar.maskeli.txt").read_text(encoding="utf-8")
     assert "KARA" not in maskeli and TCKN not in maskeli and "{{KİŞİ-01}}" in maskeli
@@ -125,5 +127,6 @@ def test_pdf_metin_katmani_maskelenir(tmp_path, monkeypatch):
 def test_taranmis_pdf_durdurulur(tmp_path):
     kaynak = tmp_path / "taranmis.pdf"
     _pdf(kaynak, [])
-    with pytest.raises(belgeler.BelgeHatasi, match="OCR"):
+    # OCR yoksa "OCR gerekli", varsa "okunabilir metin bulunamadı" (yalnız çerçeve çizili sayfa).
+    with pytest.raises(belgeler.BelgeHatasi, match="OCR|okunabilir metin"):
         belgeler.ac(kaynak)

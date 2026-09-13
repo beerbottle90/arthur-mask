@@ -208,6 +208,9 @@ class MaskeMotoru:
         if m and varlik == "PERSON":
             bas += m.end()
         while son > bas and metin[son - 1] in " \t.,;:)'’\"":
+            # Kısaltma noktası değerin parçasıdır: "A.Ş.", "Ltd.", "Inc.", "J." kırpılmaz.
+            if metin[son - 1] == "." and re.search(r"(?:\b[A-ZÇĞİÖŞÜ]|Ltd|Şti|Sti|Inc|Co|Corp|Plc|Jr|Sr|Cad|Sok|Mah|Blv)\.$", metin[bas:son]):
+                break
             son -= 1
         parca = metin[bas:son]
         if not parca.strip():
@@ -223,8 +226,12 @@ class MaskeMotoru:
             if len(genel) == len(kelimeler):
                 return None
             parcalar = list(re.finditer(r"\S+", parca))
-            while parcalar and (rol_ismi_mi(tr_kucuk(parcalar[0].group())) or tr_kucuk(parcalar[0].group()).strip(".,:;") in KISI_OLMAYAN):
+            genel_mi = lambda p: rol_ismi_mi(tr_kucuk(p.group())) or tr_kucuk(p.group()).strip(".,:;") in KISI_OLMAYAN
+            while parcalar and genel_mi(parcalar[0]):
                 parcalar.pop(0)
+            # Sondaki unvan/rol de ada ait değildir ("Zeynep Hanım" → "Zeynep").
+            while len(parcalar) > 1 and genel_mi(parcalar[-1]):
+                parcalar.pop()
             if not parcalar:
                 return None
             bas, son = bas + parcalar[0].start(), bas + parcalar[-1].end()

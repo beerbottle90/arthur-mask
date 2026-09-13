@@ -167,18 +167,23 @@ _KISA_KOK_EKLERI = {
 }
 
 
+_ASCII_ROL_KOKLERI = tuple(sorted({ascii_kucuk(k) for k in ROL_KOKLERI}))
+
+
 def rol_ismi_mi(kelime: str) -> bool:
     """Küçük harfe çevrilmiş sözcük bir rol isminin kendisi ya da kısa çekimli hâli mi."""
     kelime = re.split(r"['’]", kelime.strip(".,:;'’"))[0]
-    for kok in ROL_KOKLERI:
-        if not kelime.startswith(kok):
-            continue
-        ek = kelime[len(kok):]
-        if len(kok) <= 4:
-            if ek in _KISA_KOK_EKLERI:
+    # Türkçe karakterleri düşmüş OCR metni ("davali", "musteki") da aynı köklerle karşılaştırılır.
+    for aday, kokler in ((kelime, ROL_KOKLERI), (ascii_kucuk(kelime), _ASCII_ROL_KOKLERI)):
+        for kok in kokler:
+            if not aday.startswith(kok):
+                continue
+            ek = aday[len(kok):]
+            if len(kok) <= 4:
+                if ek in _KISA_KOK_EKLERI:
+                    return True
+            elif len(ek) <= 6:
                 return True
-        elif len(ek) <= 6:
-            return True
     return False
 
 

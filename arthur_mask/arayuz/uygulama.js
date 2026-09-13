@@ -118,7 +118,7 @@ async function yukle(dosyalar) {
         await dosya.arrayBuffer(), { "X-Dosya-Adi": encodeURIComponent(dosya.name) });
       if (sonuc.durum !== "hazir") durum.acikInceleme = sonuc.id;
     }
-    ipucu.textContent = ".docx · .udf · .pdf · .txt — belge bu bilgisayardan çıkmaz";
+    ipucu.textContent = ".docx · .udf · .pdf · .jpg/.png · .txt — belge bu bilgisayardan çıkmaz";
   } catch (hata) {
     ipucu.textContent = `Hata: ${hata.message}`;
   } finally {
@@ -207,6 +207,9 @@ function incelemeyiCiz() {
     bolumler.push(el("p", { sinif: "uyari" }, `Artık tarama: ${belge.artik.map((a) => `satır ${a.satir} ${a.aciklama}`).join("; ")}`));
   }
 
+  bolumler.push(el("div", { sinif: "eylem-satiri" },
+    el("button", { type: "button", sinif: belge.ocr ? "" : "ikincil", onclick: () => maskeliKopyaAc(belge) },
+      belge.ocr ? "Maskeli sayfa görüntülerini kontrol et (PDF)" : "Maskeli kopyayı aç")));
   bolumler.push(el("h3", {}, "Claude'a gidecek metin"));
   bolumler.push(el("div", { sinif: "onizleme", tabindex: "0" }, etiketliMetin(belge.maskeli_metin)));
 
@@ -253,6 +256,15 @@ function cevaplariCiz() {
     el("div", { sinif: "metin onizleme", tabindex: "0" },
       durum.maskeliGorunum ? etiketliMetin(c.maskeli_metin) : c.acik_metin),
   )));
+}
+
+async function maskeliKopyaAc(belge) {
+  const yanit = await fetch(`/api/dosyalar/${encodeURIComponent(durum.aktif)}/maskeli-dosyasi?id=${encodeURIComponent(belge.id)}`,
+    { headers: { "X-Arthur-Mask": BELIRTEC } });
+  if (!yanit.ok) return;
+  const adres = URL.createObjectURL(await yanit.blob());
+  window.open(adres, "_blank", "noopener");
+  setTimeout(() => URL.revokeObjectURL(adres), 60000);
 }
 
 async function indir(cevap) {

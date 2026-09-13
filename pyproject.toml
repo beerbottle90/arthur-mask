@@ -16,6 +16,7 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest>=8", "python-docx>=1.1", "reportlab>=4"]
 semantik = ["gliner>=0.2.29", "presidio-analyzer[gliner]>=2.2.364", "protobuf", "sentencepiece"]
+ocr = ["rapidocr>=3.9", "onnxruntime>=1.20", "pypdfium2>=5", "pillow>=10", "numpy"]
 
 [project.scripts]
 arthur-mask = "arthur_mask.cli:main"

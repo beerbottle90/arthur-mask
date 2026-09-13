@@ -29,6 +29,7 @@ class PdfBelge:
     metin: str
     sayfa_sayisi: int
     uyarilar: List[str] = field(default_factory=list)
+    bos_sayfalar: List[int] = field(default_factory=list)
 
 
 def oku(yol: Path) -> PdfBelge:
@@ -50,4 +51,4 @@ def oku(yol: Path) -> PdfBelge:
         uyarilar.append(
             f"Metni olmayan sayfalar: {', '.join(map(str, bos))}. Taranmış sayfa olabilir; bu sayfalardaki veri MASKELENMEDİ."
         )
-    return PdfBelge(SAYFA_AYRACI.join(sayfalar), len(sayfalar), uyarilar)
+    return PdfBelge(SAYFA_AYRACI.join(sayfalar), len(sayfalar), uyarilar, bos)
