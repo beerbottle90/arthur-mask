@@ -13,14 +13,16 @@ import threading
 from collections import Counter
 from dataclasses import replace
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 from . import belgeler, docx, docx_yapi, udf
 from .cikis import CikisDenetimi
 from .depo import Depo, simdi
 from .maskeleyici import ETIKET_DESENI, geri_acma_degisiklikleri, maskele
-from .motor import Bulgu, MaskeMotoru, artik_adaylari, artik_tarama
 from .servis import geri_ac_metin, maskele_belge
+
+if TYPE_CHECKING:  # motor presidio ve spaCy'yi yükler; köprü açılışında bu bedel ödenmez
+    from .motor import MaskeMotoru
 
 gunluk = logging.getLogger("arthur_mask")
 
@@ -43,7 +45,7 @@ class Islem:
     def __init__(self, depo: Depo, semantik: Optional[bool] = None):
         self.depo = depo
         self._semantik = semantik
-        self._motor: Optional[MaskeMotoru] = None
+        self._motor: Optional["MaskeMotoru"] = None
         self._motor_kilidi = threading.Lock()
         self._motor_hazir = threading.Event()
         # Claude'un kullanıcıyı yönlendirebilmesi için yerel arayüz adresi (köprü başlatınca atanır).
@@ -56,7 +58,9 @@ class Islem:
     def motoru_arkaplanda_yukle(self) -> None:
         threading.Thread(target=self.motor, name="motor-yukleme", daemon=True).start()
 
-    def motor(self) -> MaskeMotoru:
+    def motor(self) -> "MaskeMotoru":
+        from .motor import MaskeMotoru  # ağır bağımlılıklar burada yüklenir (arka plan işçisi çağırır)
+
         with self._motor_kilidi:
             if self._motor is None:
                 semantik = self._semantik
@@ -105,6 +109,8 @@ class Islem:
             # geçici dosyanın silinmesi yazıcıyı etkilemez (UDF/DOCX içerikleri belleğe okundu).
 
         # Artık tarama izleri de avukatın tek tıkla karar vereceği adaylara dönüşür.
+        from .motor import artik_adaylari
+
         supheli = list(sonuc.supheli) + artik_adaylari(belge.metin, list(sonuc.bulgular) + list(sonuc.supheli))
         if sonuc.kirmizi:
             durum = DURUM_KIRMIZI
@@ -175,6 +181,8 @@ class Islem:
                 kayit["maskeli_metin"] = maskeli
                 kayit["etiket_sayisi"] = len({d[2] for d in degisiklikler})
                 kayit["turler"] = _etiket_turleri(degisiklikler)
+                from .motor import artik_tarama
+
                 kayit["artik"] = [{"satir": s, "aciklama": a} for s, a in artik_tarama(maskeli)]
             # Kararlar dosya sözlüğüne yazılır; aynı soru bu dosyada bir daha sorulmaz.
             self.depo.sozluge_ekle(

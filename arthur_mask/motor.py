@@ -4,17 +4,6 @@ import re
 from dataclasses import dataclass, replace
 from typing import Iterable, List, Optional, Tuple
 
-from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
-from presidio_analyzer.predefined_recognizers import (
-    CreditCardRecognizer,
-    EmailRecognizer,
-    IbanRecognizer,
-    IpRecognizer,
-    TrLicensePlateRecognizer,
-    TrNationalIdRecognizer,
-)
-
-from .nlp import TurkceNlpMotoru
 from .sozluk import Sozluk
 from . import semantik as semantik_modulu
 from .tanimlayicilar import (
@@ -178,6 +167,21 @@ class MaskeMotoru:
         ictihat_koruma: bool = True,
     ):
         """semantik: None = kuruluysa GLiNER katmanını aç; True = zorunlu; False = yalnız kurallar."""
+        # Presidio ve spaCy burada, motor gerçekten kurulurken içe aktarılır. Modül başında olduğunda
+        # bedeli (bu makinede ~11 sn) arthur_mask'i içe aktaran herkes öderdi: Claude Desktop köprüyü
+        # başlatırken initialize yanıtı gecikir ve eşzamanlı başlatmalarda zaman aşımına uğrardı.
+        from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
+        from presidio_analyzer.predefined_recognizers import (
+            CreditCardRecognizer,
+            EmailRecognizer,
+            IbanRecognizer,
+            IpRecognizer,
+            TrLicensePlateRecognizer,
+            TrNationalIdRecognizer,
+        )
+
+        from .nlp import TurkceNlpMotoru
+
         if profil not in PROFILLER:
             raise ValueError(f"Bilinmeyen profil: {profil} (seçenekler: {', '.join(PROFILLER)})")
         self.profil = profil

@@ -1,11 +1,15 @@
 """Bulguları tutarlı maske etiketleriyle değiştirir ve yapay zekâ çıktısını geri açar."""
 
+from __future__ import annotations
+
 import re
-from typing import List, Sequence, Tuple
+from typing import TYPE_CHECKING, List, Sequence, Tuple
 
 from .ek_uyumu import ek_uyumla
 from .kasa import Kasa
-from .motor import Bulgu
+
+if TYPE_CHECKING:  # motor presidio ve spaCy'yi yükler; burada yalnız tür ipucu için gerekli
+    from .motor import Bulgu
 
 Degisiklik = Tuple[int, int, str]
 

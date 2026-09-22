@@ -1,14 +1,18 @@
 """CLI, yerel arayüz ve MCP köprüsünün ortak kullandığı maskeleme / geri açma işlemleri."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple
+from typing import TYPE_CHECKING, List, Tuple
 
 from . import kirmizi_hat, rapor
 from .belgeler import Belge
 from .kasa import Kasa
-from .motor import Bulgu, MaskeMotoru, artik_tarama
 from .maskeleyici import Degisiklik, degisiklikleri_uygula, geri_acma_degisiklikleri, maskele
+
+if TYPE_CHECKING:  # motor modülü presidio ve spaCy'yi yükler (~11 sn); çalışma anında geç içe aktarılır
+    from .motor import Bulgu, MaskeMotoru
 
 
 @dataclass
@@ -28,6 +32,8 @@ class MaskelemeSonucu:
 
 
 def maskele_belge(belge: Belge, motor: MaskeMotoru, kasa: Kasa) -> MaskelemeSonucu:
+    from .motor import artik_tarama
+
     bulgular, supheli = motor.analiz(belge.metin)
     maskeli, degisiklikler = maskele(belge.metin, bulgular, kasa)
     kirmizi = kirmizi_hat.tara(belge.metin)

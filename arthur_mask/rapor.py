@@ -1,12 +1,16 @@
 """Avukat incelemesi için yerel rapor. Gerçek değer içermez; şüpheli adaylar hariç."""
 
+from __future__ import annotations
+
 from collections import Counter
 from datetime import datetime
-from typing import List, Sequence, Tuple
+from typing import TYPE_CHECKING, List, Sequence, Tuple
 
 from .kirmizi_hat import KirmiziHatUyarisi
-from .motor import Bulgu
 from .maskeleyici import Degisiklik
+
+if TYPE_CHECKING:  # motor presidio ve spaCy'yi yükler; burada yalnız tür ipucu için gerekli
+    from .motor import Bulgu
 
 
 def _satir(metin: str, konum: int) -> int:
