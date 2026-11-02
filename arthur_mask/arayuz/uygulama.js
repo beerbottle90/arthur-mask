@@ -32,6 +32,30 @@ function kisayoldanAcUyarisi() {
     el("p", {}, "Güvenlik için arayüz bu bilgisayardaki Arthur Mask kısayoluyla (masaüstü ya da Başlat menüsü; Mac'te ",
       "Uygulamalar) bir kez açılmalı. Sonra bu tarayıcı sizi tanır; Claude'un verdiği bağlantılar da çalışır.")));
 }
+
+// Görünüm, AL Masası'ndaki gibi: açık (varsayılan), koyu ya da otomatik (sistemin temasına uyar). Bu tarayıcıda saklanır.
+const tema = {
+  anahtar: "al.tema",
+  gecici: null,
+  secim() {
+    try { return this.gecici || localStorage.getItem(this.anahtar) || "acik"; } catch { return this.gecici || "acik"; }
+  },
+  sec(deger) {
+    this.gecici = deger;
+    try { localStorage.setItem(this.anahtar, deger); } catch { /* depolama kapalı: yalnız bu sekme */ }
+    this.uygula();
+  },
+  uygula() {
+    const s = this.secim();
+    const koyu = s === "koyu" || (s === "otomatik" && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.dataset.tema = koyu ? "koyu" : "acik";
+    document.querySelectorAll(".tema-secimi [data-tema]").forEach((d) => d.setAttribute("aria-pressed", String(d.dataset.tema === s)));
+  },
+};
+document.querySelectorAll(".tema-secimi [data-tema]").forEach((d) => d.addEventListener("click", () => tema.sec(d.dataset.tema)));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => tema.uygula());
+tema.uygula();
+
 const DURUM_ADI = { hazir: "Claude'a hazır", onay_bekliyor: "Onayınızı bekliyor", kirmizi_hat: "Kırmızı hat" };
 const BICIM_ADI = { docx: "Word'de aç", udf: "UYAP editöründe aç", txt: "Aç" };
 const ETIKET = /\{\{[^{}\s]{1,40}?-\d{1,5}\}\}/g;

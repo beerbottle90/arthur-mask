@@ -1,29 +1,104 @@
 <!doctype html>
-<html lang="tr">
+<html lang="tr" data-tema="acik">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Arthur Mask</title>
-<link rel="icon" href="logo.png">
+<meta name="color-scheme" content="light dark">
+<title>Arthur Mask · ArthurLegal</title>
+<link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="stil.css">
 <script src="uygulama.js" defer></script>
 </head>
 <body>
-<header class="ust">
-  <div class="marka">
-    <img src="logo.png" alt="" width="36" height="36">
-    <div>
-      <h1>ARTHUR MASK</h1>
-      <p class="alt">ArthurLegal · belgeler bu bilgisayardan çıkmadan maskelenir · v{{SURUM}}</p>
+<!-- Düzen ve görünüm AL Masası'nınki (arthurlegal-app4all ortak/tasarim/al.css): solda panel, sağda içerik. -->
+<div class="masa">
+  <aside class="yan" aria-label="Arthur Mask">
+    <header class="kimlik">
+      <img class="arma" src="logo.svg" alt="" width="30" height="30">
+      <span class="marka">Arthur<span>Legal</span></span>
+      <span class="ayrac" aria-hidden="true"></span>
+      <span class="bolum">Mask</span>
+    </header>
+
+    <h2 class="bolum-adi" id="dosyalar-baslik">Dosyalar</h2>
+    <ul id="dosya-listesi" class="liste dosyalar" aria-labelledby="dosyalar-baslik"></ul>
+    <button type="button" id="yeni-dosya" class="ikincil tam">+ Yeni dosya</button>
+    <p class="not">Yeni dosyanın adı, bıraktığınız ilk belgeden alınır.</p>
+
+    <div class="yan-alt">
+      <div class="durumlar">
+        <span class="durum" id="kopru-durumu" role="status" aria-live="polite">Bağlanıyor…</span>
+        <span class="durum" id="koruma-durumu" hidden></span>
+      </div>
+      <nav class="menu" aria-label="Menü">
+        <button type="button" class="git" id="rehber-ac">Nasıl çalışır</button>
+        <button type="button" class="git" id="kurtarma-ac">Kurtarma anahtarı<span id="kurtarma-rozet" class="rozet" hidden title="Henüz saklanmadı"></span></button>
+      </nav>
+      <div class="segment tema-secimi" role="group" aria-label="Görünüm">
+        <button type="button" data-tema="acik">Açık</button>
+        <button type="button" data-tema="koyu">Koyu</button>
+        <button type="button" data-tema="otomatik">Otomatik</button>
+      </div>
+      <p class="surum">Arthur Mask v{{SURUM}}</p>
     </div>
-  </div>
-  <nav class="menu" aria-label="Menü">
-    <span class="durum" id="kopru-durumu" role="status" aria-live="polite">Bağlanıyor…</span>
-    <span class="durum" id="koruma-durumu" hidden></span>
-    <button type="button" class="menu-dugme" id="rehber-ac">Nasıl çalışır</button>
-    <button type="button" class="menu-dugme" id="kurtarma-ac">Kurtarma anahtarı<span id="kurtarma-rozet" class="rozet" hidden title="Henüz saklanmadı"></span></button>
-  </nav>
-</header>
+  </aside>
+
+  <main class="icerik">
+    <div class="sayfa-bas">
+      <span class="etiket-ust">Arthur Mask</span>
+      <h1>Belgeler bu bilgisayardan çıkmadan maskelenir</h1>
+      <p class="aciklama">Kişisel veriler burada etiketlenir; Claude yalnız etiketli metni görür, cevabı burada gerçek adlarla açarsınız.</p>
+    </div>
+
+    <div id="guncelleme" class="guncelleme" hidden>
+      <span id="guncelleme-metin"></span>
+      <a id="guncelleme-baglanti" href="#" target="_blank" rel="noopener noreferrer">Sürüm sayfasını aç</a>
+    </div>
+
+    <div id="birak" class="birak" tabindex="0" role="button" aria-describedby="birak-ipucu">
+      <img class="birak-arma" src="logo.svg" alt="" width="40" height="40">
+      <strong id="birak-baslik">Belgeyi buraya bırakın</strong>
+      <span id="birak-ipucu"></span>
+      <input id="dosya-sec" type="file" accept=".docx,.udf,.pdf,.txt,.md,.jpg,.jpeg,.png,.tif,.tiff" hidden multiple>
+    </div>
+
+    <div id="calisma" hidden>
+      <section class="kutu" aria-labelledby="belgeler-baslik">
+        <h2 id="belgeler-baslik">Belgeler</h2>
+        <ul id="belge-listesi" class="liste belgeler"></ul>
+        <div class="komut" id="komut-kutusu" hidden>
+          <span>Claude Desktop'ta ArthurLegal projesine yapıştırın:</span>
+          <code id="ornek-komut"></code>
+          <button type="button" id="komut-kopyala" class="ikincil">Kopyala</button>
+        </div>
+      </section>
+
+      <section id="inceleme" class="kutu inceleme" hidden aria-labelledby="inceleme-baslik">
+        <h2 id="inceleme-baslik">İnceleme</h2>
+        <div id="inceleme-icerik"></div>
+      </section>
+
+      <section class="kutu" aria-labelledby="cevaplar-baslik">
+        <h2 id="cevaplar-baslik">Cevaplar</h2>
+        <ul id="cevap-listesi" class="liste cevaplar"></ul>
+      </section>
+
+      <section class="kutu giden" aria-labelledby="giden-baslik">
+        <div class="baslik-satiri">
+          <h2 id="giden-baslik">Claude'a giden</h2>
+          <button type="button" id="denetle" class="ikincil">Sızıntı denetimi yap</button>
+        </div>
+        <p id="giden-ozet" class="not ust-bosluksuz"></p>
+        <div id="denetim-sonucu" hidden></div>
+        <ul id="giden-listesi" class="liste gidenler"></ul>
+      </section>
+    </div>
+
+    <footer class="alt-bilgi">
+      Claude'a yalnız maskeli metin gider; her yanıt gönderilmeden önce kasadaki gerçek değerlere karşı yeniden taranır.
+    </footer>
+  </main>
+</div>
 
 <dialog id="rehber" class="pencere" aria-labelledby="rehber-baslik">
   <h2 id="rehber-baslik">Nasıl çalışır</h2>
@@ -50,65 +125,5 @@
     <form method="dialog"><button class="ikincil">Kapat</button></form>
   </div>
 </dialog>
-
-<div id="guncelleme" class="guncelleme" hidden>
-  <span id="guncelleme-metin"></span>
-  <a id="guncelleme-baglanti" href="#" target="_blank" rel="noopener noreferrer">Sürüm sayfasını aç</a>
-</div>
-
-<main class="duzen">
-  <aside class="yan">
-    <section class="panel" aria-labelledby="dosyalar-baslik">
-      <h2 id="dosyalar-baslik">Dosyalar</h2>
-      <ul id="dosya-listesi" class="liste"></ul>
-      <button type="button" id="yeni-dosya" class="ikincil tam">+ Yeni dosya</button>
-      <p class="not">Yeni dosyanın adı, bıraktığınız ilk belgeden alınır.</p>
-    </section>
-  </aside>
-
-  <section class="icerik">
-    <div id="birak" class="birak" tabindex="0" role="button" aria-describedby="birak-ipucu">
-      <strong id="birak-baslik">Belgeyi buraya bırakın</strong>
-      <span id="birak-ipucu"></span>
-      <input id="dosya-sec" type="file" accept=".docx,.udf,.pdf,.txt,.md,.jpg,.jpeg,.png,.tif,.tiff" hidden multiple>
-    </div>
-
-    <div id="calisma" hidden>
-      <section class="panel" aria-labelledby="belgeler-baslik">
-        <h2 id="belgeler-baslik">Belgeler</h2>
-        <ul id="belge-listesi" class="liste belgeler"></ul>
-        <div class="komut" id="komut-kutusu" hidden>
-          <span>Claude Desktop'ta ArthurLegal projesine yapıştırın:</span>
-          <code id="ornek-komut"></code>
-          <button type="button" id="komut-kopyala" class="ikincil">Kopyala</button>
-        </div>
-      </section>
-
-      <section id="inceleme" class="panel inceleme" hidden aria-labelledby="inceleme-baslik">
-        <h2 id="inceleme-baslik">İnceleme</h2>
-        <div id="inceleme-icerik"></div>
-      </section>
-
-      <section class="panel" aria-labelledby="cevaplar-baslik">
-        <h2 id="cevaplar-baslik">Cevaplar</h2>
-        <ul id="cevap-listesi" class="liste cevaplar"></ul>
-      </section>
-
-      <section class="panel giden" aria-labelledby="giden-baslik">
-        <div class="baslik-satiri">
-          <h2 id="giden-baslik">Claude'a giden</h2>
-          <button type="button" id="denetle" class="ikincil">Sızıntı denetimi yap</button>
-        </div>
-        <p id="giden-ozet" class="not ust-bosluksuz"></p>
-        <div id="denetim-sonucu" hidden></div>
-        <ul id="giden-listesi" class="liste gidenler"></ul>
-      </section>
-    </div>
-  </section>
-</main>
-
-<footer class="alt-bilgi">
-  Claude'a yalnız maskeli metin gider; her yanıt gönderilmeden önce kasadaki gerçek değerlere karşı yeniden taranır.
-</footer>
 </body>
 </html>
