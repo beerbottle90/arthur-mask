@@ -2,8 +2,9 @@
 
 Güvenlik:
 - Host başlığı yalnız 127.0.0.1/localhost olabilir (DNS rebinding'e karşı).
-- API isteklerinde `X-Arthur-Mask` belirteci zorunlu; belirteç arayüz sayfasına
-  sunucu tarafından gömülür, başka sitelerden okunamaz.
+- API isteklerinde `X-Arthur-Mask` belirteci zorunlu. Belirteç sayfaya gömülmez: sayfa kimliksiz sunulur ve aynı
+  bilgisayardaki başka bir hesap da onu açabilir. Masaüstü kısayolu (baslat.py) tarayıcıyı belirteçle açar,
+  arayüz onu o tarayıcıda hatırlar.
 - Origin yalnız aynı köken veya tanımlı eklenti kimliği olabilir.
 """
 
@@ -209,8 +210,7 @@ class _Isleyici(BaseHTTPRequestHandler):
         if veri is None:
             return self._json(HTTPStatus.NOT_FOUND, {"hata": "Bulunamadı"})
         if ad == "index.html":
-            veri = veri.replace(b"{{BELIRTEC}}", self.uygulama.belirtec.encode()).replace(
-                b"{{SURUM}}", __version__.encode())
+            veri = veri.replace(b"{{SURUM}}", __version__.encode())
         tur = mimetypes.guess_type(ad)[0] or "application/octet-stream"
         if tur.startswith("text/") or tur in ("application/javascript",):
             tur += "; charset=utf-8"
