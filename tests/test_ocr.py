@@ -21,7 +21,8 @@ SATIRLAR = [
 
 
 def _tarama(yol, bicim):
-    yollar = ("C:/Windows/Fonts/times.ttf", "/System/Library/Fonts/Supplemental/Times New Roman.ttf")
+    yollar = ("C:/Windows/Fonts/times.ttf", "/System/Library/Fonts/Supplemental/Times New Roman.ttf",
+              "/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf")  # Linux (OSS Scanner imajı)
     font = ImageFont.truetype(next((y for y in yollar if Path(y).exists()), yollar[0]), 34)
     img = Image.new("RGB", (1654, 700), "white")
     ciz = ImageDraw.Draw(img)

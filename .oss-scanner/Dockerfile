@@ -14,8 +14,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     HF_HOME=/opt/hf \
     ARTHUR_MASK_ANA_ANAHTAR=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
 
-# libgl1 ve libglib2.0-0: RapidOCR'ın kullandığı OpenCV için.
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git libgl1 libglib2.0-0 \
+# libgl1 ve libglib2.0-0: RapidOCR'ın kullandığı OpenCV için. fonts-liberation: OCR testleri taranmış sayfayı
+# Times New Roman'ın ölçü uyumlusu Liberation Serif ile çizer.
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git libgl1 libglib2.0-0 fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 # Torch'un CPU sürümü önce: GLiNER başka türlü GPU'lu büyük paketi çeker.
