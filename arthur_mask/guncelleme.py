@@ -19,7 +19,10 @@ from .anahtar import uygulama_klasoru
 
 gunluk = logging.getLogger("arthur_mask.guncelleme")
 
-SURUM_ADRESI = "https://api.github.com/repos/beerbottle90/ArthurLegal/releases?per_page=15"
+# Arthur Mask'ın kurulum dosyaları ArthurLegal'deki sabit `arthur-mask` sürümünde durur. Etiketi doğrudan sorarız:
+# sürüm listesinin ilk sayfası (eskiden per_page=15) ArthurLegal'in sonraki sürümleriyle dolunca bu sürüm görünmez
+# olmuş, 1.0.x'te güncelleme bildirimi hiç çıkmamıştı (2026-11-03).
+SURUM_ADRESI = "https://api.github.com/repos/beerbottle90/ArthurLegal/releases/tags/arthur-mask"
 # Kalıcı indirme bağlantısı için dosya adı sürümsüzdür (ArthurMask-Kurulum.exe); sürüm o zaman
 # sürüm başlığından okunur ("Arthur Mask 1.0.0 — Windows kurulum dosyası").
 # macOS kurulum dosyası aynı sürüm sayfasında ArthurMask-Kurulum.dmg adıyla durur.
@@ -33,6 +36,13 @@ _sonuc: Optional[Dict] = None
 
 def _surum(metin: str):
     return tuple(int(p) for p in re.findall(r"\d+", metin)[:3])
+
+
+def surum_listesi(yanit) -> list:
+    """Etiket uç noktası tek bir sürüm nesnesi döndürür; en_yeni liste bekler."""
+    if isinstance(yanit, list):
+        return yanit
+    return [yanit] if isinstance(yanit, dict) else []
 
 
 def en_yeni(surumler_json) -> Optional[Dict]:
@@ -63,7 +73,7 @@ def _denetle() -> None:
             istek = urllib.request.Request(SURUM_ADRESI, headers={
                 "Accept": "application/vnd.github+json", "User-Agent": f"ArthurMask/{__version__}"})
             with urllib.request.urlopen(istek, timeout=10) as yanit:  # noqa: S310 - sabit https adresi
-                veri = en_yeni(json.loads(yanit.read())) or {}
+                veri = en_yeni(surum_listesi(json.loads(yanit.read()))) or {}
             onbellek.write_text(json.dumps(veri), encoding="utf-8")
         if veri.get("surum") and _surum(veri["surum"]) > _surum(__version__):
             _sonuc = veri
