@@ -13,10 +13,22 @@ import time
 import urllib.request
 import webbrowser
 
+from .anahtar import uygulama_klasoru
 from .sunucu import BELIRTEC_BASLIGI, VARSAYILAN_PORT, belirtec_al
 
 ADRES = f"http://127.0.0.1:{VARSAYILAN_PORT}/"
 CLAUDE_KIMLIGI = "com.anthropic.claudefordesktop"
+
+
+def arayuzu_ac() -> None:
+    """Arayüzü belirteçle açar; arayüz belirteci bu tarayıcıda hatırlar. Belirteç tarayıcının komut satırına yazılmaz
+    (macOS'ta süreç listesi başka hesaplara açıktır): yalnız bu kullanıcının klasöründe duran, adrese yönlendiren
+    küçük bir sayfa açılır."""
+    sayfa = uygulama_klasoru() / "ac.html"
+    hedef = f"{ADRES}#t={belirtec_al()}"
+    sayfa.write_text(f'<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url={hedef}">'
+                     "<title>Arthur Mask</title>", encoding="utf-8")
+    webbrowser.open(sayfa.as_uri())
 
 
 def arayuz_calisiyor(zaman_asimi: float = 1.5) -> bool:
@@ -92,14 +104,14 @@ def main() -> int:
     if sys.platform == "darwin" and not macos_hazirla():
         return 1
     if arayuz_calisiyor():
-        webbrowser.open(ADRES)
+        arayuzu_ac()
         return 0
     if claude_desktop_ac():
         son = time.monotonic() + 45
         while time.monotonic() < son:
             time.sleep(1.5)
             if arayuz_calisiyor():
-                webbrowser.open(ADRES)
+                arayuzu_ac()
                 return 0
     # Claude Desktop yok ya da köprüyü başlatmadı: arayüz bu süreçte sunulur.
     from . import kopru
@@ -109,7 +121,7 @@ def main() -> int:
     def _ac():
         for _ in range(40):
             if arayuz_calisiyor():
-                webbrowser.open(ADRES)
+                arayuzu_ac()
                 return
             time.sleep(0.5)
 

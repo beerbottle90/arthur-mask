@@ -1,6 +1,37 @@
 "use strict";
 
-const BELIRTEC = document.querySelector('meta[name="am-belirtec"]').content;
+// Belirteç sayfada değil: masaüstü kısayolu sayfayı "#t=<belirteç>" ile açar, bu tarayıcı onu hatırlar. Aynı
+// bilgisayardaki başka bir hesabın tarayıcısında belirteç olmadığı için API ona kapalı kalır.
+const BELIRTEC = belirteciAl();
+// Sayfa zaten açıkken kısayol aynı sekmeye "#t=" getirirse tarayıcı yeniden yüklemez; belirteci alıp baştan başla.
+window.addEventListener("hashchange", () => {
+  if (new URLSearchParams(location.hash.slice(1)).has("t")) { belirteciAl(); location.reload(); }
+});
+
+function belirteciAl() {
+  const parametreler = new URLSearchParams(location.hash.slice(1));
+  const gelen = parametreler.get("t");
+  let kayitli = "";
+  try {
+    if (gelen) localStorage.setItem("am-belirtec", gelen);
+    kayitli = localStorage.getItem("am-belirtec") || "";
+  } catch { /* depolama kapalı: belirteç yalnız bu sekmede */ }
+  if (gelen) {
+    parametreler.delete("t");
+    const kalan = parametreler.toString();
+    history.replaceState(null, "", location.pathname + location.search + (kalan ? `#${kalan}` : ""));
+  }
+  return gelen || kayitli;
+}
+
+function kisayoldanAcUyarisi() {
+  if (document.getElementById("kisayol-uyarisi")) return;
+  try { localStorage.removeItem("am-belirtec"); } catch { /* depolama kapalı */ }
+  document.body.prepend(el("div", { sinif: "denetim bulgu", id: "kisayol-uyarisi", role: "alert" },
+    el("strong", {}, "Arthur Mask'ı kısayolundan açın"),
+    el("p", {}, "Güvenlik için arayüz bu bilgisayardaki Arthur Mask kısayoluyla (masaüstü ya da Başlat menüsü; Mac'te ",
+      "Uygulamalar) bir kez açılmalı. Sonra bu tarayıcı sizi tanır; Claude'un verdiği bağlantılar da çalışır.")));
+}
 const DURUM_ADI = { hazir: "Claude'a hazır", onay_bekliyor: "Onayınızı bekliyor", kirmizi_hat: "Kırmızı hat" };
 const BICIM_ADI = { docx: "Word'de aç", udf: "UYAP editöründe aç", txt: "Aç" };
 const ETIKET = /\{\{[^{}\s]{1,40}?-\d{1,5}\}\}/g;
@@ -18,6 +49,7 @@ async function api(yontem, yol, govde, ekBasliklar = {}) {
     secenek.headers["Content-Type"] = "application/json";
   }
   const yanit = await fetch(yol, secenek);
+  if (yanit.status === 401) kisayoldanAcUyarisi();
   const veri = await yanit.json().catch(() => ({}));
   if (!yanit.ok) throw new Error(veri.hata || `İstek başarısız (${yanit.status})`);
   return veri;

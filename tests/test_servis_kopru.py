@@ -146,8 +146,22 @@ def test_http_guvenlik_kapilari(yerel):
     assert _istek(yerel, "GET", "/api/durum", belirtec="yanlis")[0] == 401
     assert _istek(yerel, "GET", "/api/durum", basliklar={"Origin": "https://kotu.example"})[0] == 403
     assert _istek(yerel, "GET", "/api/durum", basliklar={"Host": "kotu.example"})[0] == 421
+    # Sayfa kimliksiz sunulur; aynı bilgisayardaki başka bir hesap da açabileceği için belirteç sayfada olmamalı.
     durum, govde = _istek(yerel, "GET", "/", belirtec=None)
-    assert durum == 200 and b"test-belirtec" in govde and b"{{BELIRTEC}}" not in govde
+    assert durum == 200 and b"test-belirtec" not in govde and b"BELIRTEC" not in govde
+
+
+def test_kisayol_belirteci_komut_satirina_yazmaz(tmp_path, monkeypatch):
+    from arthur_mask import baslat
+
+    acilan = []
+    monkeypatch.setattr(baslat, "uygulama_klasoru", lambda: tmp_path)
+    monkeypatch.setattr(baslat, "belirtec_al", lambda: "gizli-belirtec")
+    monkeypatch.setattr(baslat.webbrowser, "open", acilan.append)
+    baslat.arayuzu_ac()
+    assert len(acilan) == 1 and acilan[0].startswith("file:") and "gizli-belirtec" not in acilan[0]
+    sayfa = (tmp_path / "ac.html").read_text(encoding="utf-8")
+    assert f"{baslat.ADRES}#t=gizli-belirtec" in sayfa
 
 
 def test_http_uctan_uca(yerel, islem):
