@@ -13,16 +13,19 @@ import time
 import urllib.request
 import webbrowser
 
-from .sunucu import VARSAYILAN_PORT
+from .sunucu import BELIRTEC_BASLIGI, VARSAYILAN_PORT, belirtec_al
 
 ADRES = f"http://127.0.0.1:{VARSAYILAN_PORT}/"
 CLAUDE_KIMLIGI = "com.anthropic.claudefordesktop"
 
 
 def arayuz_calisiyor(zaman_asimi: float = 1.5) -> bool:
+    """Porttaki sunucu BU kullanıcının köprüsü mü: kullanıcının kendi belirteciyle API'ye sorulur. Sayfada geçen
+    bir yazıya bakmak yetmez; aynı bilgisayardaki başka bir hesabın sunucusu da o yazıyı gösterebilir."""
+    istek = urllib.request.Request(ADRES + "api/dosyalar", headers={BELIRTEC_BASLIGI: belirtec_al()})
     try:
-        with urllib.request.urlopen(ADRES, timeout=zaman_asimi) as yanit:  # noqa: S310 - yerel adres
-            return yanit.status == 200 and b"ARTHUR MASK" in yanit.read()
+        with urllib.request.urlopen(istek, timeout=zaman_asimi) as yanit:  # noqa: S310 - yerel adres
+            return yanit.status == 200
     except OSError:
         return False
 

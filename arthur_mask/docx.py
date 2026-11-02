@@ -13,6 +13,7 @@ değişikliklerdeki silinmiş metin (`w:delText`) de maskelenir. Üstveri
 
 import html
 import re
+import xml.etree.ElementTree as ET
 import zipfile
 from bisect import bisect_right
 from dataclasses import dataclass, field
@@ -32,6 +33,13 @@ _CORE_TEMIZLE = re.compile(r"(<(dc:creator|cp:lastModifiedBy|cp:keywords|dc:desc
 _APP_TEMIZLE = re.compile(r"(<(Company|Manager)>)[^<]*(</\2>)")
 _MAILTO = re.compile(r'(Target=")mailto:[^"]*(")')
 XML_GECERSIZ = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f￾￿]")
+_W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+
+
+def _xml_metni(xml: str) -> str:
+    """Bir parçanın metni, Claude görünümünü üreten ayrıştırıcının (ElementTree) gördüğü gibi."""
+    kok = ET.fromstring(xml.encode("utf-8"))
+    return "".join(d.text or "" for d in kok.iter() if d.tag in (_W + "t", _W + "delText"))
 
 
 class DocxHatasi(Exception):
@@ -89,6 +97,16 @@ def oku(yol: Path) -> DocxBelge:
                 imlec += 1
         metin_parcalari.append("\n")
         imlec += 1
+        # Maskeleme bu düz kalıpla okur, Claude'a giden görünüm ElementTree ile. Word dışı bir programın yazdığı
+        # dosyada (başka ad alanı öneki, CDATA, varlık tanımı) ikisi farklı metin görür ve kalıbın görmediği metin
+        # maskesiz gider. Bu yüzden ikisi aynı metni vermiyorsa belge işlenmez.
+        try:
+            ayni = _xml_metni(xml).replace("\r", "") == "".join(d.metin for d in dugumler if d.parca == ad).replace("\r", "")
+        except ET.ParseError:
+            ayni = False
+        if not ayni:
+            raise DocxHatasi(f"{yol.name} içindeki {ad} alışılmadık biçimde yazılmış (Word dışı bir program üretmiş "
+                             "olabilir); güvenle maskelenemiyor. Belgeyi Word'de açıp .docx olarak yeniden kaydedin.")
 
     uyarilar = []
     govde = parcalar["word/document.xml"]

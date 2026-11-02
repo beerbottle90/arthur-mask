@@ -62,6 +62,23 @@ def test_docx_bolunmus_run_ve_ustbilgi(tmp_path, motor):
     assert "Ayşe KARA" in docx_kutuphanesi.Document(acik_yol).paragraphs[0].text
 
 
+def test_alisilmadik_onekli_docx_islenmez(tmp_path):
+    """Maskeleyicinin göremediği metni Claude görünümü görecekse belge işlenmez (aksi hâlde maskesiz giderdi)."""
+    from arthur_mask import docx as docx_modulu
+
+    kaynak, hedef = tmp_path / "olagan.docx", tmp_path / "onekli.docx"
+    _word_belgesi(kaynak)
+    with zipfile.ZipFile(kaynak) as zin, zipfile.ZipFile(hedef, "w") as zout:
+        for bilgi in zin.infolist():
+            veri = zin.read(bilgi)
+            if bilgi.filename == "word/document.xml":
+                veri = veri.replace(b"<w:", b"<ns0:").replace(b"</w:", b"</ns0:").replace(b"xmlns:w=", b"xmlns:ns0=")
+            zout.writestr(bilgi, veri)
+    assert docx_modulu.oku(kaynak).metin  # olağan Word dosyası okunur
+    with pytest.raises(docx_modulu.DocxHatasi, match="yeniden kaydedin"):
+        docx_modulu.oku(hedef)
+
+
 def test_metinden_docx_word_ile_acilir(tmp_path):
     yol = tmp_path / "taslak.docx"
     belgeler.metinden_yaz("Birinci satır\n  girintili <özel> & karakter\x07\n\f\nikinci sayfa", yol)

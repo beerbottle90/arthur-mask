@@ -19,7 +19,8 @@ from .turkce import ascii_kucuk
 
 _EN_AZ_HARF = 4
 _EN_AZ_RAKAM = 6
-_AYRAC = r"[\s.\-/()]*"
+_AYRAC = r"[\s.\-–—/(),_]*"
+_AYRAC_SINIFI = r"[\s.\-–—/(),_]"
 
 
 def _katla(metin: str) -> str:
@@ -41,16 +42,19 @@ def _deger_deseni(deger: str) -> Tuple[str, bool]:
     harf = re.sub(r"[^\w]|\d|_", "", deger)
     if len(rakam) >= _EN_AZ_RAKAM and len(rakam) >= len(harf):
         # TCKN, telefon, IBAN, dosya no: ayraçlar (boşluk, nokta, tire) değişse de yakala.
-        govde = _AYRAC.join(re.escape(r) for r in rakam)
         if harf:
-            govde = _AYRAC.join(re.escape(h) for h in re.sub(r"[\s.\-/()]", "", _katla(deger)))
-        return rf"(?<![0-9a-z]){govde}(?![0-9])", False
+            govde = _AYRAC.join(re.escape(h) for h in re.sub(_AYRAC_SINIFI, "", _katla(deger)))
+            return rf"(?<![0-9a-z]){govde}(?![0-9])", False
+        # Yalnız rakamdan oluşan değer önündeki harfe bakmaz: "TC12345678901" de yakalanır.
+        govde = _AYRAC.join(re.escape(r) for r in rakam)
+        return rf"(?<![0-9]){govde}(?![0-9])", False
     sozcukler = _katla(deger).split()
     if not sozcukler or len("".join(sozcukler)) < _EN_AZ_HARF:
         return "", False
     govde = r"\s+".join(re.escape(s) for s in sozcukler)
-    # Tek sözcüklü değer ("Kara") yalnız büyük harfle başladığında sayılır: "kara yolu" dokunulmaz.
-    return rf"(?<![0-9a-z]){govde}(?![0-9a-z])", len(sozcukler) == 1
+    # Tek sözcüklü ad ("Kara") yalnız büyük harfle başladığında sayılır: "kara yolu" dokunulmaz. Harf dışı işaret
+    # taşıyan tek sözcük (e-posta, KEP, alan adı, kullanıcı adı) küçük harfle yazılır; şart ona uygulanmaz.
+    return rf"(?<![0-9a-z]){govde}(?![0-9a-z])", len(sozcukler) == 1 and sozcukler[0].isalpha()
 
 
 @dataclass
