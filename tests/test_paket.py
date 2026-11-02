@@ -61,6 +61,17 @@ def test_en_yeni_kurulum_dosyasi_secilir():
     assert guncelleme.en_yeni([{"name": "başka", "assets": [{"name": f"ArthurMask-Kurulum.{UZ}"}]}]) is None
 
 
+def test_etiket_ucu_tek_surum_nesnesi_dondurur():
+    # releases/tags/arthur-mask tek nesne döndürür; sürümlü ve sürümsüz dosyalar yan yana durur.
+    tek = {"name": "Arthur Mask 1.1.1 — Windows ve macOS kurulum dosyaları", "html_url": "s",
+           "assets": [{"name": f"ArthurMask-Kurulum.{UZ}", "browser_download_url": "eski"},
+                      {"name": f"ArthurMask-Kurulum-1.1.1.{UZ}", "browser_download_url": "yeni"}]}
+    assert guncelleme.SURUM_ADRESI.endswith("/releases/tags/arthur-mask")
+    assert guncelleme.surum_listesi(tek) == [tek] and guncelleme.surum_listesi([tek]) == [tek]
+    assert guncelleme.surum_listesi("hata") == []
+    assert guncelleme.en_yeni(guncelleme.surum_listesi(tek))["surum"] == "1.1.1"
+
+
 @pytest.mark.skipif(sys.platform != "darwin", reason="macOS yapılandırma yolu")
 def test_macos_claude_desktop_kaydi(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))
