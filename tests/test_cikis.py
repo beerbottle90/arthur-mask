@@ -28,6 +28,16 @@ def test_bicim_farklari_yakalanir():
     assert {t for t, _, _ in bulunan} == {"KİŞİ", "TCKN", "ŞİRKET", "TELEFON", "IBAN"}
 
 
+def test_kucuk_harfli_eposta_ve_ayrac_cesitleri_yakalanir():
+    kasa = _kasa()
+    kasa.etiket_al("EPOSTA", "EMAIL_ADDRESS", "ayse.kara@ornek.com", "ayse.kara@ornek.com")
+    d = CikisDenetimi(kasa)
+    metin, bulunan = d.tara("Yazışma ayse.kara@ornek.com üzerinden; TC12345678950; tel 0532–123–45–67, 0532_123_45_67.")
+    assert "ayse.kara@" not in metin and "12345678950" not in metin
+    assert "0532" not in metin
+    assert {t for t, _, _ in bulunan} == {"EPOSTA", "TCKN", "TELEFON"}
+
+
 def test_genel_sozcuk_ve_etiketler_bozulmaz():
     d = CikisDenetimi(_kasa())
     metin = "kara yolu, Karaköy'de toplantı; {{KİŞİ-01}} ve {{TCKN-01}} korunur. Tutar 1.250.000,00 TL."

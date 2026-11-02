@@ -84,6 +84,18 @@ def test_supheli_aday_onayla_maskelenir_ve_sozluge_yazilir(islem):
     assert vkn in (islem.depo.dosya_yolu(klasor) / "sozluk.yaml").read_text(encoding="utf-8")
 
 
+def test_yeniden_baslatma_sonrasi_supheli_incelenmeden_onaylanamaz(islem):
+    klasor = islem.depo.aktif_dosya
+    from arthur_mask.dogrulama import vkn_kontrol_basamagi
+    vkn = "123456789" + str(vkn_kontrol_basamagi("123456789"))
+    kayit = islem.arayuz_belge_isle(klasor, "fatura.txt", f"Referans {vkn} ile kayıt açıldı.".encode())
+    assert kayit["durum"] == "onay_bekliyor"
+    islem._bekleyen.clear()  # köprü yeniden başladı: adaylar bellekteydi
+    with pytest.raises(Exception, match="yeniden yükleyin"):
+        islem.arayuz_belge_onayla(klasor, kayit["id"], [], [], "")
+    assert islem.depo.belge_oku(klasor, kayit["id"])["durum"] == "onay_bekliyor"
+
+
 def _mcp_cagir(islem, arac, argumanlar=None):
     from mcp import Client
 

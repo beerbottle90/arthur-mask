@@ -12,6 +12,7 @@ import logging
 import mimetypes
 import os
 import secrets
+import socket
 import subprocess
 import sys
 import threading
@@ -31,6 +32,18 @@ gunluk = logging.getLogger("arthur_mask.sunucu")
 VARSAYILAN_PORT = 47831
 AZAMI_YUKLEME = 60 * 2**20
 BELIRTEC_BASLIGI = "X-Arthur-Mask"
+
+
+class _TekSunucu(ThreadingHTTPServer):
+    """Portu yalnız bu süreç tutar. Python, sunucu soketinde SO_REUSEADDR'ı açar; Windows'ta bu, aynı bilgisayardaki
+    başka bir hesabın aynı porta bağlanıp istekleri ve bırakılan belgeleri almasına izin verir."""
+
+    allow_reuse_address = sys.platform != "win32"
+
+    def server_bind(self):
+        if sys.platform == "win32" and hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
 
 
 def belirtec_al() -> str:
@@ -281,7 +294,7 @@ class YerelSunucu:
     def baslat(self) -> bool:
         """Portu alabilirse arka planda sunar; port doluysa (başka köprü sunuyor) False döner."""
         try:
-            self._httpd = ThreadingHTTPServer(("127.0.0.1", self.port), _Isleyici)
+            self._httpd = _TekSunucu(("127.0.0.1", self.port), _Isleyici)
         except OSError:
             gunluk.info("Port %s dolu; arayüzü başka bir Arthur Mask süreci sunuyor.", self.port)
             return False

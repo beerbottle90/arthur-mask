@@ -166,7 +166,9 @@ class Islem:
         if kayit["kirmizi_hat"] and not gerekce.strip():
             raise IslemHatasi("Kırmızı hat içeren belge gerekçe yazılmadan Claude'a verilemez.")
         bekleyen = self._bekleyen.get((klasor, belge_id))
-        if maskelenecek and not bekleyen:
+        # Şüpheli adaylar yalnız bellekte durur; uygulama yeniden başladıysa avukat onları görmeden onaylayamaz,
+        # yoksa incelenmemiş adlar maskesiz Claude'a gider.
+        if not bekleyen and (maskelenecek or (kayit["durum"] != DURUM_HAZIR and kayit.get("supheli_sayisi", 0) > 0)):
             raise IslemHatasi("Onay bilgisi bu oturumda yok (uygulama yeniden başlamış). Belgeyi yeniden yükleyin.")
 
         if bekleyen:
