@@ -13,7 +13,7 @@ import time
 import urllib.request
 import webbrowser
 
-from .anahtar import uygulama_klasoru
+from .anahtar import ozel_izinler, ozel_yaz, uygulama_klasoru
 from .sunucu import BELIRTEC_BASLIGI, VARSAYILAN_PORT, belirtec_al
 
 ADRES = f"http://127.0.0.1:{VARSAYILAN_PORT}/"
@@ -26,8 +26,8 @@ def arayuzu_ac() -> None:
     küçük bir sayfa açılır."""
     sayfa = uygulama_klasoru() / "ac.html"
     hedef = f"{ADRES}#t={belirtec_al()}"
-    sayfa.write_text(f'<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url={hedef}">'
-                     "<title>Arthur Mask</title>", encoding="utf-8")
+    ozel_yaz(sayfa, f'<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url={hedef}">'
+                    "<title>Arthur Mask</title>")
     webbrowser.open(sayfa.as_uri())
 
 
@@ -101,6 +101,7 @@ def main() -> int:
     if sys.stderr is None:  # pythonw: konsol yok
         sys.stderr = open(os.devnull, "w", encoding="utf-8")
         sys.stdout = sys.stderr
+    ozel_izinler()
     if sys.platform == "darwin" and not macos_hazirla():
         return 1
     if arayuz_calisiyor():

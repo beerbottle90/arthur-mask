@@ -25,7 +25,7 @@ from typing import Optional
 from urllib.parse import parse_qs, unquote, urlparse
 
 from . import __version__, guncelleme
-from .anahtar import uygulama_klasoru
+from .anahtar import ozel_yaz, uygulama_klasoru
 from .islem import Islem, IslemHatasi
 
 gunluk = logging.getLogger("arthur_mask.sunucu")
@@ -50,7 +50,9 @@ class _TekSunucu(ThreadingHTTPServer):
 def belirtec_al() -> str:
     yol = uygulama_klasoru() / "yerel-belirtec"
     if not yol.exists():
-        yol.write_text(secrets.token_urlsafe(32), encoding="utf-8")
+        ozel_yaz(yol, secrets.token_urlsafe(32))
+    elif os.name == "posix":
+        os.chmod(yol, 0o600)  # önceki sürümün yazdığı dosya
     return yol.read_text(encoding="utf-8").strip()
 
 
@@ -71,7 +73,8 @@ class _Isleyici(BaseHTTPRequestHandler):
         return self.server.uygulama  # type: ignore[attr-defined]
 
     def log_message(self, format, *args):  # noqa: A002 - http.server imzası
-        gunluk.debug("%s %s", self.address_string(), format % args)
+        # İstek satırı yazılmaz: yolda dosya (çoğu kez müvekkil) adı geçer.
+        gunluk.debug("%s isteği", self.command)
 
     def _gonder(self, durum: int, govde: bytes, tur: str = "application/json; charset=utf-8", ek=None) -> None:
         self.send_response(durum)
@@ -200,8 +203,10 @@ class _Isleyici(BaseHTTPRequestHandler):
             return self._json(HTTPStatus.UNPROCESSABLE_ENTITY, {"hata": str(hata)})
         except (FileNotFoundError, KeyError) as hata:
             return self._json(HTTPStatus.NOT_FOUND, {"hata": f"Bulunamadı: {hata}"})
-        except Exception:  # noqa: BLE001 - istemciye iç ayrıntı sızdırma
-            gunluk.exception("API hatası: %s %s", yontem, yol)
+        except Exception as hata:  # noqa: BLE001 - istemciye iç ayrıntı sızdırma
+            # Günlüğe yalnız yolun kalıbı ve hatanın türü: dosya adı ve istisna metni belge içeriği taşıyabilir.
+            kalip = ["<dosya>" if i == 1 and parcalar[0] == "dosyalar" else p for i, p in enumerate(parcalar)]
+            gunluk.error("API hatası: %s /api/%s (%s)", yontem, "/".join(kalip), type(hata).__name__)
             return self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {"hata": "Beklenmeyen hata; günlüğe bakın."})
 
     def _statik(self, yol: str) -> None:

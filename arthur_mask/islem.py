@@ -13,7 +13,7 @@ import threading
 from collections import Counter
 from dataclasses import replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
 
 from . import belgeler, docx, docx_yapi, udf
 from .cikis import CikisDenetimi
@@ -33,6 +33,28 @@ TESLIM_BICIMLERI = {"docx": ".docx", "udf": ".udf", "txt": ".txt"}
 
 class IslemHatasi(Exception):
     pass
+
+
+def parcalara_bol(metin: str, boy: int = MCP_PARCA_KARAKTER, korunan: Sequence[Tuple[int, int]] = ()) -> List[str]:
+    """En çok `boy` karakterlik parçalar; kesim satır sonunda, yoksa boşlukta yapılır (etiket ikiye bölünmesin).
+    `korunan` aralıkların (kasadaki değerlerin geçtiği yerler) ortasından kesilmez: her parça çıkış kapısından ayrı
+    geçtiği için değer bütün kalmalı."""
+    parcalar, bas = [], 0
+    while len(metin) - bas > boy:
+        kesim = metin.rfind("\n", bas + boy // 2, bas + boy)
+        if kesim < 0:
+            kesim = metin.rfind(" ", bas + boy // 2, bas + boy)
+        kesim = kesim + 1 if kesim >= 0 else bas + boy
+        degisti = True
+        while degisti:
+            degisti = False
+            for a_bas, a_son in korunan:
+                if a_bas < kesim < a_son:
+                    kesim, degisti = (a_bas if a_bas > bas else a_son), True
+        parcalar.append(metin[bas:kesim])
+        bas = kesim
+    parcalar.append(metin[bas:])
+    return parcalar
 
 
 def _etiket_turleri(degisiklikler) -> Dict[str, int]:
@@ -234,17 +256,31 @@ class Islem:
             self._denetim[klasor] = onbellek
         return onbellek[1]
 
-    def mcp_cikis(self, arac: str, yanit: Dict) -> Dict:
+    def mcp_cikis(self, arac: str, yanit: Dict, klasor: Optional[str] = None) -> Dict:
         """Claude'a giden her yanıtın son kapısı: kasadaki gerçek değerler etiketine çevrilir ve
-        gönderilen yanıt yerel 'Claude'a gidenler' kaydına yazılır (yalnız maskeli içerik)."""
-        klasor = self.depo.aktif_dosya
-        if not klasor:
+        gönderilen yanıt yerel 'Claude'a gidenler' kaydına yazılır (yalnız maskeli içerik).
+
+        `klasor`, çağrı başladığında etkin olan dosyadır. Avukat çağrı sürerken etkin dosyayı değiştirdiyse yanıt
+        iki dosyanın kasasına karşı da taranır: hangisinden üretildiyse onun değerleri kaçmaz."""
+        klasorler = []
+        for aday in dict.fromkeys((klasor, self.depo.aktif_dosya)):
+            try:
+                if aday:
+                    klasorler.append((aday, self._cikis_denetimi(aday)))
+            except FileNotFoundError:
+                continue
+        if not klasorler:
             return yanit
-        temiz, sonuc = self._cikis_denetimi(klasor).yanit_temizle(yanit)
-        if sonuc.yakalanan:
-            gunluk.warning("Çıkış kapısı %s yanıtında %s değer yakaladı (%s).", arac, sonuc.yakalanan, sonuc.turler)
-        self.depo.giden_kaydet(klasor, {
-            "zaman": simdi(), "arac": arac, "yakalanan": sonuc.yakalanan, "turler": sonuc.turler, "yanit": temiz,
+        temiz, yakalanan, turler = yanit, 0, {}
+        for _, denetim in klasorler:
+            temiz, sonuc = denetim.yanit_temizle(temiz)
+            yakalanan += sonuc.yakalanan
+            for tur, adet in sonuc.turler.items():
+                turler[tur] = turler.get(tur, 0) + adet
+        if yakalanan:
+            gunluk.warning("Çıkış kapısı %s yanıtında %s değer yakaladı (%s).", arac, yakalanan, turler)
+        self.depo.giden_kaydet(klasorler[0][0], {
+            "zaman": simdi(), "arac": arac, "yakalanan": yakalanan, "turler": turler, "yanit": temiz,
         })
         return temiz
 
@@ -308,7 +344,7 @@ class Islem:
             liste.append({
                 "kimlik": k["id"], "durum": k["durum"], "bicim": k["bicim"], "karakter": k["karakter"],
                 "etiket_sayisi": k["etiket_sayisi"], "turler": k["turler"],
-                "parca_sayisi": max(1, -(-len(k["maskeli_metin"]) // MCP_PARCA_KARAKTER)),
+                "parca_sayisi": len(parcalara_bol(k["maskeli_metin"])),
                 "hazirlanma": k["olusturma"],
             })
         return {
@@ -333,19 +369,18 @@ class Islem:
         if kayit["bicim"] == ".docx" and kayit.get("maskeli_kopya") and kopya.is_file():
             # Word yapısı (tablolar, çift sütun, başlıklar) Markdown olarak korunur.
             metin, yapi = docx_yapi.claude_gorunumu(kopya), "markdown (Word tabloları | ... | olarak)"
-        parca_sayisi = max(1, -(-len(metin) // MCP_PARCA_KARAKTER))
-        if not 1 <= parca <= parca_sayisi:
-            raise IslemHatasi(f"Parça 1–{parca_sayisi} arasında olmalı.")
-        bas = (parca - 1) * MCP_PARCA_KARAKTER
+        parcalar = parcalara_bol(metin, korunan=self._cikis_denetimi(klasor).araliklar(metin))
+        if not 1 <= parca <= len(parcalar):
+            raise IslemHatasi(f"Parça 1–{len(parcalar)} arasında olmalı.")
         return {
             "kimlik": kimlik,
             "parca": parca,
-            "parca_sayisi": parca_sayisi,
+            "parca_sayisi": len(parcalar),
             "etiket_turleri": kayit["turler"],
             "yapi": yapi,
             "revize_edilebilir": kayit["bicim"] in (".docx", ".udf"),
             "kural": "{{TÜR-NN}} etiketlerini harfi harfine koru; ek için kesme işareti kullan; gerçek değeri tahmin etme.",
-            "metin": metin[bas:bas + MCP_PARCA_KARAKTER],
+            "metin": parcalar[parca - 1],
         }
 
     def mcp_revize(self, kimlik: str, degisiklikler: List[Dict], baslik: str = "revizyon", izli: bool = True) -> Dict:
@@ -374,7 +409,9 @@ class Islem:
                 rapor = docx_yapi.revizyon_uygula(kopya, degisiklikler, ara, izli=izli)
                 ara_belge = docx.oku(ara)
                 cozum, bilinmeyen = geri_acma_degisiklikleri(ara_belge.metin, kasa)
-                docx.maskelenmis_yaz(ara_belge, cozum, hedef)
+                # Avukata giden çözülmüş taslak: üstveri temizliği maskeli kopyada yapıldı; burada yeniden yapılırsa
+                # Claude'un izli değişikliklerindeki yazar adı da silinirdi.
+                docx.maskelenmis_yaz(ara_belge, cozum, hedef, ustveri_temizle=False)
             else:
                 rapor = docx_yapi.RevizyonRaporu()
                 kaynak = udf.oku(kopya)

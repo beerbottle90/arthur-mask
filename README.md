@@ -25,7 +25,7 @@ sürüm listesinden yeni sürüm olup olmadığını okumak için çıkar.
 | Dosya sözlüğü | Dosyaya özgü "hep maskele" / "asla maskeleme" listesi (YAML) |
 | Kırmızı hat | Maskelense bile gitmeyecek içerik (savunma stratejisi, sulh sınırı, KVKK m.6, içsel bilgi…) çıktıyı durdurur; gerekçeli onayla aşılır |
 | UDF | Metin maskelenir, bütün `startOffset/length` biçim ofsetleri UTF‑16 birimiyle yeniden eşlenir |
-| Word | Run'lara bölünmüş adlar birleştirilerek yerinde maskelenir; üst/alt bilgi, tablo, dipnot, yorum ve izlenen değişiklikler taranır; yazar/şirket üstverisi ve `mailto` köprüleri temizlenir |
+| Word | Run'lara bölünmüş adlar birleştirilerek yerinde maskelenir; üst/alt bilgi, tablo, dipnot, yorum ve izlenen değişiklikler taranır; maskeli kopyada belge özellikleri, yorum ve değişiklik yazarları, alt metin, küçük resim ve dış bağlantılar temizlenir |
 | PDF | Metin katmanı maskelenip metin olarak yazılır |
 | Taranmış belge / fotoğraf | Yerel OCR (RapidOCR PP-OCRv6); metin maskelenir, etiketler sayfa görüntüsüne kalıcı basılır, çıktı üstverisiz görüntü PDF'i; avukat incelemesi zorunlu |
 | İngilizce | Yabancı şirket ekleri, İngilizce unvan/taraf/imza blokları, UK/US/AB adresleri, uluslararası telefon, pasaport; yayımlanmış İngiliz/ABD içtihat atıfları korunur |

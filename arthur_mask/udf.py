@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Callable, List, Sequence, Tuple
 
 from .maskeleyici import Degisiklik, degisiklikleri_uygula
+from .sinirlar import arsiv_oku
 
 ICERIK_XML = "content.xml"
 _ICERIK = re.compile(r"<content>(.*?)</content>", re.S)
@@ -62,7 +63,7 @@ def _cdata(metin: str) -> str:
 def oku(yol: Path) -> UdfBelge:
     try:
         with zipfile.ZipFile(yol) as zf:
-            girdiler = [(bilgi, zf.read(bilgi)) for bilgi in zf.infolist()]
+            girdiler = arsiv_oku(zf, yol.name, UdfHatasi)
     except zipfile.BadZipFile as hata:
         raise UdfHatasi(f"{yol} geçerli bir UDF (ZIP) değil.") from hata
     ham = next((veri for bilgi, veri in girdiler if bilgi.filename == ICERIK_XML), None)

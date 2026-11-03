@@ -4,6 +4,7 @@ import asyncio
 import base64
 import json
 import secrets
+import sys
 import urllib.error
 import urllib.request
 
@@ -180,3 +181,110 @@ def test_http_uctan_uca(yerel, islem):
     durum, dosya = _istek(yerel, "GET", f"/api/dosyalar/{quote(klasor)}/cevap-dosyasi?ad={quote(cevap['dosya'])}")
     assert durum == 200 and "Zümrüt KARABACAK".encode() in dosya
     assert _istek(yerel, "GET", f"/api/dosyalar/{quote(klasor)}/cevap-dosyasi?ad=..%2F..%2Fdosya.kasa")[0] == 404
+
+
+# -- sağlamlaştırma ----------------------------------------------------------------------------------------
+def _hazir_kayit(metin, kimlik="belge-1"):
+    return {"id": kimlik, "kaynak_ad": "x.txt", "olusturma": "2026-11-03T00:00:00+00:00", "durum": "hazir",
+            "bicim": ".txt", "karakter": len(metin), "ozet": "", "maskeli_metin": metin, "etiket_sayisi": 0,
+            "turler": {}, "kirmizi_hat": [], "artik": [], "uyarilar": [], "supheli_sayisi": 0, "ocr": False,
+            "maskeli_kopya": ""}
+
+
+def test_parca_sinirina_denk_gelen_deger_kacmaz(islem):
+    from arthur_mask.islem import MCP_PARCA_KARAKTER
+
+    klasor = islem.depo.aktif_dosya
+    with islem.depo.kasa(klasor) as kasa:
+        kasa.etiket_al("KİŞİ", "PERSON", "zümrüt karabacak", "Zümrüt KARABACAK")
+    # Kasadaki bir değer, maskeli metinde tam parça sınırına denk gelir.
+    dolgu = ("Sözleşme hükümleri aynen geçerlidir. " * 2000)[:MCP_PARCA_KARAKTER - 9] + " "
+    metin = dolgu + "Zümrüt KARABACAK ile görüşüldü.\n" + "Ek açıklama.\n" * 10
+    islem.depo.belge_kaydet(klasor, _hazir_kayit(metin))
+
+    ham = [islem.mcp_belge_getir("belge-1", i) for i in (1, 2)]
+    assert ham[0]["parca_sayisi"] == 2 and ham[1]["metin"].startswith("Zümrüt KARABACAK")  # değer bölünmedi
+    giden = [islem.mcp_cikis("arthur_mask_belge_getir", p, klasor) for p in ham]
+    birlesik = "".join(p["metin"] for p in giden)
+    assert "Zümrüt" not in birlesik and "ARABACAK" not in birlesik and "{{KİŞİ-01}} ile görüşüldü" in birlesik
+    assert all(len(p["metin"]) <= MCP_PARCA_KARAKTER for p in ham)
+    assert islem.arayuz_gidenler(klasor)["toplam_yakalanan"] == 1
+
+
+def test_etkin_dosya_degisse_de_cagrinin_dosyasi_denetlenir(islem):
+    ilk = islem.depo.aktif_dosya
+    with islem.depo.kasa(ilk) as kasa:
+        kasa.etiket_al("KİŞİ", "PERSON", "zümrüt karabacak", "Zümrüt KARABACAK")
+    islem.depo.aktif_dosya = islem.depo.dosya_olustur("2026-015 başka dosya")
+    temiz = islem.mcp_cikis("arthur_mask_belge_getir", {"metin": "Zümrüt KARABACAK"}, ilk)
+    assert temiz == {"metin": "{{KİŞİ-01}}"}
+
+
+def test_beklenmeyen_hata_metni_claudea_ve_gunluge_gitmez(islem, monkeypatch, caplog):
+    import logging
+
+    def mcp_belgeler():
+        raise RuntimeError(f"{ISARETLI[0]} dosyası okunamadı")
+
+    monkeypatch.setattr(islem, "mcp_belgeler", mcp_belgeler)
+    with caplog.at_level(logging.INFO, logger="arthur_mask"):
+        cikti = _mcp_cagir(islem, "arthur_mask_belgeler")
+    assert "RuntimeError" in cikti["hata"] and ISARETLI[0] not in json.dumps(cikti, ensure_ascii=False)
+    assert ISARETLI[0] not in caplog.text
+
+
+def test_api_hata_gunlugunde_dosya_adi_ve_istisna_metni_yok(yerel, islem, monkeypatch, caplog):
+    import logging
+    from urllib.parse import quote
+
+    klasor = islem.depo.aktif_dosya
+
+    def patla(_klasor):
+        raise RuntimeError(f"{ISARETLI[0]} {ISARETLI[1]}")
+
+    monkeypatch.setattr(islem, "arayuz_belgeler", patla)
+    with caplog.at_level(logging.DEBUG, logger="arthur_mask"):
+        durum, _ = _istek(yerel, "GET", f"/api/dosyalar/{quote(klasor)}/belgeler")
+    assert durum == 500
+    assert "API hatası: GET /api/dosyalar/<dosya>/belgeler (RuntimeError)" in caplog.text
+    assert "alacak" not in caplog.text and ISARETLI[0] not in caplog.text and ISARETLI[1] not in caplog.text
+    assert not any(kayit.exc_info for kayit in caplog.records)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX izinleri; Windows'ta kullanıcı klasörü zaten özel")
+def test_klasorler_ve_belirtec_yalniz_kullaniciya_acik(tmp_path, monkeypatch):
+    import os
+
+    from arthur_mask import sunucu
+
+    kok = tmp_path / "Arthur Mask"
+    kok.mkdir()
+    os.chmod(kok, 0o755)  # önceden açılmış klasör
+    Depo(secrets.token_bytes(32), kok=kok)
+    assert kok.stat().st_mode & 0o077 == 0
+    monkeypatch.setenv("APPDATA", str(tmp_path / "ayar"))
+    sunucu.belirtec_al()
+    klasor = tmp_path / "ayar" / "ArthurMask"
+    assert klasor.stat().st_mode & 0o077 == 0 and (klasor / "yerel-belirtec").stat().st_mode & 0o077 == 0
+
+
+def test_revizyon_ciktisi_claude_yazarini_korur(islem):
+    """Üstveri temizliği maskeli kopyada yapılır; avukata dönen revizyonda Claude'un izli değişiklikleri adıyla kalır."""
+    import io
+    import zipfile
+
+    docx_kutuphanesi = pytest.importorskip("docx")
+    belge = docx_kutuphanesi.Document()
+    belge.add_paragraph(f"DAVACI: {ISARETLI[0]} (TCKN: {ISARETLI[1]})")
+    belge.add_paragraph("Talep konusu alacak tahsilidir.")
+    tampon = io.BytesIO()
+    belge.save(tampon)
+    klasor = islem.depo.aktif_dosya
+    kayit = islem.arayuz_belge_isle(klasor, "dilekce.docx", tampon.getvalue())
+    if kayit["durum"] != "hazir":
+        kayit = islem.arayuz_belge_onayla(klasor, kayit["id"], [], list(range(kayit["supheli_sayisi"])), "")
+    yanit = islem.mcp_revize(kayit["id"], [{"eski": "alacak tahsilidir", "yeni": "alacağın tahsilidir"}])
+    assert yanit["uygulanan_degisiklik"] == 1, yanit
+    with zipfile.ZipFile(islem.depo.dosya_yolu(klasor) / "cevaplar" / yanit["dosya"]) as zf:
+        govde = zf.read("word/document.xml").decode("utf-8")
+    assert 'w:author="Claude (Arthur Mask)"' in govde and ISARETLI[0] in govde
