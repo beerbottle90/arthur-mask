@@ -16,6 +16,8 @@ from typing import List
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
+from .sinirlar import AZAMI_PDF_SAYFASI
+
 SAYFA_AYRACI = "\n\f\n"
 MIN_KARAKTER_SAYFA_BASI = 25
 
@@ -39,6 +41,9 @@ def oku(yol: Path) -> PdfBelge:
         raise PdfHatasi(f"{yol} okunamadı: {hata}") from hata
     if okuyucu.is_encrypted:
         raise PdfHatasi(f"{yol} parolalı; önce parolasını kaldırın.")
+    if len(okuyucu.pages) > AZAMI_PDF_SAYFASI:
+        raise PdfHatasi(f"{yol.name} {len(okuyucu.pages)} sayfa; en çok {AZAMI_PDF_SAYFASI} sayfalık PDF maskelenir. "
+                        "Belgeyi bölüp parça parça yükleyin.")
 
     sayfalar = [(sayfa.extract_text() or "").replace("\r\n", "\n") for sayfa in okuyucu.pages]
     bos = [i + 1 for i, s in enumerate(sayfalar) if len(s.strip()) < MIN_KARAKTER_SAYFA_BASI]

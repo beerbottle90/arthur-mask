@@ -27,12 +27,34 @@ def test_claude_desktop_kaydi_diger_ayarlari_korur_ve_yedekler(tmp_path, monkeyp
     veri = json.loads((klasik / "claude_desktop_config.json").read_text(encoding="utf-8"))
     assert veri["mcpServers"]["baska"] == {"command": "x"} and veri["preferences"] == {"tema": "koyu"}
     assert veri["mcpServers"]["arthur-mask"]["args"][-2:] == ["-c", claude_ayari.KOPRU_KOMUTU]
-    assert list(klasik.glob("claude_desktop_config.arthur-mask-yedek-*.json"))
+    assert (klasik / claude_ayari.YEDEK_ADI).is_file()
     assert "arthur-mask" in json.loads((msix / "claude_desktop_config.json").read_text(encoding="utf-8"))["mcpServers"]
 
     claude_ayari.sil()
     veri = json.loads((klasik / "claude_desktop_config.json").read_text(encoding="utf-8"))
     assert "arthur-mask" not in veri["mcpServers"] and "baska" in veri["mcpServers"]
+
+
+def test_tek_yedek_yalniz_degisiklikte_ve_yalniz_kullaniciya(tmp_path, monkeypatch):
+    """Yapılandırma başka sunucuların sırlarını taşıyabilir: her çalışmada yeni yedek birikmez, eski zaman damgalı
+    yedekler silinir, değişiklik yoksa hiç yazılmaz; macOS/Linux'ta yedek 600."""
+    monkeypatch.setattr(claude_ayari, "yapilandirma_yollari", lambda: [tmp_path / "Claude" / "claude_desktop_config.json"])
+    yol = tmp_path / "Claude" / "claude_desktop_config.json"
+    yol.parent.mkdir()
+    yol.write_text(json.dumps({"mcpServers": {"baska": {"command": "x", "env": {"ANAHTAR": "gizli"}}}}), encoding="utf-8")
+    eski = yol.with_name("claude_desktop_config.arthur-mask-yedek-20260101-000000.json")
+    eski.write_text("{}", encoding="utf-8")
+
+    claude_ayari.kaydet()
+    yedekler = sorted(p.name for p in yol.parent.glob("claude_desktop_config.arthur-mask-yedek*.json"))
+    assert yedekler == [claude_ayari.YEDEK_ADI]
+    yedek = yol.with_name(claude_ayari.YEDEK_ADI)
+    if sys.platform != "win32":
+        assert yedek.stat().st_mode & 0o077 == 0 and yol.stat().st_mode & 0o077 == 0
+
+    damga = yedek.stat().st_mtime_ns, yol.stat().st_mtime_ns
+    claude_ayari.kaydet()  # kayıt zaten güncel: ne yapılandırma ne yedek yeniden yazılır
+    assert (yedek.stat().st_mtime_ns, yol.stat().st_mtime_ns) == damga
 
 
 @yalniz_windows

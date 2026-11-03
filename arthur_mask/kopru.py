@@ -14,10 +14,12 @@ from typing import Optional
 from mcp.server.mcpserver import MCPServer
 
 from . import __version__
-from .anahtar import ana_anahtar, kurtarma_kodu
+from .anahtar import ana_anahtar, kurtarma_kodu, ozel_izinler
 from .depo import Depo
 from .islem import Islem, IslemHatasi
 from .sunucu import VARSAYILAN_PORT, YerelSunucu
+
+gunluk = logging.getLogger("arthur_mask.kopru")
 
 TALIMAT = (
     "Arthur Mask, avukatın cihazında maskelenmiş belgeleri verir. Kurallar:\n"
@@ -39,12 +41,18 @@ def sunucu_olustur(islem: Islem) -> MCPServer:
     mcp = MCPServer(name="arthur-mask", title="Arthur Mask", version=__version__, instructions=TALIMAT)
 
     def _hata_sar(islev, *args, **kwargs):
+        klasor = None
         try:
+            klasor = islem.depo.aktif_dosya
             yanit = islev(*args, **kwargs)
         except IslemHatasi as hata:
             yanit = {"hata": str(hata)}
+        except Exception as hata:  # noqa: BLE001 - istisna metni (dosya adı, belge parçası) Claude'a ve günlüğe gitmez
+            gunluk.error("%s beklenmeyen hata: %s", islev.__name__, type(hata).__name__)
+            yanit = {"hata": f"Arthur Mask beklenmeyen bir hatayla karşılaştı ({type(hata).__name__}). "
+                             "Avukattan Arthur Mask'i yeniden başlatmasını isteyin."}
         # Her yanıt, hata iletileri dahil, Claude'a gitmeden önce çıkış kapısından geçer.
-        return islem.mcp_cikis(islev.__name__, yanit)
+        return islem.mcp_cikis(islev.__name__, yanit, klasor)
 
     @mcp.tool(
         name="arthur_mask_belgeler",
@@ -111,6 +119,7 @@ def main(argv: Optional[list] = None) -> int:
     ap.add_argument("--yalniz-arayuz", action="store_true", help="MCP olmadan yalnız yerel arayüz (geliştirme)")
     args = ap.parse_args(argv)
 
+    ozel_izinler()
     _gunluk_ayarla()
     anahtar = ana_anahtar()
     islem = Islem(Depo(anahtar))

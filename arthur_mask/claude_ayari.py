@@ -1,22 +1,26 @@
 """Claude Desktop yapılandırmasına Arthur Mask yerel bağlayıcısını ekler ya da çıkarır.
 
-Kurulum paketi `python -m arthur_mask.claude_ayari kaydet` / `sil` ile çağırır. Mevcut yapılandırma
-değiştirilmeden önce yanına zaman damgalı yedeği alınır; yalnız `mcpServers.arthur-mask` girdisine
-dokunulur, diğer ayarlar olduğu gibi kalır.
+Kurulum paketi `python -m arthur_mask.claude_ayari kaydet` / `sil` ile çağırır. Yalnız `mcpServers.arthur-mask`
+girdisine dokunulur, diğer ayarlar olduğu gibi kalır. Yapılandırma yalnız gerçekten değişeceği zaman, yanına tek bir
+yedek alınarak yazılır. Yapılandırma başka sunucuların ortam değişkenlerini (erişim anahtarları dahil) taşıyabildiği
+için yedek her seferinde aynı dosyanın üzerine yazılır, eski sürümlerin bıraktığı zaman damgalı yedekler silinir ve
+macOS'ta yedek de yapılandırma da yalnız kullanıcıya açıktır.
 """
 
 import argparse
 import json
 import os
 import shutil
+import stat
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
 from .paket import python_yolu
 
 SUNUCU_ADI = "arthur-mask"
+YEDEK_ADI = "claude_desktop_config.arthur-mask-yedek.json"
+_ESKI_YEDEKLER = "claude_desktop_config.arthur-mask-yedek-*.json"
 # Derlenmiş pakette `python -m` çalışmaz (runpy kod nesnesi ister); giriş noktası -c ile çağrılır.
 KOPRU_KOMUTU = "import sys; from arthur_mask.kopru import main; sys.exit(main())"
 
@@ -54,13 +58,25 @@ def _oku(yol: Path) -> Dict:
 
 
 def _yaz(yol: Path, veri: Dict) -> None:
+    kip = None
     if yol.exists():
-        damga = datetime.now().strftime("%Y%m%d-%H%M%S")
-        shutil.copy2(yol, yol.with_name(f"claude_desktop_config.arthur-mask-yedek-{damga}.json"))
+        kip = stat.S_IMODE(yol.stat().st_mode)
+        yedek = yol.with_name(YEDEK_ADI)
+        shutil.copyfile(yol, yedek)
+        _yalniz_kullanici(yedek)
+        for eski in yol.parent.glob(_ESKI_YEDEKLER):
+            eski.unlink(missing_ok=True)
     yol.parent.mkdir(parents=True, exist_ok=True)
     gecici = yol.with_suffix(".tmp")
     gecici.write_text(json.dumps(veri, ensure_ascii=False, indent=2), encoding="utf-8")
+    if kip is not None and os.name == "posix":
+        os.chmod(gecici, kip & 0o600 or 0o600)  # özgün dosyadan geniş olmasın
     os.replace(gecici, yol)
+
+
+def _yalniz_kullanici(yol: Path) -> None:
+    if os.name == "posix":
+        os.chmod(yol, 0o600)
 
 
 def kayitli_mi() -> bool:

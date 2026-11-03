@@ -7,8 +7,13 @@ geri dağıtır ve XML'in geri kalanına dokunmaz (ElementTree ile yeniden
 serileştirme Word'ün ad alanı önekleri nedeniyle dosyayı bozabilir).
 
 Taranan parçalar: gövde, üst/alt bilgi, dipnot/son not, yorumlar; izlenen
-değişikliklerdeki silinmiş metin (`w:delText`) de maskelenir. Üstveri
-(yazar, son değiştiren, şirket) temizlenir; e-posta köprüleri maskelenir.
+değişikliklerdeki silinmiş metin (`w:delText`) de maskelenir.
+
+Maskeli kopyada üstveri de temizlenir: belge özellikleri (yazar, son değiştiren, şirket, başlık,
+özel özellikler), yorum ve izli değişiklik yazarları ("Yazar 1", "Yazar 2"), kişi listesi
+(`people.xml`), belge değişkenleri, görsellerin alternatif metni, küçük resim ve dış bağlantılar
+(yerel yol, şablon, e-posta). Gövdede maskelenen gerçek değerler gövde dışında geçtiği yerlerde de
+(alan kodu, içerik denetimine bağlı veri, grafik, yapı taşı) etiketine çevrilir.
 """
 
 import html
@@ -19,8 +24,12 @@ from bisect import bisect_right
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
+from urllib.parse import unquote
 
+from .cikis import CikisDenetimi, normallestir
+from .kasa import Kasa
 from .maskeleyici import Degisiklik
+from .sinirlar import arsiv_oku
 
 _PARCA = re.compile(r"^word/(document|header\d*|footer\d*|footnotes|endnotes|comments)\.xml$")
 _BELIRTEC = re.compile(
@@ -29,9 +38,24 @@ _BELIRTEC = re.compile(
     r"|(?P<sekme><w:tab/>|<w:ptab\b[^>]*/>)"
     r"|(?P<satir><w:br\b[^>]*/>|<w:cr/>)"
 )
-_CORE_TEMIZLE = re.compile(r"(<(dc:creator|cp:lastModifiedBy|cp:keywords|dc:description|dc:subject|dc:title)(?:\s[^>]*)?>)[^<]*(</\2>)")
-_APP_TEMIZLE = re.compile(r"(<(Company|Manager)>)[^<]*(</\2>)")
-_MAILTO = re.compile(r'(Target=")mailto:[^"]*(")')
+_CORE_TEMIZLE = re.compile(r"(<(dc:creator|cp:lastModifiedBy|cp:keywords|dc:description|dc:subject|dc:title|"
+                           r"cp:category|cp:contentStatus|dc:identifier)(?:\s[^>]*)?>)[^<]*(</\2>)")
+_APP_TEMIZLE = re.compile(r"(<(Company|Manager|HyperlinkBase|Template)>)[^<]*(</\2>)")
+_APP_BASLIKLAR = re.compile(r"<TitlesOfParts>.*?</TitlesOfParts>", re.S)
+_VT_METIN = re.compile(r"(<vt:lpw?str>)[^<]*(</vt:lpw?str>)")
+_OZEL_OZELLIK = re.compile(r"<(?:\w+:)?property\b.*?</(?:\w+:)?property>", re.S)
+_BELGE_DEGISKENLERI = re.compile(r"<w:docVars\b(?:[^>]*/>|.*?</w:docVars>)", re.S)
+_YAZAR = re.compile(r'(\s(?:w|w15):author=")([^"]*)(")')
+_BAS_HARFLER = re.compile(r'(\sw:initials=")[^"]*(")')
+_KISI_KIMLIGI = re.compile(r'(\sw15:(?:userId|providerId)=")[^"]*(")')
+_ALT_METNI_OLAN = re.compile(r"<(?:\w+:)?(?:docPr|cNvPr|shape|imagedata)\b[^>]*>")
+_ALT_METIN = re.compile(r'(\s(?:descr|title|alt|o:title)=")[^"]*(")')
+_ALAN_KODU = re.compile(r"(<w:instrText\b[^>]*>)([^<]*)(</w:instrText>)")
+_OZNITELIK_METNI = re.compile(r'(\s(?:w:instr|w:tooltip)=")([^"]*)(")')
+_METIN_DUGUMU = re.compile(r">([^<]+)<")
+_ILISKI = re.compile(r"<Relationship\b[^>]*>")
+_HEDEF = re.compile(r'(\sTarget=")([^"]*)(")')
+_KUCUK_RESIM = re.compile(r"^docProps/thumbnail\.\w+$")
 XML_GECERSIZ = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f￾￿]")
 _W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
@@ -71,7 +95,7 @@ class DocxBelge:
 def oku(yol: Path) -> DocxBelge:
     try:
         with zipfile.ZipFile(yol) as zf:
-            girdiler = [(bilgi, zf.read(bilgi)) for bilgi in zf.infolist()]
+            girdiler = arsiv_oku(zf, yol.name, DocxHatasi)
     except zipfile.BadZipFile as hata:
         raise DocxHatasi(f"{yol} geçerli bir .docx değil (Word 97-2003 .doc ise .docx olarak kaydedin).") from hata
 
@@ -152,7 +176,100 @@ def _xml_space_ekle(xml: str, metin_bas: int) -> str:
     return xml[:metin_bas - 1] + ' xml:space="preserve"' + xml[metin_bas - 1:]
 
 
+class _Ustveri:
+    """Maskeli kopyanın gövde dışı temizliği. `degisiklikler`deki gerçek değer → etiket eşlemesi, gövde dışında
+    kalan metne de uygulanır."""
+
+    def __init__(self, belge: DocxBelge, degisiklikler: Sequence[Degisiklik]):
+        ciftler: Dict[str, str] = {}
+        for bas, son, etiket in degisiklikler:
+            deger = belge.metin[bas:son]
+            if deger.strip() and deger != etiket:
+                ciftler.setdefault(deger, etiket)
+        self._denetim = CikisDenetimi(Kasa(), ek_degerler=list(ciftler.items())) if ciftler else None
+        sikisik = (re.sub(r"[^0-9a-z]", "", normallestir(d)[0]) for d in ciftler)
+        self._url_parcalari = [s for s in sikisik if len(s) >= 5]
+        self.yazarlar: Dict[str, str] = {}
+
+    def ort(self, metin: str) -> str:
+        return self._denetim.temizle(metin)[0] if self._denetim and metin.strip() else metin
+
+    def _xml_ort(self, ham: str, tirnak: bool) -> str:
+        duz = html.unescape(ham)
+        yeni = self.ort(duz)
+        return ham if yeni == duz else html.escape(yeni, quote=tirnak)
+
+    def _yazar(self, m: re.Match) -> str:
+        if not m.group(2):
+            return m.group(0)
+        takma = self.yazarlar.setdefault(m.group(2), f"Yazar {len(self.yazarlar) + 1}")
+        return m.group(1) + takma + m.group(3)
+
+    def kisiler(self, xml: str) -> str:
+        """Yazarlar takma adla, baş harfler ve hesap kimlikleri boş; görsellerin alt metni silinir."""
+        xml = _YAZAR.sub(self._yazar, xml)
+        xml = _BAS_HARFLER.sub(r"\1\2", xml)
+        xml = _KISI_KIMLIGI.sub(r"\1\2", xml)
+        return _ALT_METNI_OLAN.sub(lambda m: _ALT_METIN.sub(r"\1\2", m.group(0)), xml)
+
+    def govde(self, xml: str) -> str:
+        """Gövde parçası (metni zaten maskeli): alan kodları ve ipuçları da etiketlenir."""
+        xml = _ALAN_KODU.sub(lambda m: m.group(1) + self._xml_ort(m.group(2), False) + m.group(3), xml)
+        xml = _OZNITELIK_METNI.sub(lambda m: m.group(1) + self._xml_ort(m.group(2), True) + m.group(3), xml)
+        return self.kisiler(xml)
+
+    def _url_maskeli(self, url: str) -> bool:
+        sikisik = re.sub(r"[^0-9a-z]", "", normallestir(unquote(url))[0])
+        return any(p in sikisik for p in self._url_parcalari)
+
+    def _iliski(self, m: re.Match) -> str:
+        etiket = m.group(0)
+        if "/metadata/thumbnail" in etiket:
+            return ""  # küçük resim kopyaya alınmaz
+        hedef = _HEDEF.search(etiket)
+        if not hedef:
+            return etiket
+        url = html.unescape(hedef.group(2))
+        if url.lower().startswith("mailto:"):
+            yeni = "mailto:maskeli@example.invalid"
+        elif 'TargetMode="External"' not in etiket:
+            return etiket
+        elif re.match(r"https?://", url, re.I):
+            # Web bağlantısı içerik olabilir (mevzuat, karar); yalnız maskelenen bir değeri taşıyorsa değişir.
+            if not self._url_maskeli(url):
+                return etiket
+            yeni = "https://maskeli.invalid/"
+        else:
+            yeni = "maskeli.invalid"  # yerel yol, ağ paylaşımı, şablon: kullanıcı ve klasör adı taşır
+        return etiket[:hedef.start(2)] + html.escape(yeni) + etiket[hedef.end(2):]
+
+    def parca(self, ad: str, veri: bytes) -> bytes:
+        if not (ad.endswith(".xml") or ad.endswith(".rels")) or ad == "[Content_Types].xml":
+            return veri
+        try:
+            xml = veri.decode("utf-8")
+        except UnicodeDecodeError:
+            return veri
+        if ad == "docProps/core.xml":
+            xml = _CORE_TEMIZLE.sub(r"\1\3", xml)
+        elif ad == "docProps/app.xml":
+            xml = _APP_TEMIZLE.sub(r"\1\3", xml)
+            xml = _APP_BASLIKLAR.sub(lambda m: _VT_METIN.sub(r"\1\2", m.group(0)), xml)
+        elif ad == "docProps/custom.xml":
+            xml = _OZEL_OZELLIK.sub("", xml)
+        elif ad.endswith(".rels"):
+            xml = _ILISKI.sub(self._iliski, xml)
+        else:
+            if ad == "word/settings.xml":
+                xml = _BELGE_DEGISKENLERI.sub("", xml)
+            # Grafik, SmartArt, içerik denetimi verisi (customXml), yapı taşları: metin düğümleri etiketlenir.
+            xml = _METIN_DUGUMU.sub(lambda m: ">" + self._xml_ort(m.group(1), False) + "<", xml)
+            xml = self.kisiler(xml)
+        return xml.encode("utf-8")
+
+
 def maskelenmis_yaz(belge: DocxBelge, degisiklikler: Sequence[Degisiklik], hedef: Path, ustveri_temizle: bool = True) -> None:
+    ustveri = _Ustveri(belge, degisiklikler) if ustveri_temizle else None
     yeni_metinler = _dugum_metinleri(belge, degisiklikler)
     parcalar = dict(belge.parcalar)
     for j in range(len(belge.dugumler) - 1, -1, -1):
@@ -170,14 +287,12 @@ def maskelenmis_yaz(belge: DocxBelge, degisiklikler: Sequence[Degisiklik], hedef
     with zipfile.ZipFile(gecici, "w", zipfile.ZIP_DEFLATED) as zf:
         for bilgi, veri in belge.girdiler:
             ad = bilgi.filename
+            if ustveri and _KUCUK_RESIM.match(ad):
+                continue  # ilk sayfanın görüntüsü: gerçek adlar piksel olarak durur
             if ad in parcalar:
-                veri = parcalar[ad].encode("utf-8")
-            elif ustveri_temizle and ad == "docProps/core.xml":
-                veri = _CORE_TEMIZLE.sub(r"\1\3", veri.decode("utf-8")).encode("utf-8")
-            elif ustveri_temizle and ad == "docProps/app.xml":
-                veri = _APP_TEMIZLE.sub(r"\1\3", veri.decode("utf-8")).encode("utf-8")
-            elif ustveri_temizle and ad.endswith(".rels"):
-                veri = _MAILTO.sub(r"\1mailto:maskeli@example.invalid\2", veri.decode("utf-8")).encode("utf-8")
+                veri = (ustveri.govde(parcalar[ad]) if ustveri else parcalar[ad]).encode("utf-8")
+            elif ustveri:
+                veri = ustveri.parca(ad, veri)
             zf.writestr(bilgi, veri)
     gecici.replace(hedef)
 

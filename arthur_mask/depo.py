@@ -25,7 +25,7 @@ from typing import Dict, Iterator, List, Optional
 
 import yaml
 
-from .anahtar import kasa_parolasi
+from .anahtar import kasa_parolasi, ozel_klasor
 from .kasa import Kasa
 from .sozluk import Sozluk
 
@@ -89,6 +89,9 @@ class Depo:
     def __init__(self, anahtar: bytes, kok: Optional[Path] = None):
         self.kok = Path(kok) if kok else varsayilan_kok()
         self.kok.mkdir(parents=True, exist_ok=True)
+        # Sözlük, çözülmüş cevaplar ve maskeli kopyalar yalnız bu kullanıcıya açık kalsın (macOS/Linux; Windows'ta
+        # Belgeler klasörü zaten kullanıcıya özeldir).
+        ozel_klasor(self.kok)
         self._parola = kasa_parolasi(anahtar)
 
     # -- dosyalar ----------------------------------------------------------------

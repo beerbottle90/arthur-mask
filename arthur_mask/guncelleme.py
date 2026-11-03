@@ -78,7 +78,7 @@ def _denetle() -> None:
         if veri.get("surum") and _surum(veri["surum"]) > _surum(__version__):
             _sonuc = veri
     except Exception as hata:  # noqa: BLE001 - çevrimdışı çalışmak normaldir
-        gunluk.info("Güncelleme denetlenemedi: %s", hata)
+        gunluk.info("Güncelleme denetlenemedi (%s).", type(hata).__name__)
 
 
 def arkaplanda_denetle() -> None:

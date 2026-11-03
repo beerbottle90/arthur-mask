@@ -92,7 +92,33 @@ def uygulama_klasoru() -> Path:
             else str(Path.home() / ".config")
     yol = Path(taban) / "ArthurMask"
     yol.mkdir(parents=True, exist_ok=True)
+    ozel_klasor(yol)
     return yol
+
+
+def ozel_izinler() -> None:
+    """macOS ve Linux: bu süreçte açılan dosya ve klasörler yalnız kullanıcıya açık olsun (700/600). Windows'ta
+    kullanıcı klasörlerinin erişim listesi zaten yalnız kullanıcıya açıktır."""
+    if os.name == "posix":
+        os.umask(0o077)
+
+
+def ozel_klasor(yol: Path) -> None:
+    """Klasörü (önceden açılmış olsa da) yalnız kullanıcıya açar; Windows'ta bir şey yapmaz."""
+    if os.name == "posix":
+        try:
+            os.chmod(yol, 0o700)
+        except OSError:
+            pass
+
+
+def ozel_yaz(yol: Path, metin: str) -> None:
+    """Gizli küçük dosya (belirteç, belirteçli açılış sayfası): POSIX'te 600 izinle yazılır."""
+    tanitici = os.open(yol, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(tanitici, "w", encoding="utf-8") as f:
+        f.write(metin)
+    if os.name == "posix":
+        os.chmod(yol, 0o600)
 
 
 def ana_anahtar(klasor: Path = None) -> bytes:

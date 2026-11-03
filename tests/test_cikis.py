@@ -1,6 +1,6 @@
 """Çıkış kapısı: kasadaki değerler hangi biçimde yazılırsa yazılsın Claude'a gitmeden etiketlenir."""
 
-from arthur_mask.cikis import CikisDenetimi
+from arthur_mask.cikis import CikisDenetimi, normallestir
 from arthur_mask.depo import Depo
 from arthur_mask.kasa import Kasa
 
@@ -56,3 +56,56 @@ def test_belge_adindan_benzersiz_dosya(tmp_path):
     ilk = depo.dosya_olustur(depo.benzersiz_ad("nda final"))
     ikinci = depo.dosya_olustur(depo.benzersiz_ad("nda final"))
     assert (ilk, ikinci) == ("nda final", "nda final (2)")
+
+
+def test_gorunmez_karakter_ayrik_aksan_ve_satir_sonu_tiresi_yakalanir():
+    kasa = Kasa()
+    kasa.etiket_al("KİŞİ", "PERSON", "zümrüt karabacak", "Zümrüt KARABACAK")
+    d = CikisDenetimi(kasa)
+    ornekler = [
+        "Zü­mrüt Kara​bacak",          # yumuşak tire, sıfır genişlikli boşluk
+        "Zümrüt KARABACAK",           # ayrık aksan (NFD)
+        "﻿Zümrüt Karabacak",                  # BOM
+        "Zümrüt Kara-\nbacak",                     # satır sonu tirelemesi
+        "Ｚümrüt ＫＡＲＡＢＡＣＡＫ",               # tam genişlikli harfler
+    ]
+    for ornek in ornekler:
+        temiz, bulunan = d.tara(f"Taraf: {ornek} imzaladı.")
+        # Değerin önündeki görünmez karakter (BOM) yerinde kalabilir; görünen metin yalnız etiket.
+        assert normallestir(temiz)[0] == "taraf: {{kisi-01}} imzaladi.", (ornek, temiz)
+        assert bulunan and bulunan[0][1] == "{{KİŞİ-01}}"
+
+
+def test_kismi_ad_ve_kisa_ad():
+    kasa = Kasa()
+    kasa.etiket_al("KİŞİ", "PERSON", "mehmet ali yılmaz", "Mehmet Ali YILMAZ")
+    kasa.etiket_al("KİŞİ", "PERSON", "can", "Can")
+    d = CikisDenetimi(kasa)
+    metin, _ = d.tara("Mehmet Yılmaz, M. Yılmaz, M.A. Yılmaz ve YILMAZ; Can geldi. yılmaz bir sözcük, can sıkıcı. Ak.")
+    assert metin == ("{{KİŞİ-01}}, {{KİŞİ-01}}, {{KİŞİ-01}} ve {{KİŞİ-01}}; {{KİŞİ-02}} geldi. "
+                     "yılmaz bir sözcük, can sıkıcı. Ak.")
+
+
+def test_ayni_soyadli_iki_kisi_soyadindan_etiketlenmez():
+    """Soyadı tek başına iki kişiden birine yanlış etiket verdirmesin: belirsizse kısmi biçim eklenmez."""
+    kasa = Kasa()
+    kasa.etiket_al("KİŞİ", "PERSON", "ayşe demir", "Ayşe Demir")
+    kasa.etiket_al("KİŞİ", "PERSON", "mehmet demir", "Mehmet Demir")
+    d = CikisDenetimi(kasa)
+    assert d.tara("Demir ailesi; A. Demir ve M. Demir.")[0] == "Demir ailesi; {{KİŞİ-01}} ve {{KİŞİ-02}}."
+
+
+def test_telefon_iban_plaka_ve_dosya_no_bicimleri():
+    kasa = _kasa()
+    kasa.etiket_al("PLAKA", "TR_PLAKA", "34 abc 123", "34 ABC 123")
+    kasa.etiket_al("DOSYA_NO", "TR_DOSYA_NO", "2024/5678 e.", "2024/5678 E.")
+    d = CikisDenetimi(kasa)
+    metin, bulunan = d.tara(
+        "Tel +90 532 123 45 67, 0090 (532) 123 4567 ve 532 123 45 67. IBAN 33 0006 1005 1978 6457 8413 26, "
+        "IBANTR330006100519786457841326. Araç 34ABC123 / 34-abc-123. Esas No: 2024/5678; 2024/5678 Esas."
+    )
+    for parca in ("532", "0006", "ABC", "abc", "5678"):
+        assert parca not in metin, (parca, metin)
+    assert {t for t, _, _ in bulunan} == {"TELEFON", "IBAN", "PLAKA", "DOSYA_NO"}
+    # Başka bir numara (ilk hanesi farklı) dokunulmaz.
+    assert d.tara("Tel 0533 123 45 67")[0] == "Tel 0533 123 45 67"

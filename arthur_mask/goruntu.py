@@ -18,6 +18,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
+from .sinirlar import AZAMI_GORUNTU_PIKSELI, AZAMI_OCR_SAYFASI
+
 gunluk = logging.getLogger("arthur_mask.goruntu")
 
 GORUNTU_UZANTILARI = (".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".webp")
@@ -58,6 +60,19 @@ class Sayfa:
     guven: float = 0.0
 
 
+def _sayfa_siniri(yol: Path, sayi: int) -> None:
+    if sayi > AZAMI_OCR_SAYFASI:
+        raise OcrHatasi(f"{yol.name} {sayi} sayfa; yerel OCR en çok {AZAMI_OCR_SAYFASI} sayfayı okur. "
+                        "Belgeyi bölüp parça parça yükleyin.")
+
+
+def _olcek(genislik: float, yukseklik: float) -> float:
+    """200 DPI; sayfa çok büyükse (afiş, pafta) piksel sınırına sığacak kadar düşürülür."""
+    olcek = PDF_DPI / 72
+    piksel = genislik * yukseklik * olcek * olcek
+    return olcek if piksel <= AZAMI_GORUNTU_PIKSELI else (AZAMI_GORUNTU_PIKSELI / (genislik * yukseklik)) ** 0.5
+
+
 def sayfa_goruntuleri(yol: Path) -> List["object"]:
     from PIL import Image, ImageOps
 
@@ -67,13 +82,19 @@ def sayfa_goruntuleri(yol: Path) -> List["object"]:
 
         belge = pdfium.PdfDocument(str(yol))
         try:
-            return [belge[i].render(scale=PDF_DPI / 72).to_pil().convert("RGB") for i in range(len(belge))]
+            _sayfa_siniri(yol, len(belge))
+            return [belge[i].render(scale=_olcek(*belge[i].get_size())).to_pil().convert("RGB")
+                    for i in range(len(belge))]
         finally:
             belge.close()
     goruntu = Image.open(yol)
+    _sayfa_siniri(yol, getattr(goruntu, "n_frames", 1))
     sayfalar = []
     for i in range(getattr(goruntu, "n_frames", 1)):
         goruntu.seek(i)
+        if goruntu.size[0] * goruntu.size[1] > AZAMI_GORUNTU_PIKSELI:
+            raise OcrHatasi(f"{yol.name} çok büyük bir görüntü ({goruntu.size[0]}×{goruntu.size[1]}); "
+                            "daha düşük çözünürlükte tarayıp yeniden deneyin.")
         sayfalar.append(ImageOps.exif_transpose(goruntu.copy()).convert("RGB"))
     return sayfalar
 
