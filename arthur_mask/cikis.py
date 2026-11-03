@@ -222,6 +222,22 @@ class CikisDenetimi:
                 gorulen.add((desen, yerine))
                 self._desenler.append((re.compile(desen), buyuk_sart, yerine, tur))
 
+    def araliklar(self, metin: str) -> List[Tuple[int, int]]:
+        """Kasadaki değerlerin metindeki (özgün) konumları; metin parçalara bölünürken bir değerin ortasından
+        kesilmesin diye."""
+        sonuc: List[Tuple[int, int]] = []
+        if not self._desenler or not metin:
+            return sonuc
+        normal, konum = normallestir(metin)
+        for desen, buyuk_sart, _, _ in self._desenler:
+            for m in desen.finditer(normal):
+                if m.end() == m.start():
+                    continue
+                bas, son = konum[m.start()], konum[m.end() - 1] + 1
+                if not buyuk_sart or metin[bas].isupper():
+                    sonuc.append((bas, son))
+        return sonuc
+
     def temizle(self, metin: str) -> Tuple[str, Dict[str, int]]:
         temiz, bulunanlar = self.tara(metin)
         turler: Dict[str, int] = {}

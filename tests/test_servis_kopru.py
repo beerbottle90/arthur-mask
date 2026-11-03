@@ -202,11 +202,13 @@ def test_parca_sinirina_denk_gelen_deger_kacmaz(islem):
     metin = dolgu + "Zümrüt KARABACAK ile görüşüldü.\n" + "Ek açıklama.\n" * 10
     islem.depo.belge_kaydet(klasor, _hazir_kayit(metin))
 
-    parcalar = [islem.mcp_belge_getir("belge-1", i) for i in (1, 2)]
-    assert parcalar[0]["parca_sayisi"] == 2
-    birlesik = "".join(p["metin"] for p in parcalar)
+    ham = [islem.mcp_belge_getir("belge-1", i) for i in (1, 2)]
+    assert ham[0]["parca_sayisi"] == 2 and ham[1]["metin"].startswith("Zümrüt KARABACAK")  # değer bölünmedi
+    giden = [islem.mcp_cikis("arthur_mask_belge_getir", p, klasor) for p in ham]
+    birlesik = "".join(p["metin"] for p in giden)
     assert "Zümrüt" not in birlesik and "ARABACAK" not in birlesik and "{{KİŞİ-01}} ile görüşüldü" in birlesik
-    assert not parcalar[0]["metin"].endswith("{{") and all(len(p["metin"]) <= MCP_PARCA_KARAKTER for p in parcalar)
+    assert all(len(p["metin"]) <= MCP_PARCA_KARAKTER for p in ham)
+    assert islem.arayuz_gidenler(klasor)["toplam_yakalanan"] == 1
 
 
 def test_etkin_dosya_degisse_de_cagrinin_dosyasi_denetlenir(islem):
