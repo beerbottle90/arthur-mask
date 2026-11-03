@@ -1,6 +1,6 @@
 """Arthur Mask — ArthurLegal takma adlandırma kapısı: Türk hukuk belgeleri için yerel PII maskeleme."""
 
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 
 from .paket import ortami_hazirla as _ortami_hazirla
 
