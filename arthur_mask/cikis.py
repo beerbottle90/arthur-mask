@@ -153,7 +153,12 @@ def _deger_deseni(deger: str, tur: str = "") -> Tuple[str, bool]:
         kumeler = re.findall(r"[^\W\d_]+|[0-9]+", deger)
         if len("".join(kumeler)) < 4:
             return "", False
-        return _ONCE + _KUME_AYRACI.join(re.escape(k) for k in kumeler) + _SONRA, False
+        govde = _KUME_AYRACI.join(re.escape(k) for k in kumeler)
+        if not harf:
+            # Yalnız rakam kümeleri (kısa esas no "2025/7"): ayraçla devam eden daha uzun bir sayının parçası
+            # etiketlenmez. "2025/7/15" bir tarihtir, "12025/7" ya da "2025/71" başka numaradır.
+            return rf"(?<![0-9])(?<![0-9][/.\-]){govde}(?![0-9])(?![/.\-][0-9])", False
+        return _ONCE + govde + _SONRA, False
 
     sozcukler = [s for s in deger.split() if _sozcuk_deseni(s)]
     if not sozcukler or len(harf) < _EN_AZ_HARF:
