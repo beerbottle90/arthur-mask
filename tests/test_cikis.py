@@ -109,3 +109,14 @@ def test_telefon_iban_plaka_ve_dosya_no_bicimleri():
     assert {t for t, _, _ in bulunan} == {"TELEFON", "IBAN", "PLAKA", "DOSYA_NO"}
     # Başka bir numara (ilk hanesi farklı) dokunulmaz.
     assert d.tara("Tel 0533 123 45 67")[0] == "Tel 0533 123 45 67"
+
+
+def test_kisa_esas_no_tarihin_ya_da_baska_numaranin_parcasi_olunca_etiketlenmez():
+    kasa = _kasa()
+    etiket = kasa.etiket_al("DOSYA_NO", "TR_DOSYA_NO", "2025/7", "2025/7")
+    d = CikisDenetimi(kasa)
+    metin, bulunan = d.tara("2025/7 ve 2025 / 7 sayılı dosya. Dosya 2025/7.")
+    assert metin == f"{etiket} ve {etiket} sayılı dosya. Dosya {etiket}.", metin
+    assert len(bulunan) == 3
+    korunan = "Karar 2025/7/15 tarihli; 12025/7, 2025/71, 3/2025/7 ve 2025.7.1 başka sayılar."
+    assert d.tara(korunan)[0] == korunan
