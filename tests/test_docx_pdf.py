@@ -200,6 +200,15 @@ def test_metinden_docx_word_ile_acilir(tmp_path):
     assert paragraflar == ["Birinci satır", "  girintili <özel> & karakter", "", "ikinci sayfa"]
 
 
+def test_metinden_docx_markdown_tablosu_word_tablosu_olur(tmp_path):
+    """Claude'un teslim ettiği risk tablosu gibi Markdown tablolar Word tablosuna çevrilir (kaçışlı | hücrede kalır)."""
+    yol = tmp_path / "risk.docx"
+    belgeler.metinden_yaz("# Risk tablosu\n\n| Madde | Risk |\n|---|---|\n| 7.3 | Süre 30 → 60 gün \\| yüksek |\n", yol)
+    belge = docx_kutuphanesi.Document(yol)
+    assert len(belge.tables) == 1
+    assert [[h.text for h in s.cells] for s in belge.tables[0].rows] == [["Madde", "Risk"], ["7.3", "Süre 30 → 60 gün | yüksek"]]
+
+
 def test_metinden_udf_kontrol_karakteri(tmp_path):
     yol = tmp_path / "taslak.udf"
     belgeler.metinden_yaz("sayfa bir\n\f\nsayfa iki", yol)
