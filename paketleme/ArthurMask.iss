@@ -1,8 +1,8 @@
 ; ArthurMask kurulum paketi (Inno Setup 6)
-; ISCC.exe /DSurum=1.1.3 /DKaynak=E:\arthur-mask-derleme\ArthurMask /OE:\arthur-mask-derleme paketleme\ArthurMask.iss
+; ISCC.exe /DSurum=1.2.0 /DKaynak=E:\arthur-mask-derleme\ArthurMask /OE:\arthur-mask-derleme paketleme\ArthurMask.iss
 
 #ifndef Surum
-  #define Surum "1.1.3"
+  #define Surum "1.2.0"
 #endif
 #ifndef Kaynak
   #define Kaynak "E:\arthur-mask-derleme\ArthurMask"
