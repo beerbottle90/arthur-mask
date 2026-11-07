@@ -5,6 +5,7 @@
     sozluk.yaml             dosya sözlüğü (maskele / maskeleme)
     maskeli\\<id>.json       maskeli metin ve özet (özgün metin YOK)
     maskeli\\<id>.<uzantı>   maskeli belge kopyası (30 gün sonra silinir)
+    maskeli\\<id>.tutarlilik avukatın ekranındaki tam tutarlılık raporu (şifreli; 30 gün sonra silinir)
     cevaplar\\               Claude'un teslim ettiği, yerelde çözülmüş taslaklar
     kirmizi-hat.jsonl       yalnız kırmızı hat onayları (gerçek değer yok)
     claude-giden.jsonl      Claude'a gönderilen her araç yanıtı (çıkış kapısından geçmiş, maskeli)
@@ -26,7 +27,7 @@ from typing import Dict, Iterator, List, Optional
 import yaml
 
 from .anahtar import kasa_parolasi, ozel_klasor
-from .kasa import Kasa
+from .kasa import Kasa, gizli_ac, gizli_paketle
 from .sozluk import Sozluk
 
 SAKLAMA_GUNU = 30
@@ -214,6 +215,21 @@ class Depo:
 
     def maskeli_kopya_yolu(self, klasor: str, belge_id: str, uzanti: str) -> Path:
         return self.dosya_yolu(klasor) / "maskeli" / f"{belge_id}{uzanti}"
+
+    # -- şifreli yerel raporlar (gerçek değer taşır; belgeyle birlikte silinir, 30 gün sonra temizlenir) --------
+    def _gizli_yol(self, klasor: str, ad: str) -> Path:
+        if not re.fullmatch(r"[a-z0-9-]{1,40}\.tutarlilik", ad):
+            raise FileNotFoundError(ad)
+        return self.dosya_yolu(klasor) / "maskeli" / ad
+
+    def gizli_kaydet(self, klasor: str, ad: str, veri: Dict) -> None:
+        yol = self._gizli_yol(klasor, ad)
+        gecici = yol.with_name(yol.name + ".tmp")
+        gecici.write_bytes(gizli_paketle(json.dumps(veri, ensure_ascii=False).encode("utf-8"), self._parola))
+        os.replace(gecici, yol)
+
+    def gizli_oku(self, klasor: str, ad: str) -> Dict:
+        return json.loads(gizli_ac(self._gizli_yol(klasor, ad).read_bytes(), self._parola))
 
     # -- cevaplar ----------------------------------------------------------------------
     def cevap_yolu(self, klasor: str, baslik: str, uzanti: str) -> Path:

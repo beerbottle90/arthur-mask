@@ -203,6 +203,31 @@ button.tam { width: 100%; margin-top: 8px; }
 .birak.isleniyor { opacity: 0.6; pointer-events: none; }
 .birak.hatali span { color: var(--kirmizi-metin); }
 
+/* ---- Sürüm karşılaştırması: iki yuva ---- */
+.karsilastir h2 { margin-bottom: 6px; }
+.yuvalar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: center; margin-top: 12px; }
+.yuva {
+  display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; min-height: 72px; justify-content: center;
+  border-radius: var(--k-grup); border: 1.5px dashed var(--cizgi-guclu); background: var(--grup); cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.yuva:hover, .yuva.uzerinde { border-color: var(--altin); }
+.yuva.uzerinde { background: var(--secili); }
+.yuva.dolu { border-style: solid; border-color: var(--altin); background: var(--secili); }
+.yuva strong { font-size: 14px; }
+.yuva span { font-size: 12.5px; color: var(--ikincil); overflow-wrap: anywhere; }
+.yuva:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--halka); }
+#yuva-degistir { min-width: 40px; padding: 0 10px; }
+.cip.surum { background: var(--mavi-zemin); color: var(--mavi-metin); }
+
+/* ---- İç tutarlılık raporu ---- */
+.tutarlilik { margin-top: 4px; }
+.tutarlilik-listesi { margin: 8px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; }
+.tutarlilik-bulgu { display: flex; flex-direction: column; gap: 4px; }
+.tutarlilik-bulgu .meta { font-size: 12px; color: var(--ikincil); }
+.tutarlilik-bulgu .cip { margin-right: 4px; }
+.onizleme.alinti { max-height: 120px; padding: 8px 12px; font-size: 12.5px; }
+
 /* ---- Belge ve cevap satırları ---- */
 .belge, .cevap {
   display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center;
@@ -320,7 +345,9 @@ textarea, input {
   .yan-alt { margin-top: 12px; }
   .icerik { padding: 20px 16px; }
   .belge, .cevap { grid-template-columns: minmax(0, 1fr); }
+  .yuvalar { grid-template-columns: minmax(0, 1fr); }
+  #yuva-degistir { justify-self: center; }
   .belge .eylemler, .cevap .eylemler { grid-column: 1; grid-row: auto; justify-content: flex-start; }
 }
 @media (pointer: coarse) { button { min-height: 44px; } }
-@media (prefers-reduced-motion: reduce) { button, .birak { transition: none; } button:active { transform: none; } }
+@media (prefers-reduced-motion: reduce) { button, .birak, .yuva { transition: none; } button:active { transform: none; } }

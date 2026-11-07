@@ -174,6 +174,10 @@ class _Isleyici(BaseHTTPRequestHandler):
                         klasor, parcalar[3], govde.get("maskelenecek", []), govde.get("birakilacak", []),
                         govde.get("gerekce", ""),
                     ))
+                if kaynak == "belgeler" and len(parcalar) == 5 and parcalar[4] == "tutarlilik" and yontem == "GET":
+                    return self._json(200, islem.arayuz_tutarlilik(klasor, parcalar[3]))
+                if kaynak == "karsilastir" and len(parcalar) == 3 and yontem == "POST":
+                    return self._json(201, self._karsilastir(klasor))
                 if kaynak == "belgeler" and len(parcalar) == 4 and yontem == "DELETE":
                     islem.arayuz_belge_sil(klasor, parcalar[3])
                     return self._json(200, {"silindi": parcalar[3]})
@@ -208,6 +212,20 @@ class _Isleyici(BaseHTTPRequestHandler):
             kalip = ["<dosya>" if i == 1 and parcalar[0] == "dosyalar" else p for i, p in enumerate(parcalar)]
             gunluk.error("API hatası: %s /api/%s (%s)", yontem, "/".join(kalip), type(hata).__name__)
             return self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {"hata": "Beklenmeyen hata; günlüğe bakın."})
+
+    def _karsilastir(self, klasor: str) -> dict:
+        """Gövde: özgün belgenin baytları ardından yeni sürümün baytları; ilkinin boyu X-Boyut-1 başlığında."""
+        uzunluk = int(self.headers.get("Content-Length") or 0)
+        try:
+            ilk = int(self.headers.get("X-Boyut-1") or -1)
+        except ValueError:
+            ilk = -1
+        if not 0 < uzunluk <= 2 * AZAMI_YUKLEME or not 0 < ilk < uzunluk:
+            raise IslemHatasi("Belgeler boş ya da toplamı 120 MB'tan büyük.")
+        veri = self.rfile.read(uzunluk)
+        ad1 = unquote(self.headers.get("X-Dosya-Adi-1", "ozgun.docx"))
+        ad2 = unquote(self.headers.get("X-Dosya-Adi-2", "yeni.docx"))
+        return self.uygulama.islem.arayuz_karsilastir(klasor, ad1, veri[:ilk], ad2, veri[ilk:])
 
     def _statik(self, yol: str) -> None:
         ad = "index.html" if yol in ("", "/") else yol.lstrip("/")

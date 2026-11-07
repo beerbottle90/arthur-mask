@@ -29,8 +29,10 @@ sürüm listesinden yeni sürüm olup olmadığını okumak için çıkar.
 | PDF | Metin katmanı maskelenip metin olarak yazılır |
 | Taranmış belge / fotoğraf | Yerel OCR (RapidOCR PP-OCRv6); metin maskelenir, etiketler sayfa görüntüsüne kalıcı basılır, çıktı üstverisiz görüntü PDF'i; avukat incelemesi zorunlu |
 | İngilizce | Yabancı şirket ekleri, İngilizce unvan/taraf/imza blokları, UK/US/AB adresleri, uluslararası telefon, pasaport; yayımlanmış İngiliz/ABD içtihat atıfları korunur |
-| Claude köprüsü | Claude Desktop MCP (belgeler / belge_getir / belgeyi_revize_et / teslim) + yerel AL arayüzü, tek süreç |
+| Claude köprüsü | Claude Desktop MCP (belgeler / belge_getir / belgeyi_revize_et / teslim / surumleri_karsilastir / tutarlilik_denetimi) + yerel AL arayüzü, tek süreç |
 | Yapı ve revizyon | Word tabloları (ör. AZ \| EN çift sütun) Claude'a Markdown tablo olarak gider; revizyonlar özgün belgeye izli değişiklik olarak işlenir |
+| Sürüm karşılaştırması | Avukatın özgün Word belgesi ile karşı tarafın "temiz" yeni sürümü arayüzde iki yuvaya bırakılır; farklar yeni sürümün üzerine gerçek Word izli değişikliği (w:ins / w:del) olarak yazılır ve avukatın bilgisayarında açılır. Paragraf, tablo satırı ve hücre düzeyinde hizalanır; çift sütun ve biçim korunur. Claude'a yalnız maskeli "ne değişti" özeti gider (`arthur_mask_surumleri_karsilastir`) |
+| İç tutarlılık | Her belge bırakılırken kurallarla, yerelde denetlenir: tanımlanıp kullanılmayan / tanımlanmadan kullanılan terim, var olmayan madde ya da fıkraya iç atıf, taraf unvanı tutarsızlığı, çift dilli tabloda sütunlar arası madde numarası, tutar, oran, tarih ve sayı farkı. Tam rapor avukatın ekranında (diskte şifreli), maskeli rapor Claude'a (`arthur_mask_tutarlilik_denetimi`) |
 | Çıkış kapısı | Claude'a giden her yanıt, gönderilmeden önce kasadaki bütün gerçek değerlere karşı (aksan, büyük/küçük harf, ayraç farkı gözetmeden) yeniden taranır ve etiketlenir; gönderilenler dosyada kaydedilir, arayüzden sızıntı denetimi yapılır. Uçtan uca test köprünün ham stdout baytlarını tarar |
 | Geri açma | Bozulmuş etiketleri tolere eder (`{{KISI-1}}`); Türkçe ek uyumu: `{{KİŞİ-01}}'in` → `Ayşe KARA'nın` |
 | Kasa | Scrypt + Fernet ile şifreli, dosya (matter) başına; belgeler arası tutarlı etiket |
@@ -134,6 +136,11 @@ eşik, sözlük veya model değiştiğinde ölçüm tekrarlanır.
 - Metin PDF'lerinin maskeli çıktısı metindir. Taranmış belgelerde el yazısı, imza, mühür,
   fotoğraf ve karekod OCR ile okunmaz ve maskelenmez; maskeli sayfa görüntüsü kontrol edilir.
 - Geri açma kanonik değeri yazar: tek başına geçen soyadı tam ada açılır.
+- Sürüm karşılaştırması yalnız Word gövdesini karşılaştırır: üst/alt bilgi, dipnot, metin kutusu, görsel ve yalnız
+  biçim (kalın, yazı tipi) değişiklikleri izli değişikliğe işlenmez (üst/alt bilgi ve dipnot farkı uyarıyla bildirilir).
+  Yeni sürümde kabul edilmemiş izli değişiklik varsa karşılaştırma yapılmaz.
+- Tutarlılık denetimi kurallara dayanır; yanlış alarm ve kaçırma olabilir. "Tanımlanmadan kullanılan terim" bir
+  olasılıktır; Word'ün otomatik numarası sadeleştirilmiş biçimde hesaplanır, okunamazsa atıf denetimi yapılmaz.
 
 Belgeler: [masaüstü akışı ve Claude köprüsü](docs/platform-mimarisi.md) ·
 [Faz 1 şartnamesi](docs/faz-1-sartname.md) · [lisans](LICENSE) · [üçüncü taraf bileşenler](ATTRIBUTION.md)

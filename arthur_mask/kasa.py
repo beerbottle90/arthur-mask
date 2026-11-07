@@ -20,6 +20,7 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from .turkce import ascii_katla, ascii_kucuk
 
 BASLIK = b"ARTHURMASK-KASA1\n"
+GIZLI_BASLIK = b"ARTHURMASK-GIZLI1\n"
 PAROLA_DEGISKENI = "ARTHUR_MASK_KASA_PAROLASI"
 _ETIKET_PARCALARI = re.compile(r"\{\{\s*([^{}\s]+?)\s*-\s*(\d+)\s*\}\}")
 
@@ -31,6 +32,24 @@ class KasaHatasi(Exception):
 def _anahtar_turet(parola: str, tuz: bytes) -> bytes:
     kdf = Scrypt(salt=tuz, length=32, n=2**15, r=8, p=1)
     return base64.urlsafe_b64encode(kdf.derive(parola.encode("utf-8")))
+
+
+def gizli_paketle(veri: bytes, parola: str) -> bytes:
+    """Kasayla aynı yöntemle (Scrypt + Fernet) şifreli paket: gerçek değer taşıyan yerel raporlar için."""
+    if not parola:
+        raise KasaHatasi("Kasa parolası boş olamaz.")
+    tuz = os.urandom(16)
+    return GIZLI_BASLIK + base64.b64encode(tuz) + b"\n" + Fernet(_anahtar_turet(parola, tuz)).encrypt(veri)
+
+
+def gizli_ac(ham: bytes, parola: str) -> bytes:
+    if not ham.startswith(GIZLI_BASLIK):
+        raise KasaHatasi("Şifreli ArthurMask dosyası değil.")
+    tuz_satiri, belirtec = ham[len(GIZLI_BASLIK):].split(b"\n", 1)
+    try:
+        return Fernet(_anahtar_turet(parola, base64.b64decode(tuz_satiri))).decrypt(belirtec)
+    except InvalidToken as hata:
+        raise KasaHatasi("Kasa parolası yanlış veya dosya bozuk.") from hata
 
 
 def etiket_olustur(tur: str, sira: int) -> str:

@@ -66,6 +66,8 @@ görür. Çözme, modelin **teslim ettiği** metin üzerinde yerelde yapılır.
 | `arthur_mask_belgeler` | Hazır belgelerin listesi (kimlik, sayfa, etiket sayısı) | Dosya adları da gerçek ad içerebileceği için `belge-3` gibi kimlik kullanılır |
 | `arthur_mask_belge_getir(kimlik, sayfa?)` | Maskeli metin + etiket türleri lejantı | Büyük belgede sayfalı |
 | `arthur_mask_teslim(metin, bicim, baslik)` | "Kaydedildi, N etiket çözüldü, kasada olmayan: [...]" | Çözme, ek uyumu, DOCX/UDF yerelde |
+| `arthur_mask_surumleri_karsilastir(ozgun?, yeni?, parca?)` | Maskeli "ne değişti" listesi (değişen / eklenen / silinen paragraf ve tablo satırı, madde ve tablo yeriyle) | Maskeli kopyalardan üretilir; izli Word yalnız avukatın bilgisayarında |
+| `arthur_mask_tutarlilik_denetimi(kimlik, parca?)` | Maskeli tutarlılık raporu (kural, önem, açıklama, yer, alıntı) | Kurallarla, yerelde; tam rapor arayüzde gerçek adlarla |
 
 Ham metni maskeleyen bir araç **bilerek yoktur**. Öyle bir araç olsaydı modelin ham metni
 önce görmesi gerekirdi.

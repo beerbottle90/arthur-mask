@@ -33,7 +33,13 @@ TALIMAT = (
     "belgeden birebir ve tek paragraf/hücre içinden kopyala. Çift dilli belgede her iki dil sütununu da ayrı ayrı revize et.\n"
     "6) Yeni bir belge (görüş, cetvel, dilekçe) yazıyorsan arthur_mask_teslim kullan; Markdown tablo ve başlıklar "
     "Word'e tablo ve başlık olarak aktarılır. Kaynak belge çift dilliyse yeni belgeyi de aynı dillerde, iki sütunlu tabloyla yaz.\n"
-    "7) Belge 'hazir' değilse avukattan ArthurMask'te incelemeyi tamamlamasını iste."
+    "7) Belge 'hazir' değilse avukattan ArthurMask'te incelemeyi tamamlamasını iste.\n"
+    "8) Avukat sözleşmenin iki sürümünü (kendi özgün metni ve karşı tarafın yeni sürümü) karşılaştırmanı isterse "
+    "arthur_mask_surumleri_karsilastir kullan: yalnız maskeli 'ne değişti' özeti gelir, izli değişiklikli Word dosyası "
+    "avukatın ekranındadır. Risk yorumunu ve karşı öneriyi bu özete göre yaz; karşı öneriyi yeni sürüme izli değişiklik "
+    "olarak işlemek için arthur_mask_belgeyi_revize_et'i yeni sürümün kimliğiyle kullan.\n"
+    "9) Sözleşmenin iç tutarlılığı (tanımlı terimler, iç atıflar, taraf unvanları, çift dilli sütun farkları) için "
+    "arthur_mask_tutarlilik_denetimi kullan; bulgular kurallarla bulunur, önceliklendir ve belge metniyle teyit et."
 )
 
 
@@ -96,6 +102,32 @@ def sunucu_olustur(islem: Islem) -> MCPServer:
     )
     def arthur_mask_teslim(metin: str, bicim: str = "docx", baslik: str = "cevap") -> dict:
         return _hata_sar(islem.mcp_teslim, metin, bicim, baslik)
+
+    @mcp.tool(
+        name="arthur_mask_surumleri_karsilastir",
+        title="İki sürümü karşılaştır (maskeli özet)",
+        description=(
+            "Avukatın özgün Word belgesi ile karşı tarafın yeni sürümü arasındaki farkları maskeli bir 'ne değişti' "
+            "listesi olarak döndürür (değişen, eklenen, silinen paragraflar ve tablo satırları; madde ve tablo yeriyle). "
+            "Kimlik verilmezse dosyadaki son karşılaştırma kullanılır. İzli değişiklikli Word dosyası avukatın "
+            "bilgisayarında açılır; bu yanıtta gerçek değer bulunmaz. Risk yorumu ve karşı öneri bu özete göre yazılır."
+        ),
+    )
+    def arthur_mask_surumleri_karsilastir(ozgun: str = "", yeni: str = "", parca: int = 1) -> dict:
+        return _hata_sar(islem.mcp_surum_karsilastir, ozgun, yeni, parca)
+
+    @mcp.tool(
+        name="arthur_mask_tutarlilik_denetimi",
+        title="Sözleşmenin iç tutarlılık denetimi (maskeli rapor)",
+        description=(
+            "Hazır belgenin kurallarla, yerelde yapılmış iç tutarlılık raporu: tanımlanıp kullanılmayan ya da "
+            "tanımlanmadan kullanılan terimler, var olmayan maddeye/fıkraya iç atıflar, taraf unvanı tutarsızlıkları ve "
+            "çift dilli (iki sütunlu) belgelerde sütunlar arası madde numarası, tutar, oran, tarih farkları. Rapor "
+            "maskelidir; avukat aynı raporu gerçek adlarla ArthurMask'te görür."
+        ),
+    )
+    def arthur_mask_tutarlilik_denetimi(kimlik: str, parca: int = 1) -> dict:
+        return _hata_sar(islem.mcp_tutarlilik, kimlik, parca)
 
     return mcp
 

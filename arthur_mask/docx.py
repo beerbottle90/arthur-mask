@@ -347,9 +347,10 @@ def _tablo_satiri(satir: str):
     icerik = satir.strip()
     if icerik.startswith("|"):
         icerik = icerik[1:]
-    if icerik.endswith("|") and not icerik.endswith("\|"):
+    if icerik.endswith("|") and not icerik.endswith("\\|"):
         icerik = icerik[:-1]
-    return [h.replace("\|", "|").strip() for h in re.split(r"(?<!\)\|", icerik)]
+    # Kaçışlı dikey çizgi ("\|") hücre ayıracı değildir.
+    return [h.replace("\\|", "|").strip() for h in re.split(r"(?<!\\)\|", icerik)]
 
 
 def metinden_docx(metin: str, hedef: Path) -> None:
