@@ -1,4 +1,4 @@
-# Arthur Mask
+# ArthurMask
 
 ArthurLegal'in takma adlandırma (pseudonymization) kapısı. Türk hukuk belgelerini ve İngilizce sözleşmeleri
 (UYAP `.udf`, Word `.docx`, `.pdf`, taranmış PDF ve `.jpg/.png/.tif` görüntüler, `.txt`) **cihazda** tarar. Kişisel ve gizli ifadeleri
@@ -48,7 +48,7 @@ Kaynak kod bu depoda herkese açık olarak incelenebilir; lisansı ticari olmaya
 lisansı değildir (`LICENSE`). Kurulum paketlerinde kaynak kod yoktur (Nuitka). Dağıtım, herkese açık ArthurLegal
 deposunun sürüm sayfasındaki kurulum dosyalarıdır: `arthur-mask` etiketli sürümdeki `ArthurMask-Kurulum.exe` ve `ArthurMask-Kurulum.dmg` (kalıcı doğrudan bağlantı
 `https://github.com/beerbottle90/ArthurLegal/releases/download/arthur-mask/ArthurMask-Kurulum.exe`; yeni sürümde dosya
-`gh release upload arthur-mask ... --clobber` ile değiştirilir, sürüm başlığı "Arthur Mask X.Y.Z" güncellenir). Kullanım rehberi ArthurLegal paketlerindeki
+`gh release upload arthur-mask ... --clobber` ile değiştirilir, sürüm başlığı "ArthurMask X.Y.Z" güncellenir). Kullanım rehberi ArthurLegal paketlerindeki
 `ARTHUR-MASK.md` dosyasındadır.
 
 ```powershell
@@ -62,7 +62,7 @@ $env:ARTHUR_MASK_TEST_PYTHON = "E:\arthur-mask-derleme\ArthurMask\runtime\python
 .venv\Scripts\python.exe -m pytest tests\test_uctan_uca_stdio.py
 ```
 
-`paketleme/derle.py` Arthur Mask'i Nuitka ile makine koduna derler (`app\arthur_mask.*.pyd`; pakette
+`paketleme/derle.py` ArthurMask'i Nuitka ile makine koduna derler (`app\arthur_mask.*.pyd`; pakette
 `.py` kalırsa derleme durur), Python 3.11 çalışma zamanını ve üçüncü taraf kütüphaneleri ekler,
 modelleri çevrimdışı önbelleğe koyar ve paketi kendi Python'uyla sınar. Kurulum kullanıcı kapsamındadır
 (yönetici hakkı gerekmez), Claude Desktop yapılandırmasına `arthur-mask` bağlayıcısını yedek alarak
@@ -82,8 +82,8 @@ uv pip install --python .venv/bin/python -r paketleme/macos/gereksinimler.txt &&
 ```
 
 `paketleme/derle_macos.py`, `derle.py` ile aynı sürümleri ve model revizyonlarını paketler. Windows'tan farkları:
-uygulama paketi `Arthur Mask.app` (ad-hoc imzalı, noter onaysız; ilk açılışta Gizlilik ve Güvenlik > "Yine de Aç"),
-ana anahtar DPAPI yerine Anahtar Zinciri'nde, belgeler `~/Arthur Mask` klasöründe (iCloud eşitlemesine girmez),
+uygulama paketi `ArthurMask.app` (ad-hoc imzalı, noter onaysız; ilk açılışta Gizlilik ve Güvenlik > "Yine de Aç"),
+ana anahtar DPAPI yerine Anahtar Zinciri'nde, belgeler `~/ArthurMask` klasöründe (iCloud eşitlemesine girmez),
 Claude Desktop kaydı kurulumda değil uygulamanın ilk açılışında yapılır. Kullanıcı notu: `paketleme/macos/BENIOKU.md`.
 
 ## Kullanım
@@ -124,7 +124,7 @@ eşik, sözlük veya model değiştiğinde ölçüm tekrarlanır.
 - Tespit olasılıksaldır; maskeli çıktı gönderilmeden önce avukat tarafından okunur.
 - Çıkış kapısı yalnız kasada bulunan (en az bir kez tespit edilmiş) değerleri tanır; hiç tespit edilmemiş
   bir ad için güvence tespit katmanı ve avukat incelemesidir. Sohbete doğrudan yazılan ya da Claude'a
-  ayrıca eklenen belgeler Arthur Mask'ten geçmez.
+  ayrıca eklenen belgeler ArthurMask'ten geçmez.
 - Takma adlandırma kimliği gizler, içeriği gizlemez: benzersiz olay örgüsü kişiyi ele verebilir.
 - Kural katmanı tek başına bağlamsız yabancı adları ve lakapları kaçırabilir; bunları yerel
   semantik katman (`arthur-mask[semantik]`, GLiNER PII) yakalar. Ölçümler: docs/faz-1-sartname.md.

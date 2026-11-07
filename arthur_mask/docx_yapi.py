@@ -127,7 +127,7 @@ def _metin_run(rpr: str, metin: str) -> str:
 
 
 def revizyon_uygula(kaynak: Path, degisiklikler: Sequence[Dict[str, str]], hedef: Path,
-                    izli: bool = True, yazar: str = "Claude (Arthur Mask)") -> RevizyonRaporu:
+                    izli: bool = True, yazar: str = "Claude (ArthurMask)") -> RevizyonRaporu:
     """Maskeli .docx üzerinde {eski, yeni} değişikliklerini uygular; sonuç yine maskelidir."""
     belge = docx.oku(kaynak)
     rapor = RevizyonRaporu()

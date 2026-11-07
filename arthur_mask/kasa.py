@@ -139,7 +139,7 @@ class Kasa:
     def ac(cls, yol: Path, parola: str) -> "Kasa":
         ham = Path(yol).read_bytes()
         if not ham.startswith(BASLIK):
-            raise KasaHatasi(f"{yol} bir Arthur Mask kasası değil.")
+            raise KasaHatasi(f"{yol} bir ArthurMask kasası değil.")
         tuz_satiri, belirtec = ham[len(BASLIK):].split(b"\n", 1)
         try:
             duz = Fernet(_anahtar_turet(parola, base64.b64decode(tuz_satiri))).decrypt(belirtec)

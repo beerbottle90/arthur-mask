@@ -1,4 +1,4 @@
-"""Claude Desktop yapılandırmasına Arthur Mask yerel bağlayıcısını ekler ya da çıkarır.
+"""Claude Desktop yapılandırmasına ArthurMask yerel bağlayıcısını ekler ya da çıkarır.
 
 Kurulum paketi `python -m arthur_mask.claude_ayari kaydet` / `sil` ile çağırır. Yalnız `mcpServers.arthur-mask`
 girdisine dokunulur, diğer ayarlar olduğu gibi kalır. Yapılandırma yalnız gerçekten değişeceği zaman, yanına tek bir

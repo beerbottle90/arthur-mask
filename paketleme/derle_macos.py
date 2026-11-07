@@ -1,13 +1,13 @@
-"""Arthur Mask macOS (Apple Silicon) disk görüntüsünü hazırlar. Yalnız macOS'ta çalışır.
+"""ArthurMask macOS (Apple Silicon) disk görüntüsünü hazırlar. Yalnız macOS'ta çalışır.
 
-Windows paketinin (`derle.py`) karşılığıdır; aynı Arthur Mask sürümünü, aynı kütüphane sürümlerini
+Windows paketinin (`derle.py`) karşılığıdır; aynı ArthurMask sürümünü, aynı kütüphane sürümlerini
 (`macos/gereksinimler.txt`) ve aynı model revizyonlarını paketler.
 
-Düzen (`<cikti>/dmg/Arthur Mask.app/Contents`):
+Düzen (`<cikti>/dmg/ArthurMask.app/Contents`):
     Info.plist
-    MacOS/Arthur Mask                    C başlatıcı (macos/baslatici.c)
+    MacOS/ArthurMask                    C başlatıcı (macos/baslatici.c)
     Resources/runtime/                   Python 3.11 (python-build-standalone) + üçüncü taraf kütüphaneler
-    Resources/app/arthur_mask.*.so       Nuitka ile makine koduna derlenmiş Arthur Mask (kaynak kod yok)
+    Resources/app/arthur_mask.*.so       Nuitka ile makine koduna derlenmiş ArthurMask (kaynak kod yok)
     Resources/app/arthur_mask/veri, arayuz
     Resources/models/hf/hub/             GLiNER PII modeli ve mDeBERTa belirteçleyicisi (çevrimdışı)
     Resources/belgeler/                  LICENSE, ATTRIBUTION.md, BENIOKU.md, üçüncü taraf lisansları
@@ -34,7 +34,7 @@ TABAN_PYTHON = Path(sys.base_prefix)
 PYVER = f"python{sys.version_info.major}.{sys.version_info.minor}"
 SITE = Path(sysconfig.get_paths()["purelib"])
 HF_HOME = Path(os.environ.get("HF_HOME", Path.home() / ".cache" / "huggingface"))
-UYGULAMA_ADI = "Arthur Mask"
+UYGULAMA_ADI = "ArthurMask"
 KIMLIK = "com.arthurlegal.arthurmask"
 DMG_ADI = "ArthurMask-Kurulum.dmg"
 
@@ -236,7 +236,7 @@ def bayt_kodu(kaynaklar: Path) -> None:
 def dogrula(kaynaklar: Path) -> None:
     kaynak_kod = list((kaynaklar / "app").rglob("*.py"))
     if kaynak_kod:
-        raise SystemExit(f"Pakette Arthur Mask kaynak kodu var: {kaynak_kod[:3]}")
+        raise SystemExit(f"Pakette ArthurMask kaynak kodu var: {kaynak_kod[:3]}")
     dogrula_python(kaynaklar / "runtime" / "bin" / "python3", kaynaklar)
 
 
@@ -255,7 +255,7 @@ def dogrula_python(py: Path, cwd: Path) -> None:
         "assert os.environ.get('HF_HOME', '').endswith('/models/hf'), 'kurulum düzeni algılanmadı';"
         "g = claude_ayari.sunucu_girdisi(); print('claude', g);"
         "assert g['args'][:2] == ['-I', '-B'] and g['command'].endswith('/runtime/bin/python3');"
-        "assert depo.varsayilan_kok().name == 'Arthur Mask' and 'Documents' not in str(depo.varsayilan_kok());"
+        "assert depo.varsayilan_kok().name == 'ArthurMask' and 'Documents' not in str(depo.varsayilan_kok());"
         "m = motor.MaskeMotoru();"
         "b, _ = m.analiz('DAVACI: Ayşe KARA, vekili Av. Mehmet Ali YILMAZ, Qafqaz Enerji MMC ile sözleşme imzaladı.');"
         "turler = sorted({x.tur for x in b}); print('semantik_motor', m.semantik, turler);"

@@ -1,4 +1,4 @@
-# Arthur Mask macOS (Apple Silicon) disk görüntüsü. macOS dakikaları ücretli olduğu için yalnız `macos`
+# ArthurMask macOS (Apple Silicon) disk görüntüsü. macOS dakikaları ücretli olduğu için yalnız `macos`
 # dalına gönderimde ya da elle tetiklenir; Windows kurulum paketi yerelde paketleme/derle.py ile üretilir.
 name: macOS kurulum paketi
 
@@ -55,7 +55,7 @@ jobs:
         run: |
           MNT="$RUNNER_TEMP/mnt"; mkdir -p "$MNT"
           hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$RUNNER_TEMP/derleme/ArthurMask-Kurulum.dmg"
-          APP="$MNT/Arthur Mask.app"
+          APP="$MNT/ArthurMask.app"
           codesign --verify --deep --strict --verbose=2 "$APP"
           spctl --assess --type execute --verbose "$APP" || echo "Gatekeeper: imzasız paket için beklenen ret"
           ARTHUR_MASK_TEST_PYTHON="$APP/Contents/Resources/runtime/bin/python3" \

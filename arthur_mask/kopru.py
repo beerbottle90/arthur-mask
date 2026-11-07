@@ -22,7 +22,7 @@ from .sunucu import VARSAYILAN_PORT, YerelSunucu
 gunluk = logging.getLogger("arthur_mask.kopru")
 
 TALIMAT = (
-    "Arthur Mask, avukatın cihazında maskelenmiş belgeleri verir. Kurallar:\n"
+    "ArthurMask, avukatın cihazında maskelenmiş belgeleri verir. Kurallar:\n"
     "1) Belgeyi yalnız arthur_mask_belge_getir ile al; kullanıcıdan ham belge isteme.\n"
     "2) {{TÜR-NN}} biçimindeki maske etiketlerini (ör. {{KİŞİ-01}}) harfi harfine koru; "
     "ek getirirken kesme işareti kullan: {{KİŞİ-01}}'in.\n"
@@ -33,12 +33,12 @@ TALIMAT = (
     "belgeden birebir ve tek paragraf/hücre içinden kopyala. Çift dilli belgede her iki dil sütununu da ayrı ayrı revize et.\n"
     "6) Yeni bir belge (görüş, cetvel, dilekçe) yazıyorsan arthur_mask_teslim kullan; Markdown tablo ve başlıklar "
     "Word'e tablo ve başlık olarak aktarılır. Kaynak belge çift dilliyse yeni belgeyi de aynı dillerde, iki sütunlu tabloyla yaz.\n"
-    "7) Belge 'hazir' değilse avukattan Arthur Mask'te incelemeyi tamamlamasını iste."
+    "7) Belge 'hazir' değilse avukattan ArthurMask'te incelemeyi tamamlamasını iste."
 )
 
 
 def sunucu_olustur(islem: Islem) -> MCPServer:
-    mcp = MCPServer(name="arthur-mask", title="Arthur Mask", version=__version__, instructions=TALIMAT)
+    mcp = MCPServer(name="arthur-mask", title="ArthurMask", version=__version__, instructions=TALIMAT)
 
     def _hata_sar(islev, *args, **kwargs):
         klasor = None
@@ -49,8 +49,8 @@ def sunucu_olustur(islem: Islem) -> MCPServer:
             yanit = {"hata": str(hata)}
         except Exception as hata:  # noqa: BLE001 - istisna metni (dosya adı, belge parçası) Claude'a ve günlüğe gitmez
             gunluk.error("%s beklenmeyen hata: %s", islev.__name__, type(hata).__name__)
-            yanit = {"hata": f"Arthur Mask beklenmeyen bir hatayla karşılaştı ({type(hata).__name__}). "
-                             "Avukattan Arthur Mask'i yeniden başlatmasını isteyin."}
+            yanit = {"hata": f"ArthurMask beklenmeyen bir hatayla karşılaştı ({type(hata).__name__}). "
+                             "Avukattan ArthurMask'i yeniden başlatmasını isteyin."}
         # Her yanıt, hata iletileri dahil, Claude'a gitmeden önce çıkış kapısından geçer.
         return islem.mcp_cikis(islev.__name__, yanit, klasor)
 
@@ -90,7 +90,7 @@ def sunucu_olustur(islem: Islem) -> MCPServer:
         name="arthur_mask_teslim",
         title="Taslağı avukata teslim et",
         description=(
-            "Etiketli nihai taslağı avukatın cihazına teslim eder; Arthur Mask etiketleri yerelde çözer ve "
+            "Etiketli nihai taslağı avukatın cihazına teslim eder; ArthurMask etiketleri yerelde çözer ve "
             "Word (docx), UYAP (udf) ya da metin (txt) olarak kaydeder. Yanıtta gerçek değer bulunmaz."
         ),
     )
@@ -136,7 +136,7 @@ def main(argv: Optional[list] = None) -> int:
     islem.arayuz_adresi = yerel.adres
 
     if args.yalniz_arayuz:
-        print(f"Arthur Mask arayüzü: {yerel.adres}  (durdurmak için Ctrl+C)", file=sys.stderr)
+        print(f"ArthurMask arayüzü: {yerel.adres}  (durdurmak için Ctrl+C)", file=sys.stderr)
         try:
             threading.Event().wait()
         except KeyboardInterrupt:

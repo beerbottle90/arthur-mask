@@ -301,7 +301,7 @@ class YerelSunucu:
         try:
             self._httpd = _TekSunucu(("127.0.0.1", self.port), _Isleyici)
         except OSError:
-            gunluk.info("Port %s dolu; arayüzü başka bir Arthur Mask süreci sunuyor.", self.port)
+            gunluk.info("Port %s dolu; arayüzü başka bir ArthurMask süreci sunuyor.", self.port)
             return False
         self._httpd.daemon_threads = True
         self._httpd.uygulama = self  # type: ignore[attr-defined]

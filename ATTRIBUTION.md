@@ -1,6 +1,6 @@
 # Üçüncü taraf bileşenler / Third-Party Materials
 
-Arthur Mask aşağıdaki bileşenlere dayanır. Her biri kendi lisansına tabidir; bu
+ArthurMask aşağıdaki bileşenlere dayanır. Her biri kendi lisansına tabidir; bu
 bildirimler sürüm paketlerinde korunur ve kaldırılamaz.
 
 | Bileşen | Kullanım | Lisans | Kaynak |

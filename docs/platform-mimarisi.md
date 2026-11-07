@@ -1,9 +1,9 @@
-# Arthur Mask: masaüstü akışı ve Claude köprüsü
+# ArthurMask: masaüstü akışı ve Claude köprüsü
 
-**Hedef:** Avukat Arthur Mask'i tek tıkla kurar. Kısayoldan açtığında tarayıcıda AL
+**Hedef:** Avukat ArthurMask'i tek tıkla kurar. Kısayoldan açtığında tarayıcıda AL
 kimliğinde bir sayfaya belgeyi sürükler. Belge cihazda maskelenir ve ArthurLegal'e
 (Claude Desktop'taki proje, `tr_` bağlayıcısı) **yalnız maskeli hâliyle** gider. Cevap
-maskeli döner, Arthur Mask'te gerçek adlarla Word/UDF olarak açılır. Kullanıcıya ek ücret
+maskeli döner, ArthurMask'te gerçek adlarla Word/UDF olarak açılır. Kullanıcıya ek ücret
 yoktur; ek adım en azdır.
 
 Kararların tamamı ve kabul ölçütleri: [faz-1-sartname.md](faz-1-sartname.md).
@@ -28,7 +28,7 @@ sızıntı olmaz.
 sequenceDiagram
     autonumber
     actor Av as Avukat
-    participant AM as Arthur Mask (tarayıcı sekmesi + yerel servis)
+    participant AM as ArthurMask (tarayıcı sekmesi + yerel servis)
     participant K as Kasa (Windows kimlik deposu)
     participant CD as Claude Desktop · ArthurLegal projesi
     participant AN as Anthropic (Claude)
@@ -43,7 +43,7 @@ sequenceDiagram
     else Şüpheli aday / kırmızı hat / artık iz
         AM-->>Av: Tek ekranlık onay (kırmızı hatta gerekçe)
     end
-    Av->>CD: "Arthur Mask'teki dilekçeyi incele"
+    Av->>CD: "ArthurMask'teki dilekçeyi incele"
     CD->>AM: arthur_mask_belge_getir (yerel MCP, stdio)
     AM-->>CD: YALNIZ maskeli metin
     CD->>AN: maskeli metin + soru
@@ -81,10 +81,10 @@ ArthurLegal proje talimatına eklenecek bölüm:
 
 - Servis, Claude Desktop MCP köprüsünü başlattığında açılır, Claude kapanınca kapanır.
   Tepsi simgesi yoktur.
-- **Arthur Mask** kısayolu Claude Desktop çalışmıyorsa önce onu başlatır, servis ayağa
+- **ArthurMask** kısayolu Claude Desktop çalışmıyorsa önce onu başlatır, servis ayağa
   kalkınca varsayılan tarayıcıda sekmeyi açar.
 - Claude kapalıyken arayüz ve eklenti çözücüsü çalışmaz. Sekme bunu açıkça gösterir:
-  "Arthur Mask bağlantısı yok — Claude Desktop'u açın".
+  "ArthurMask bağlantısı yok — Claude Desktop'u açın".
 - Servis yalnız `127.0.0.1`'e bağlanır. Kurulum başına rastgele belirteç kullanır ve
   Origin denetimi yapar; eklentiye yalnız kendi kimliğiyle izin verir.
 
@@ -94,7 +94,7 @@ ArthurLegal proje talimatına eklenecek bölüm:
   Kurulum şunları yapar:
   - Başlat menüsüne ve masaüstüne kısayol koyar,
   - MCP köprüsünü Claude Desktop'a kaydeder,
-  - `Belgeler\Arthur Mask\` klasörünü açar,
+  - `Belgeler\ArthurMask\` klasörünü açar,
   - Chrome/Edge salt çözücü eklentisinin kurulum bağlantısını gösterir.
 - Kasa anahtarı Windows Kimlik Bilgisi Yöneticisi'nde (DPAPI) durur, parola yoktur.
   Kurulumda bir kurtarma anahtarı üretilir. Kullanıcı bunu yazdırır ya da ortakta şifreli

@@ -15,7 +15,7 @@ def kurulum_klasoru() -> Optional[Path]:
     """Kurulu paket içinden çalışılıyorsa kurulum klasörü, geliştirme ortamında None."""
     calisma_zamani = Path(sys.executable).resolve().parent
     if sys.platform == "darwin" and calisma_zamani.name == "bin":
-        # macOS: `Arthur Mask.app/Contents/Resources/runtime/bin/python3`
+        # macOS: `ArthurMask.app/Contents/Resources/runtime/bin/python3`
         calisma_zamani = calisma_zamani.parent
     kok = calisma_zamani.parent
     if calisma_zamani.name.lower() == "runtime" and (kok / "models").is_dir():

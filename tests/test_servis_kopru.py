@@ -30,7 +30,7 @@ BELGE = (
 @pytest.fixture()
 def islem(tmp_path, monkeypatch, motor):
     monkeypatch.setenv(ORTAM_DEGISKENI, base64.b64encode(secrets.token_bytes(32)).decode())
-    islem = Islem(Depo(secrets.token_bytes(32), kok=tmp_path / "Arthur Mask"), semantik=False)
+    islem = Islem(Depo(secrets.token_bytes(32), kok=tmp_path / "ArthurMask"), semantik=False)
     islem._motor = motor
     islem._motor_hazir.set()
     klasor = islem.depo.dosya_olustur("2026-014 alacak")
@@ -257,7 +257,7 @@ def test_klasorler_ve_belirtec_yalniz_kullaniciya_acik(tmp_path, monkeypatch):
 
     from arthur_mask import sunucu
 
-    kok = tmp_path / "Arthur Mask"
+    kok = tmp_path / "ArthurMask"
     kok.mkdir()
     os.chmod(kok, 0o755)  # önceden açılmış klasör
     Depo(secrets.token_bytes(32), kok=kok)
@@ -287,4 +287,4 @@ def test_revizyon_ciktisi_claude_yazarini_korur(islem):
     assert yanit["uygulanan_degisiklik"] == 1, yanit
     with zipfile.ZipFile(islem.depo.dosya_yolu(klasor) / "cevaplar" / yanit["dosya"]) as zf:
         govde = zf.read("word/document.xml").decode("utf-8")
-    assert 'w:author="Claude (Arthur Mask)"' in govde and ISARETLI[0] in govde
+    assert 'w:author="Claude (ArthurMask)"' in govde and ISARETLI[0] in govde

@@ -20,7 +20,7 @@ Kararlar 13.09.2026'da proje sahibiyle netleştirildi. Mimari gerekçe:
 | K11 | Servis yaşam döngüsü | Claude Desktop ile birlikte başlar/kapanır; kısayol gerekirse Claude'u başlatır |
 | K12 | Kurulum boyutu | Sınır yok; en isabetli model seçilir, model kurulumun içinde (çevrimdışı) |
 | K13 | Dağıtım | Özel GitHub sürümü + uygulama içi bildirim; sessiz güncelleme yok |
-| K14 | Saklama | `Belgeler\Arthur Mask\<dosya>\`; özgün kopyalanmaz; maskeli ara kopya 30 gün |
+| K14 | Saklama | `Belgeler\ArthurMask\<dosya>\`; özgün kopyalanmaz; maskeli ara kopya 30 gün |
 | K15 | Denetim kaydı | Yalnız kırmızı hat onayları (gerçek değer yok) |
 | K16 | Lisans | ArthurLegal Proprietary Non-Commercial (büro ve şirket içi kullanım serbest) |
 | K17 | Depo | Özel; herkese açma kararı ileride |
