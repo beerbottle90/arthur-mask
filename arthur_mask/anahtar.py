@@ -21,7 +21,8 @@ from ctypes import wintypes
 from pathlib import Path
 
 ORTAM_DEGISKENI = "ARTHUR_MASK_ANA_ANAHTAR"
-DPAPI_ACIKLAMA = "Arthur Mask ana anahtari"
+DPAPI_ACIKLAMA = "ArthurMask ana anahtari"  # Anahtar Zinciri'nde görünen ad (yeni öğeler)
+# Teknik kimlik: var olan kasaların anahtarı bu servis adıyla aranır; değişirse kasalar açılmaz.
 ANAHTAR_ZINCIRI_SERVISI = "Arthur Mask"
 ANAHTAR_ZINCIRI_HESABI = "ana-anahtar"
 _SECURITY = "/usr/bin/security"

@@ -26,7 +26,7 @@ from degerlendir import ayristir  # noqa: E402
 Aralik = Tuple[int, int, str]
 SAYFA_KARAKTER = 3000
 
-# Model etiketleri → Arthur Mask türleri (eşlenmeyenler yok sayılır)
+# Model etiketleri → ArthurMask türleri (eşlenmeyenler yok sayılır)
 AKDENIZ = {"PER": "KİŞİ", "ORG": "ŞİRKET"}
 GLINER_ETIKETLERI = {
     "person": "KİŞİ", "company": "ŞİRKET", "address": "ADRES", "phone number": "TELEFON",

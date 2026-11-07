@@ -1,4 +1,4 @@
-"""Arthur Mask'ın logosunu ArthurLegal simgesinden üretir: arayuz/logo.png (1024 px) ve arayuz/logo.svg.
+"""ArthurMask'ın logosunu ArthurLegal simgesinden üretir: arayuz/logo.png (1024 px) ve arayuz/logo.svg.
 
 Çizim `simge.py`'dir: ArthurLegal deposundaki ArthurLegal-setup/varlik/simge.py'nin kopyası (AL kurulum simgesi,
 Claude eklentisi ve Tapu logosu da onunla çizilir; renkler AL Masası'nın armasıyla aynı). Asıl kaynak orada değişirse

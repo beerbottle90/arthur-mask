@@ -1,4 +1,4 @@
-"""Dosya (matter) klasörleri: `Belgeler\\Arthur Mask\\<dosya>\\` (macOS: `~/Arthur Mask/<dosya>/`).
+"""Dosya (matter) klasörleri: `Belgeler\\ArthurMask\\<dosya>\\` (macOS: `~/ArthurMask/<dosya>/`).
 
     dosya.json              ad, oluşturma
     dosya.kasa              şifreli etiket ↔ değer kasası
@@ -33,15 +33,25 @@ SAKLAMA_GUNU = 30
 _GECERSIZ = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
 
+KLASOR_ADI = "ArthurMask"
+# 1.1.2 ve öncesi klasörü ayrı yazılmış eski adla açıyordu. Taşımayı süreç çalışmazken kurulum paketi
+# (Windows) ya da uygulama açılışı (macOS, `tasima.py`) yapar; taşınamadıysa eski klasör kullanılmaya devam eder.
+ESKI_KLASOR_ADI = "Arthur Mask"
+
+
+def klasor_ustu() -> Path:
+    # macOS'ta Belgeler klasörü iCloud "Masaüstü ve Belgeler" eşitlemesine girebilir ve klasör izni ister.
+    return Path.home() if sys.platform == "darwin" else Path.home() / "Documents"
+
+
 def varsayilan_kok() -> Path:
     ortam = os.environ.get("ARTHUR_MASK_KOK")
     if ortam:
         return Path(ortam)
-    if sys.platform == "darwin":
-        # Belgeler klasörü iCloud "Masaüstü ve Belgeler" eşitlemesine girebilir ve klasör izni ister.
-        return Path.home() / "Arthur Mask"
-    belgeler = Path.home() / "Documents"
-    return belgeler / "Arthur Mask"
+    yeni, eski = klasor_ustu() / KLASOR_ADI, klasor_ustu() / ESKI_KLASOR_ADI
+    if not yeni.exists() and eski.is_dir():
+        return eski
+    return yeni
 
 
 def simdi() -> str:

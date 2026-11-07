@@ -28,8 +28,8 @@ function kisayoldanAcUyarisi() {
   if (document.getElementById("kisayol-uyarisi")) return;
   try { localStorage.removeItem("am-belirtec"); } catch { /* depolama kapalı */ }
   document.body.prepend(el("div", { sinif: "denetim bulgu", id: "kisayol-uyarisi", role: "alert" },
-    el("strong", {}, "Arthur Mask'ı kısayolundan açın"),
-    el("p", {}, "Güvenlik için arayüz bu bilgisayardaki Arthur Mask kısayoluyla (masaüstü ya da Başlat menüsü; Mac'te ",
+    el("strong", {}, "ArthurMask'ı kısayolundan açın"),
+    el("p", {}, "Güvenlik için arayüz bu bilgisayardaki ArthurMask kısayoluyla (masaüstü ya da Başlat menüsü; Mac'te ",
       "Uygulamalar) bir kez açılmalı. Sonra bu tarayıcı sizi tanır; Claude'un verdiği bağlantılar da çalışır.")));
 }
 
@@ -140,8 +140,8 @@ async function durumuYenile() {
     $("kurtarma-rozet").hidden = d.kurtarma_saklandi;
     $("guncelleme").hidden = !d.guncelleme;
     if (d.guncelleme) {
-      $("guncelleme-metin").textContent = `Arthur Mask ${d.guncelleme.surum} yayımlandı (kurulu: ${d.surum}). ${macos
-        ? "Yeni disk görüntüsündeki Arthur Mask'i Uygulamalar klasörüne sürükleyip eskisinin yerine koyun"
+      $("guncelleme-metin").textContent = `ArthurMask ${d.guncelleme.surum} yayımlandı (kurulu: ${d.surum}). ${macos
+        ? "Yeni disk görüntüsündeki ArthurMask'i Uygulamalar klasörüne sürükleyip eskisinin yerine koyun"
         : "Yeni kurulum dosyasını eskisinin üzerine kurun"}; dosyalarınız korunur.`;
       $("guncelleme-baglanti").href = d.guncelleme.sayfa || d.guncelleme.adres;
     }
@@ -301,7 +301,7 @@ function turOzeti(turler) {
 function belgeleriCiz() {
   const hazir = durum.belgeler.find((b) => b.durum === "hazir");
   $("komut-kutusu").hidden = !hazir;
-  if (hazir) $("ornek-komut").textContent = `Arthur Mask'teki ${hazir.id}'i incele`;
+  if (hazir) $("ornek-komut").textContent = `ArthurMask'teki ${hazir.id}'i incele`;
   if (!durum.belgeler.length) {
     $("belge-listesi").replaceChildren(el("li", { sinif: "not" }, "Henüz belge yok. Yukarıdaki alana bir belge bırakın."));
     return;

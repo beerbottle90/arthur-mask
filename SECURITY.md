@@ -1,6 +1,6 @@
 # Güvenlik politikası
 
-Arthur Mask'ın tek sözü şudur: müvekkilin gerçek kişisel verisi, Claude'a giden hiçbir şeye girmez ve bilgisayardan
+ArthurMask'ın tek sözü şudur: müvekkilin gerçek kişisel verisi, Claude'a giden hiçbir şeye girmez ve bilgisayardan
 çıkmaz. Bu sözü bozan her şey (çıkış kapısını atlatan bir metin, kasayı ya da maskesiz metni başka bir programa veya
 bir web sayfasına açan bir yol, kurulumu ya da güncellemeyi ele geçiren bir dosya) güvenlik açığıdır.
 

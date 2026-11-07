@@ -1,9 +1,9 @@
-# Threat model: Arthur Mask
+# Threat model: ArthurMask
 
 ## What this project does and where untrusted input enters
 
 A desktop privacy gate for lawyers (Windows and macOS). The lawyer drops a court or client document (Word `.docx`,
-Turkish court UYAP `.udf` = zip + XML, PDF, scanned PDF or image, `.txt`/`.md`). Arthur Mask detects personal data
+Turkish court UYAP `.udf` = zip + XML, PDF, scanned PDF or image, `.txt`/`.md`). ArthurMask detects personal data
 (names, companies, Turkish ID and tax numbers, IBAN, addresses, phones, e-mails, birth dates, file numbers, plates)
 with rules plus a local GLiNER model, replaces each value with a label such as `{{KİŞİ-01}}`, and keeps the
 real↔label mapping in an encrypted per-matter vault. Claude Desktop reaches the documents only through a local MCP

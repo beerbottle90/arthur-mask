@@ -1,8 +1,8 @@
-; Arthur Mask kurulum paketi (Inno Setup 6)
-; ISCC.exe /DSurum=1.1.2 /DKaynak=E:\arthur-mask-derleme\ArthurMask /OE:\arthur-mask-derleme paketleme\ArthurMask.iss
+; ArthurMask kurulum paketi (Inno Setup 6)
+; ISCC.exe /DSurum=1.1.3 /DKaynak=E:\arthur-mask-derleme\ArthurMask /OE:\arthur-mask-derleme paketleme\ArthurMask.iss
 
 #ifndef Surum
-  #define Surum "1.1.2"
+  #define Surum "1.1.3"
 #endif
 #ifndef Kaynak
   #define Kaynak "E:\arthur-mask-derleme\ArthurMask"
@@ -10,16 +10,17 @@
 
 [Setup]
 AppId={{8F3C2B7E-4D1A-4E7B-9C55-A7D1E0B3F412}
-AppName=Arthur Mask
+AppName=ArthurMask
 AppVersion={#Surum}
-AppVerName=Arthur Mask {#Surum}
+AppVerName=ArthurMask {#Surum}
 AppPublisher=ArthurLegal
 AppPublisherURL=https://github.com/beerbottle90/ArthurLegal
 AppSupportURL=https://github.com/beerbottle90/ArthurLegal
 AppUpdatesURL=https://github.com/beerbottle90/ArthurLegal/releases/tag/arthur-mask
+; Kurulum klasörü teknik yoldur: ArthurLegal ve UYAP bu Python'u bu yolda arar; ürün adı değişse de klasör kalır.
 DefaultDirName={localappdata}\Programs\Arthur Mask
 DisableDirPage=yes
-DefaultGroupName=Arthur Mask
+DefaultGroupName=ArthurMask
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -28,7 +29,7 @@ MinVersion=10.0
 OutputBaseFilename=ArthurMask-Kurulum
 SetupIconFile={#Kaynak}\ArthurMask.ico
 UninstallDisplayIcon={app}\ArthurMask.ico
-UninstallDisplayName=Arthur Mask
+UninstallDisplayName=ArthurMask
 LicenseFile={#Kaynak}\belgeler\LICENSE.txt
 Compression=lzma2/normal
 SolidCompression=yes
@@ -48,18 +49,22 @@ Name: "masaustu"; Description: "Masaüstüne kısayol oluştur"; GroupDescriptio
 ; Güncellemede eski sürümün kütüphaneleri ve derlenmiş modülü tamamen değiştirilir.
 Type: filesandordirs; Name: "{app}\runtime"
 Type: filesandordirs; Name: "{app}\app"
+; 1.1.3: ürün adı bitişik yazılır; eski adlı kısayollar yeni adlılarla değiştirilir.
+Type: files; Name: "{userprograms}\Arthur Mask.lnk"
+Type: files; Name: "{userprograms}\Arthur Mask Kullanım Notları.lnk"
+Type: files; Name: "{userdesktop}\Arthur Mask.lnk"; Tasks: masaustu
 
 [Files]
 Source: "{#Kaynak}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{userprograms}\Arthur Mask"; Filename: "{app}\runtime\pythonw.exe"; Parameters: "-c ""import sys; from arthur_mask.baslat import main; sys.exit(main())"""; WorkingDir: "{app}"; IconFilename: "{app}\ArthurMask.ico"; Comment: "Belgeleri Claude'a göndermeden önce bu bilgisayarda maskeler"
-Name: "{userdesktop}\Arthur Mask"; Filename: "{app}\runtime\pythonw.exe"; Parameters: "-c ""import sys; from arthur_mask.baslat import main; sys.exit(main())"""; WorkingDir: "{app}"; IconFilename: "{app}\ArthurMask.ico"; Tasks: masaustu
-Name: "{userprograms}\Arthur Mask Kullanım Notları"; Filename: "{app}\belgeler\BENIOKU.md"
+Name: "{userprograms}\ArthurMask"; Filename: "{app}\runtime\pythonw.exe"; Parameters: "-c ""import sys; from arthur_mask.baslat import main; sys.exit(main())"""; WorkingDir: "{app}"; IconFilename: "{app}\ArthurMask.ico"; Comment: "Belgeleri Claude'a göndermeden önce bu bilgisayarda maskeler"
+Name: "{userdesktop}\ArthurMask"; Filename: "{app}\runtime\pythonw.exe"; Parameters: "-c ""import sys; from arthur_mask.baslat import main; sys.exit(main())"""; WorkingDir: "{app}"; IconFilename: "{app}\ArthurMask.ico"; Tasks: masaustu
+Name: "{userprograms}\ArthurMask Kullanım Notları"; Filename: "{app}\belgeler\BENIOKU.md"
 
 [Run]
 Filename: "{app}\runtime\python.exe"; Parameters: "-c ""import sys; from arthur_mask.claude_ayari import main; sys.exit(main(['kaydet']))"""; WorkingDir: "{app}"; StatusMsg: "Claude Desktop bağlantısı kaydediliyor..."; Flags: runhidden waituntilterminated
-Filename: "{app}\runtime\pythonw.exe"; Parameters: "-c ""import sys; from arthur_mask.baslat import main; sys.exit(main())"""; WorkingDir: "{app}"; Description: "Arthur Mask'i şimdi aç"; Flags: postinstall nowait skipifsilent unchecked
+Filename: "{app}\runtime\pythonw.exe"; Parameters: "-c ""import sys; from arthur_mask.baslat import main; sys.exit(main())"""; WorkingDir: "{app}"; Description: "ArthurMask'i şimdi aç"; Flags: postinstall nowait skipifsilent unchecked
 
 [UninstallRun]
 Filename: "{app}\runtime\python.exe"; Parameters: "-c ""import sys; from arthur_mask.claude_ayari import main; sys.exit(main(['sil']))"""; WorkingDir: "{app}"; RunOnceId: "ClaudeKaydiSil"; Flags: runhidden waituntilterminated
@@ -69,10 +74,10 @@ Type: filesandordirs; Name: "{app}\runtime"
 Type: filesandordirs; Name: "{app}\app"
 
 [Messages]
-tr.FinishedLabel=Arthur Mask kuruldu.%n%nÖnemli: Claude Desktop açıksa tamamen kapatıp (sistem tepsisindeki simgeden de) yeniden açın; Arthur Mask bağlantısı ancak yeniden başlatınca görünür.%n%nBelgeleriniz ve kasalarınız Belgeler\Arthur Mask klasöründe tutulur.
+tr.FinishedLabel=ArthurMask kuruldu.%n%nÖnemli: Claude Desktop açıksa tamamen kapatıp (sistem tepsisindeki simgeden de) yeniden açın; ArthurMask bağlantısı ancak yeniden başlatınca görünür.%n%nBelgeleriniz ve kasalarınız Belgeler\ArthurMask klasöründe tutulur.
 
 [Code]
-// Kurulum ya da güncellemeden önce bu klasörden çalışan Arthur Mask süreçleri (Claude Desktop'un
+// Kurulum ya da güncellemeden önce bu klasörden çalışan ArthurMask süreçleri (Claude Desktop'un
 // başlattığı köprü dahil) kapatılır; aksi hâlde kilitli dosyalar değiştirilemez.
 procedure SurecleriKapat();
 var
@@ -82,6 +87,22 @@ begin
   Komut := '-NoProfile -ExecutionPolicy Bypass -Command "Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -like ''' +
     ExpandConstant('{app}') + '\runtime\*'' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"';
   Exec('powershell.exe', Komut, '', SW_HIDE, ewWaitUntilTerminated, Sonuc);
+end;
+
+// 1.1.3: belge klasörü yeni ada taşınır (süreçler PrepareToInstall'da kapatıldıktan sonra). Taşınamazsa
+// ArthurMask eski klasörü kullanmaya devam eder (depo.varsayilan_kok).
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  Eski, Yeni: String;
+begin
+  if CurStep = ssInstall then
+  begin
+    Eski := ExpandConstant('{%USERPROFILE}') + '\Documents\Arthur Mask';
+    Yeni := ExpandConstant('{%USERPROFILE}') + '\Documents\ArthurMask';
+    if DirExists(Eski) and not DirExists(Yeni) then
+      if not RenameFile(Eski, Yeni) then
+        Log('Belge klasoru tasinamadi; eski klasor kullanilmaya devam edecek.');
+  end;
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;

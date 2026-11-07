@@ -1,4 +1,4 @@
-"""Güncelleme bildirimi: ArthurLegal sürüm sayfasında daha yeni bir Arthur Mask kurulum dosyası var mı?
+"""Güncelleme bildirimi: ArthurLegal sürüm sayfasında daha yeni bir ArthurMask kurulum dosyası var mı?
 
 Yalnız GitHub'ın herkese açık sürüm listesi okunur; istekte belge, kasa ya da kullanıcı bilgisi
 yoktur. Sonuç günde bir kez yenilenir. `ARTHUR_MASK_GUNCELLEME=kapali` denetimi tamamen kapatır.
@@ -19,16 +19,16 @@ from .anahtar import uygulama_klasoru
 
 gunluk = logging.getLogger("arthur_mask.guncelleme")
 
-# Arthur Mask'ın kurulum dosyaları ArthurLegal'deki sabit `arthur-mask` sürümünde durur. Etiketi doğrudan sorarız:
+# ArthurMask'ın kurulum dosyaları ArthurLegal'deki sabit `arthur-mask` sürümünde durur. Etiketi doğrudan sorarız:
 # sürüm listesinin ilk sayfası (eskiden per_page=15) ArthurLegal'in sonraki sürümleriyle dolunca bu sürüm görünmez
 # olmuş, 1.0.x'te güncelleme bildirimi hiç çıkmamıştı (2026-11-03).
 SURUM_ADRESI = "https://api.github.com/repos/beerbottle90/ArthurLegal/releases/tags/arthur-mask"
 # Kalıcı indirme bağlantısı için dosya adı sürümsüzdür (ArthurMask-Kurulum.exe); sürüm o zaman
-# sürüm başlığından okunur ("Arthur Mask 1.0.0 — Windows kurulum dosyası").
+# sürüm başlığından okunur ("ArthurMask 1.0.0 — Windows kurulum dosyası").
 # macOS kurulum dosyası aynı sürüm sayfasında ArthurMask-Kurulum.dmg adıyla durur.
 KURULUM_UZANTISI = "dmg" if sys.platform == "darwin" else "exe"
 KURULUM_DESENI = re.compile(rf"^ArthurMask-Kurulum(?:-(\d+\.\d+\.\d+))?\.{KURULUM_UZANTISI}$")
-BASLIK_SURUMU = re.compile(r"Arthur Mask\s+v?(\d+\.\d+\.\d+)")
+BASLIK_SURUMU = re.compile(r"Arthur\s*Mask\s+v?(\d+\.\d+\.\d+)")  # eski başlıklar adı ayrı yazar
 YENILEME_SANIYE = 24 * 3600
 
 _sonuc: Optional[Dict] = None
@@ -46,7 +46,7 @@ def surum_listesi(yanit) -> list:
 
 
 def en_yeni(surumler_json) -> Optional[Dict]:
-    """Sürüm listesinden en yeni Arthur Mask kurulum dosyası: {surum, adres, sayfa}."""
+    """Sürüm listesinden en yeni ArthurMask kurulum dosyası: {surum, adres, sayfa}."""
     en_iyi = None
     for surum in surumler_json:
         if surum.get("draft") or surum.get("prerelease"):

@@ -101,7 +101,7 @@ class Islem:
         klasor = self.depo.aktif_dosya
         if not klasor:
             raise IslemHatasi(
-                f"Arthur Mask'te henüz dosya seçilmedi. Avukattan Arthur Mask'i açıp ({self.arayuz_adresi}) "
+                f"ArthurMask'te henüz dosya seçilmedi. Avukattan ArthurMask'i açıp ({self.arayuz_adresi}) "
                 "bir dosya seçmesini ve belgeyi bırakmasını isteyin."
             )
         return klasor
@@ -362,7 +362,7 @@ class Islem:
         if kayit["durum"] != DURUM_HAZIR:
             raise IslemHatasi(
                 f"{kimlik} henüz Claude'a hazır değil (durum: {kayit['durum']}). "
-                f"Avukatın Arthur Mask'te ({self.arayuz_adresi}#belge={kimlik}) incelemeyi tamamlaması gerekir."
+                f"Avukatın ArthurMask'te ({self.arayuz_adresi}#belge={kimlik}) incelemeyi tamamlaması gerekir."
             )
         metin, yapi = kayit["maskeli_metin"], "düz metin"
         kopya = self.depo.dosya_yolu(klasor) / "maskeli" / kayit.get("maskeli_kopya", "")
@@ -398,7 +398,7 @@ class Islem:
             raise IslemHatasi("En az bir {eski, yeni} değişikliği gerekir.")
         kopya = self.depo.dosya_yolu(klasor) / "maskeli" / kayit.get("maskeli_kopya", "")
         if not kayit.get("maskeli_kopya") or not kopya.is_file():
-            raise IslemHatasi("Maskeli kopyanın süresi dolmuş; avukattan belgeyi Arthur Mask'e yeniden bırakmasını isteyin.")
+            raise IslemHatasi("Maskeli kopyanın süresi dolmuş; avukattan belgeyi ArthurMask'e yeniden bırakmasını isteyin.")
 
         kasa = self.depo.kasa_oku(klasor)
         guvenli_baslik = ETIKET_DESENI.sub(lambda m: m.group(1), baslik)

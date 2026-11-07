@@ -77,7 +77,7 @@ def test_en_yeni_kurulum_dosyasi_secilir():
     ]
     assert guncelleme.en_yeni(surumler) == {"surum": "1.10.0", "adres": "b", "sayfa": "s2"}
     assert guncelleme.en_yeni([{"assets": []}]) is None
-    kalici = [{"name": "Arthur Mask 1.2.3 — Windows kurulum dosyası", "html_url": "s",
+    kalici = [{"name": "ArthurMask 1.2.3 — Windows kurulum dosyası", "html_url": "s",
                "assets": [{"name": f"ArthurMask-Kurulum.{UZ}", "browser_download_url": "k"}]}]
     assert guncelleme.en_yeni(kalici) == {"surum": "1.2.3", "adres": "k", "sayfa": "s"}
     assert guncelleme.en_yeni([{"name": "başka", "assets": [{"name": f"ArthurMask-Kurulum.{UZ}"}]}]) is None
@@ -85,7 +85,7 @@ def test_en_yeni_kurulum_dosyasi_secilir():
 
 def test_etiket_ucu_tek_surum_nesnesi_dondurur():
     # releases/tags/arthur-mask tek nesne döndürür; sürümlü ve sürümsüz dosyalar yan yana durur.
-    tek = {"name": "Arthur Mask 1.1.1 — Windows ve macOS kurulum dosyaları", "html_url": "s",
+    tek = {"name": "ArthurMask 1.1.1 — Windows ve macOS kurulum dosyaları", "html_url": "s",
            "assets": [{"name": f"ArthurMask-Kurulum.{UZ}", "browser_download_url": "eski"},
                       {"name": f"ArthurMask-Kurulum-1.1.1.{UZ}", "browser_download_url": "yeni"}]}
     assert guncelleme.SURUM_ADRESI.endswith("/releases/tags/arthur-mask")
@@ -111,6 +111,6 @@ def test_macos_claude_desktop_kaydi(tmp_path, monkeypatch):
 
 def test_kurulum_dosyasi_yalniz_bu_platformun_uzantisi():
     baska = "dmg" if UZ == "exe" else "exe"
-    kalici = [{"name": "Arthur Mask 1.2.3", "html_url": "s",
+    kalici = [{"name": "ArthurMask 1.2.3", "html_url": "s",
                "assets": [{"name": f"ArthurMask-Kurulum.{baska}", "browser_download_url": "x"}]}]
     assert guncelleme.en_yeni(kalici) is None

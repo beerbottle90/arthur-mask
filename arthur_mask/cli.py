@@ -133,7 +133,7 @@ def _ortak(p: argparse.ArgumentParser) -> None:
 def main(argv=None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
-    ana = argparse.ArgumentParser(prog="arthur-mask", description="Arthur Mask — ArthurLegal takma adlandırma kapısı")
+    ana = argparse.ArgumentParser(prog="arthur-mask", description="ArthurMask — ArthurLegal takma adlandırma kapısı")
     alt = ana.add_subparsers(dest="komut", required=True)
 
     p = alt.add_parser("maskele", help="belgeyi maskele, kasaya yaz, rapor üret")

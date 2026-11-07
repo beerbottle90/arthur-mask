@@ -1,4 +1,4 @@
-/* Arthur Mask.app başlatıcısı (Contents/MacOS/Arthur Mask).
+/* ArthurMask.app başlatıcısı (Contents/MacOS/ArthurMask).
  *
  * İndirilen paketin karantina işaretini kaldırır; aksi hâlde Claude Desktop'un sonradan başlattığı gömülü
  * Python ayrıca Gatekeeper'a takılır. Kullanıcı uygulamayı "Yine de Aç" ile onayladıktan sonra çalıştığı için
@@ -29,7 +29,7 @@ int main(void) {
     ust_klasor(paket); /* .../Contents */
     snprintf(kaynaklar, sizeof kaynaklar, "%s/Resources", paket);
     snprintf(python, sizeof python, "%s/runtime/bin/python3", kaynaklar);
-    ust_klasor(paket); /* .../Arthur Mask.app */
+    ust_klasor(paket); /* .../ArthurMask.app */
 
     if (getxattr(paket, "com.apple.quarantine", NULL, 0, 0, 0) >= 0) {
         char *xattr[] = {"/usr/bin/xattr", "-dr", "com.apple.quarantine", paket, NULL};
@@ -41,6 +41,6 @@ int main(void) {
     char *arg[] = {python, "-I", "-B", "-c",
                    "import sys; from arthur_mask.baslat import main; sys.exit(main())", NULL};
     execv(python, arg);
-    perror("Arthur Mask");
+    perror("ArthurMask");
     return 1;
 }

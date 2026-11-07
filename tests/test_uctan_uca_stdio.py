@@ -123,7 +123,7 @@ def _dizeler(oge):
 
 def test_claudea_giden_ham_baytlarda_gercek_deger_yok(tmp_path, motor):
     anahtar = secrets.token_bytes(32)
-    kok = tmp_path / "Arthur Mask"
+    kok = tmp_path / "ArthurMask"
     islem = Islem(Depo(anahtar, kok=kok), semantik=False)
     islem._motor, _ = motor, islem._motor_hazir.set()
     klasor = islem.depo.dosya_olustur("uçtan uca")

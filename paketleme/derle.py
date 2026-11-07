@@ -1,8 +1,8 @@
-"""Arthur Mask Windows kurulum paketini hazırlar.
+"""ArthurMask Windows kurulum paketini hazırlar.
 
 Düzen (`<cikti>\\ArthurMask`):
     runtime\\            Python 3.11 çalışma zamanı + üçüncü taraf kütüphaneler (açık kaynak)
-    app\\arthur_mask.*.pyd  Nuitka ile makine koduna derlenmiş Arthur Mask (kaynak kod yok)
+    app\\arthur_mask.*.pyd  Nuitka ile makine koduna derlenmiş ArthurMask (kaynak kod yok)
     app\\arthur_mask\\veri, arayuz   veri dosyaları ve yerel arayüz
     models\\hf\\hub\\      GLiNER PII modeli ve mDeBERTa belirteçleyicisi (çevrimdışı)
     belgeler\\           LICENSE, ATTRIBUTION.md, BENIOKU.md, üçüncü taraf lisansları
@@ -141,7 +141,7 @@ def belgeler(hedef: Path) -> None:
 def dogrula(hedef: Path) -> None:
     kaynaklar = [p for p in (hedef / "app").rglob("*.py")]
     if kaynaklar:
-        raise SystemExit(f"Pakette Arthur Mask kaynak kodu var: {kaynaklar[:3]}")
+        raise SystemExit(f"Pakette ArthurMask kaynak kodu var: {kaynaklar[:3]}")
     py = hedef / "runtime" / "python.exe"
     ortam = {k: v for k, v in os.environ.items() if not k.startswith(("PYTHON", "HF_", "VIRTUAL_ENV"))}
     betik = (
