@@ -62,6 +62,33 @@
       <input id="dosya-sec" type="file" accept=".docx,.udf,.pdf,.txt,.md,.jpg,.jpeg,.png,.tif,.tiff" hidden multiple>
     </div>
 
+    <section id="karsilastir" class="kutu karsilastir" aria-labelledby="karsilastir-baslik">
+      <div class="baslik-satiri">
+        <h2 id="karsilastir-baslik">Sürüm karşılaştır</h2>
+        <span class="not ust-bosluksuz">Word (.docx)</span>
+      </div>
+      <p class="not ust-bosluksuz">Sizdeki özgün metni ve karşı tarafın gönderdiği yeni sürümü bırakın. Farklar Word'de izli değişiklik olarak açılır; Claude'a yalnız maskeli bir "ne değişti" özeti gider.</p>
+      <div class="yuvalar">
+        <div class="yuva" id="yuva-ozgun" data-rol="ozgun" tabindex="0" role="button" aria-describedby="yuva-ozgun-ad">
+          <strong>Özgün sürüm</strong><span id="yuva-ozgun-ad">Sizdeki metin — bırakın ya da seçin</span>
+        </div>
+        <button type="button" id="yuva-degistir" class="ikincil" aria-label="Özgün ve yeni sürümün yerini değiştir" title="Yer değiştir">⇄</button>
+        <div class="yuva" id="yuva-yeni" data-rol="yeni" tabindex="0" role="button" aria-describedby="yuva-yeni-ad">
+          <strong>Yeni sürüm</strong><span id="yuva-yeni-ad">Karşı taraftan gelen — bırakın ya da seçin</span>
+        </div>
+        <input id="yuva-sec" type="file" accept=".docx" hidden>
+      </div>
+      <div class="eylem-satiri sol">
+        <button type="button" id="karsilastir-basla" disabled>Karşılaştır</button>
+        <span id="karsilastir-durum" class="not satir-ici" role="status" aria-live="polite"></span>
+      </div>
+      <div class="komut" id="karsilastir-komut" hidden>
+        <span>Claude Desktop'ta ArthurLegal projesine yapıştırın:</span>
+        <code id="karsilastir-komut-metni"></code>
+        <button type="button" id="karsilastir-komut-kopyala" class="ikincil">Kopyala</button>
+      </div>
+    </section>
+
     <div id="calisma" hidden>
       <section class="kutu" aria-labelledby="belgeler-baslik">
         <h2 id="belgeler-baslik">Belgeler</h2>
@@ -107,6 +134,8 @@
     <li><strong>Claude'a söyleyin.</strong> Claude Desktop'taki ArthurLegal projesine gösterilen komutu yapıştırın. Belgeyi Claude'a ayrıca eklemeyin.</li>
     <li><strong>Cevabı açın.</strong> Claude'un taslağı burada gerçek adlarla Word ya da UDF olarak açılır.</li>
     <li><strong>Denetleyin.</strong> "Claude'a giden" bölümünde Claude'a gönderilen her yanıtın maskeli hâlini görür, tek tıkla sızıntı denetimi yaparsınız.</li>
+    <li><strong>Sürümleri karşılaştırın.</strong> Özgün metni ve karşı tarafın yeni sürümünü "Sürüm karşılaştır" alanına bırakın: farklar Word'de izli değişiklik olarak açılır, Claude risk yorumunu maskeli özetten yazar.</li>
+    <li><strong>Tutarlılığa bakın.</strong> Bıraktığınız her belgede tanımlı terimler, iç atıflar, taraf unvanları ve çift dilli sütunlar kurallarla denetlenir; rapor belgenin incelemesinde gerçek adlarla görünür.</li>
   </ol>
   <p class="not">Takma adlandırma anonimleştirme değildir: sözleşmenin konusu ve ticari içerik maskelenmez.</p>
   <form method="dialog" class="eylem-satiri"><button>Tamam</button></form>

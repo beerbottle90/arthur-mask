@@ -23,6 +23,9 @@ class Belge:
     _yazici: Optional[Callable[[Sequence[Degisiklik], Path], None]] = None
     # OCR ile okunan belge: maskeli çıktı görüntü tabanlı PDF'tir ve inceleme zorunludur.
     ocr: bool = False
+    # Word belgesinde ayrıştırılmış yapı (docx.DocxBelge): tutarlılık denetimi tablo hücrelerini ve otomatik
+    # numaraları buradan okur.
+    ham: Optional[object] = None
 
     @property
     def cikti_uzantisi(self) -> str:
@@ -46,7 +49,7 @@ def ac(yol: Path) -> Belge:
             return Belge(yol, b.metin, [], lambda d, h: udf.maskelenmis_yaz(b, d, h))
         if uzanti == ".docx":
             b = docx.oku(yol)
-            return Belge(yol, b.metin, b.uyarilar, lambda d, h: docx.maskelenmis_yaz(b, d, h))
+            return Belge(yol, b.metin, b.uyarilar, lambda d, h: docx.maskelenmis_yaz(b, d, h), ham=b)
         if uzanti == ".pdf":
             try:
                 b = pdf.oku(yol)

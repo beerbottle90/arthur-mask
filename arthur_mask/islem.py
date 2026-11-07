@@ -15,7 +15,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
 
-from . import belgeler, docx, docx_yapi, udf
+from . import belgeler, docx, docx_yapi, surum, tutarlilik, udf
 from .cikis import CikisDenetimi
 from .depo import Depo, simdi
 from .maskeleyici import ETIKET_DESENI, geri_acma_degisiklikleri, maskele
@@ -61,6 +61,28 @@ def _etiket_turleri(degisiklikler) -> Dict[str, int]:
     """Tür başına benzersiz etiket sayısı ({{KİŞİ-01}} üç kez geçse de 1 kişi)."""
     etiketler = {d[2] for d in degisiklikler}
     return dict(Counter(e[2:-2].rsplit("-", 1)[0] for e in etiketler))
+
+
+def sayfala(ogeler: List[Dict], boy: int = MCP_PARCA_KARAKTER) -> List[List[Dict]]:
+    """Liste öğelerini, her sayfanın JSON boyu `boy` karakteri geçmeyecek biçimde böler (öğe bölünmez)."""
+    sayfalar: List[List[Dict]] = [[]]
+    uzunluk = 0
+    for oge in ogeler:
+        boyu = len(json.dumps(oge, ensure_ascii=False)) + 2
+        if sayfalar[-1] and uzunluk + boyu > boy:
+            sayfalar.append([])
+            uzunluk = 0
+        sayfalar[-1].append(oge)
+        uzunluk += boyu
+    return sayfalar
+
+
+def _sayim_metni(sayim: Dict[str, int]) -> str:
+    adlar = [("degisen", "paragraf değişti"), ("eklenen", "paragraf eklendi"), ("silinen", "paragraf silindi"),
+             ("satir_eklenen", "tablo satırı eklendi"), ("satir_silinen", "tablo satırı silindi"),
+             ("tablo_eklenen", "tablo eklendi"), ("tablo_silinen", "tablo silindi")]
+    parcalar = [f"{sayim[k]} {ad}" for k, ad in adlar if sayim.get(k)]
+    return ", ".join(parcalar) if parcalar else "gövde metninde fark bulunmadı"
 
 
 class Islem:
@@ -159,6 +181,7 @@ class Islem:
             "ocr": belge.ocr,
             "maskeli_kopya": f"{belge_id}{belge.cikti_uzantisi}",
         }
+        self._tutarlilik_hazirla(klasor, kayit, belge, sonuc.bulgular, sonuc.degisiklikler)
         self.depo.belge_kaydet(klasor, kayit)
         if durum != DURUM_HAZIR:
             self._bekleyen[(klasor, belge_id)] = (belge, list(sonuc.bulgular), supheli)
@@ -208,6 +231,8 @@ class Islem:
                 from .motor import artik_tarama
 
                 kayit["artik"] = [{"satir": s, "aciklama": a} for s, a in artik_tarama(maskeli)]
+                # Avukatın seçtiği adaylar da maskelendi: Claude'a gidecek tutarlılık raporu yeniden yazılır.
+                self._tutarlilik_hazirla(klasor, kayit, belge, tum, degisiklikler)
             # Kararlar dosya sözlüğüne yazılır; aynı soru bu dosyada bir daha sorulmaz.
             self.depo.sozluge_ekle(
                 klasor,
@@ -225,6 +250,162 @@ class Islem:
         self.depo.belge_kaydet(klasor, kayit)
         self._bekleyen.pop((klasor, belge_id), None)
         return self._arayuz_belge(klasor, kayit)
+
+    # -- iç tutarlılık denetimi ------------------------------------------------------------------------
+    def _tutarlilik_hazirla(self, klasor: str, kayit: Dict, belge: "belgeler.Belge", bulgular, degisiklikler) -> None:
+        """Denetim gerçek metinde bir kez yapılır. Tam rapor (gerçek değerli) şifreli olarak belgenin yanına,
+        maskeli rapor (Claude'a gidecek) belge kaydına yazılır. Maskeli rapordaki her parça, belgenin maskelenmesindeki
+        değişikliklerle konumdan üretilir."""
+        try:
+            if belge.ham is not None:
+                paragraflar = tutarlilik.docx_paragraflari(belge.ham)
+            else:
+                paragraflar = tutarlilik.duz_paragraflar(belge.metin)
+            sonuc = tutarlilik.denetle(paragraflar, [(b.bas, b.son, b.varlik) for b in bulgular])
+            tam = tutarlilik.rapor_yaz(sonuc, paragraflar, tutarlilik.gercek_metin(paragraflar))
+            maskeli = tutarlilik.rapor_yaz(sonuc, paragraflar,
+                                           tutarlilik.maskeli_metin(paragraflar, belge.metin, degisiklikler))
+            self.depo.gizli_kaydet(klasor, f"{kayit['id']}.tutarlilik", {"olusturma": simdi(), **tam})
+        except Exception as hata:  # noqa: BLE001 - denetim maskelemeyi durdurmaz; istisna metni belge içerebilir
+            gunluk.error("Tutarlılık denetimi yapılamadı (%s).", type(hata).__name__)
+            kayit["tutarlilik"] = {"hata": "Tutarlılık denetimi bu belgede yapılamadı."}
+            return
+        kayit["tutarlilik"] = maskeli
+
+    def arayuz_tutarlilik(self, klasor: str, belge_id: str) -> Dict:
+        """Tam rapor (gerçek değerlerle), yalnız yerel arayüze."""
+        kayit = self.depo.belge_oku(klasor, belge_id)
+        try:
+            rapor = self.depo.gizli_oku(klasor, f"{belge_id}.tutarlilik")
+        except FileNotFoundError:
+            raise IslemHatasi("Bu belgenin tutarlılık raporu yok: belge bu özellikten önce yüklenmiş ya da süresi "
+                              "dolmuş. Belgeyi silip yeniden bırakın.")
+        return {"belge": belge_id, "kaynak_ad": kayit["kaynak_ad"], **rapor}
+
+    def mcp_tutarlilik(self, kimlik: str, parca: int = 1) -> Dict:
+        klasor = self._aktif()
+        kayit = self._hazir_kayit(klasor, kimlik)
+        rapor = kayit.get("tutarlilik")
+        if not rapor:
+            raise IslemHatasi(f"{kimlik} tutarlılık denetimi eklenmeden önce yüklenmiş. Avukattan belgeyi ArthurMask'e "
+                              f"({self.arayuz_adresi}) yeniden bırakmasını isteyin.")
+        if "hata" in rapor:
+            raise IslemHatasi(rapor["hata"])
+        sayfalar = sayfala(rapor["bulgular"])
+        if not 1 <= parca <= len(sayfalar):
+            raise IslemHatasi(f"Parça 1–{len(sayfalar)} arasında olmalı.")
+        return {
+            "kimlik": kimlik,
+            "ozet": rapor["ozet"],
+            "denetlenen": rapor["denetlenen"],
+            "parca": parca,
+            "parca_sayisi": len(sayfalar),
+            "bulgular": sayfalar[parca - 1],
+            "notlar": rapor["notlar"],
+            "not": ("Bulgular kurallarla, yerelde bulundu; yanlış alarm olabilir. Avukat aynı raporu gerçek adlarla "
+                    "ArthurMask'te görüyor. Önem sırasına göre yorumla; atıf ve tutar bulgularını belge metniyle "
+                    "(arthur_mask_belge_getir) teyit et."),
+            "kural": "{{TÜR-NN}} etiketlerini harfi harfine koru; gerçek değeri tahmin etme.",
+        }
+
+    # -- sürüm karşılaştırması --------------------------------------------------------------------------
+    def arayuz_karsilastir(self, klasor: str, ozgun_adi: str, ozgun: bytes, yeni_adi: str, yeni: bytes) -> Dict:
+        """Avukatın özgün belgesi ile karşı tarafın yeni sürümü: gerçek metinle izli Word (yerelde), iki belge de
+        normal maskeleme akışından geçer; Claude'a giden özet sonradan maskeli kopyalardan üretilir."""
+        for ad in (ozgun_adi, yeni_adi):
+            if Path(ad).suffix.lower() != ".docx":
+                raise IslemHatasi("Sürüm karşılaştırması yalnız Word (.docx) belgelerinde yapılır.")
+        try:
+            izli, sayim, uyarilar = surum.izli_karsilastirma(ozgun, yeni)
+        except surum.SurumHatasi as hata:
+            raise IslemHatasi(str(hata)) from hata
+        kayit_ozgun = self.arayuz_belge_isle(klasor, ozgun_adi, ozgun)
+        kayit_yeni = self.arayuz_belge_isle(klasor, yeni_adi, yeni)
+        baslik = f"Sürüm karşılaştırması {kayit_ozgun['id']} - {kayit_yeni['id']}"
+        hedef = self.depo.cevap_yolu(klasor, baslik, ".docx")
+        hedef.write_bytes(izli)
+        meta = {
+            "olusturma": simdi(), "baslik": baslik, "bicim": "docx", "dosya": hedef.name, "tur": "karsilastirma",
+            "izli": True, "ozgun": kayit_ozgun["id"], "yeni": kayit_yeni["id"], "sayim": sayim, "uyarilar": uyarilar,
+            "cozulen": 0, "bilinmeyen": [],
+            "maskeli_metin": f"{kayit_ozgun['id']} (özgün) ile {kayit_yeni['id']} (yeni sürüm) karşılaştırıldı: "
+                             f"{_sayim_metni(sayim)}.",
+        }
+        self.depo.cevap_kaydet(klasor, meta, hedef)
+        for kayit, rol, karsi in ((kayit_ozgun, "özgün", kayit_yeni), (kayit_yeni, "yeni", kayit_ozgun)):
+            guncel = self.depo.belge_oku(klasor, kayit["id"])
+            guncel["surum"] = {"rol": rol, "karsi": karsi["id"]}
+            self.depo.belge_kaydet(klasor, guncel)
+        gorunumler = [self._arayuz_belge(klasor, self.depo.belge_oku(klasor, k["id"])) for k in (kayit_ozgun, kayit_yeni)]
+        return {
+            "ozgun": gorunumler[0], "yeni": gorunumler[1], "cevap": {**meta, "ad": hedef.stem},
+            "ozet": _sayim_metni(sayim), "uyarilar": uyarilar,
+            "hazir": all(g["durum"] == DURUM_HAZIR for g in gorunumler),
+        }
+
+    def _hazir_kayit(self, klasor: str, kimlik: str) -> Dict:
+        try:
+            kayit = self.depo.belge_oku(klasor, kimlik)
+        except (FileNotFoundError, OSError):
+            raise IslemHatasi(f"Belge bulunamadı: {kimlik}")
+        if kayit["durum"] != DURUM_HAZIR:
+            raise IslemHatasi(
+                f"{kimlik} henüz Claude'a hazır değil (durum: {kayit['durum']}). "
+                f"Avukatın ArthurMask'te ({self.arayuz_adresi}#belge={kimlik}) incelemeyi tamamlaması gerekir."
+            )
+        return kayit
+
+    def _karsilastirmalar(self, klasor: str) -> List[Dict]:
+        return [c for c in self.depo.cevaplar(klasor) if c.get("tur") == "karsilastirma"]
+
+    def mcp_surum_karsilastir(self, ozgun: str = "", yeni: str = "", parca: int = 1) -> Dict:
+        klasor = self._aktif()
+        karsilastirmalar = self._karsilastirmalar(klasor)
+        if not ozgun or not yeni:
+            if not karsilastirmalar:
+                raise IslemHatasi(
+                    "Bu dosyada sürüm karşılaştırması yok. Avukattan ArthurMask'te 'Sürüm karşılaştır' alanına özgün "
+                    "belgeyi ve karşı tarafın yeni sürümünü bırakmasını isteyin; ya da iki Word belgesinin kimliğini "
+                    "(arthur_mask_belgeler) ozgun ve yeni olarak verin.")
+            ozgun, yeni = ozgun or karsilastirmalar[0]["ozgun"], yeni or karsilastirmalar[0]["yeni"]
+        if ozgun == yeni:
+            raise IslemHatasi("Özgün ve yeni sürüm aynı belge olamaz.")
+        kopyalar = []
+        for kimlik in (ozgun, yeni):
+            kayit = self._hazir_kayit(klasor, kimlik)
+            if kayit["bicim"] != ".docx":
+                raise IslemHatasi(f"{kimlik} Word belgesi değil; sürüm karşılaştırması yalnız .docx belgelerinde yapılır.")
+            kopya = self.depo.dosya_yolu(klasor) / "maskeli" / kayit.get("maskeli_kopya", "")
+            if not kayit.get("maskeli_kopya") or not kopya.is_file():
+                raise IslemHatasi(f"{kimlik} maskeli kopyasının süresi dolmuş; avukattan belgeyi yeniden bırakmasını isteyin.")
+            kopyalar.append(surum.girdiler(kopya.read_bytes(), kimlik))
+        denetim = self._cikis_denetimi(klasor)
+        try:
+            ozet = surum.degisiklik_ozeti(kopyalar[0], kopyalar[1], lambda m: denetim.temizle(m)[0])
+        except surum.SurumHatasi as hata:
+            raise IslemHatasi(str(hata)) from hata
+        sayfalar = sayfala(ozet["degisiklikler"])
+        if not 1 <= parca <= len(sayfalar):
+            raise IslemHatasi(f"Parça 1–{len(sayfalar)} arasında olmalı.")
+        izli = next((c for c in karsilastirmalar if c.get("ozgun") == ozgun and c.get("yeni") == yeni), None)
+        return {
+            "ozgun": ozgun,
+            "yeni": yeni,
+            "ozet": _sayim_metni(ozet["sayim"]),
+            "parca": parca,
+            "parca_sayisi": len(sayfalar),
+            "degisiklikler": sayfalar[parca - 1],
+            "isaretleme": "'fark' alanında [-silinen-] ve {+eklenen+}. '(özgünde)' yer bilgisi özgün sürümdeki yerdir.",
+            "izli_word": ("Avukatın bilgisayarında izli değişiklikli Word dosyası hazır (ArthurMask › Cevaplar)."
+                          if izli else
+                          "Bu iki belge için izli Word dosyası yok; avukat iki sürümü ArthurMask'teki 'Sürüm karşılaştır' "
+                          "alanına birlikte bırakırsa oluşur."),
+            "sonraki_adim": (
+                "Değişikliklerin risk yorumunu ve karşı öneriyi bu özete göre yaz; avukata arthur_mask_teslim ile teslim et. "
+                f"Karşı öneriyi yeni sürüme izli değişiklik olarak işlemek için arthur_mask_belgeyi_revize_et'i "
+                f"kimlik='{yeni}' ile kullan."),
+            "kural": "{{TÜR-NN}} etiketlerini harfi harfine koru; gerçek değeri tahmin etme.",
+        }
 
     def arayuz_belge_sil(self, klasor: str, belge_id: str) -> None:
         self.depo.belge_oku(klasor, belge_id)
@@ -341,14 +522,22 @@ class Islem:
         klasor = self._aktif()
         liste = []
         for k in self.depo.belgeler(klasor):
-            liste.append({
+            oge = {
                 "kimlik": k["id"], "durum": k["durum"], "bicim": k["bicim"], "karakter": k["karakter"],
                 "etiket_sayisi": k["etiket_sayisi"], "turler": k["turler"],
                 "parca_sayisi": len(parcalara_bol(k["maskeli_metin"])),
                 "hazirlanma": k["olusturma"],
-            })
+            }
+            rapor = k.get("tutarlilik")
+            if rapor and "ozet" in rapor:
+                oge["tutarlilik_bulgusu"] = rapor["ozet"]["toplam"]
+            if k.get("surum"):
+                oge["surum"] = k["surum"]
+            liste.append(oge)
         return {
             "belgeler": liste,
+            "karsilastirmalar": [{"ozgun": c["ozgun"], "yeni": c["yeni"], "hazirlanma": c["olusturma"]}
+                                 for c in self._karsilastirmalar(klasor)],
             "not": "Yalnız durum='hazir' olan belgeler getirilebilir.",
             "arayuz": self.arayuz_adresi,
         }

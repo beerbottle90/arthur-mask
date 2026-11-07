@@ -306,20 +306,28 @@ function belgeleriCiz() {
     $("belge-listesi").replaceChildren(el("li", { sinif: "not" }, "Henüz belge yok. Yukarıdaki alana bir belge bırakın."));
     return;
   }
-  $("belge-listesi").replaceChildren(...durum.belgeler.map((b) => el("li", { sinif: "belge" },
-    el("span", { sinif: "ad" }, `${b.kaynak_ad} `, el("span", { sinif: `cip ${b.durum}` }, DURUM_ADI[b.durum])),
-    el("span", { sinif: "meta" }, `${b.id} · ${tarih(b.olusturma)} · ${b.etiket_sayisi} etiket${b.etiket_sayisi ? ": " + turOzeti(b.turler) : ""}`),
-    el("span", { sinif: "eylemler" },
-      el("button", { type: "button", sinif: b.durum === "hazir" ? "ikincil" : "", onclick: () => incelemeAc(b) },
-        b.durum === "hazir" ? "Önizle" : "İncele"),
-      el("button", { type: "button", sinif: "ikincil", "aria-label": `${b.kaynak_ad} sil`, onclick: () => belgeSil(b.id) }, "Sil")),
-  )));
+  $("belge-listesi").replaceChildren(...durum.belgeler.map((b) => {
+    const bulgu = tutarlilikSayisi(b);
+    return el("li", { sinif: "belge" },
+      el("span", { sinif: "ad" }, `${b.kaynak_ad} `, el("span", { sinif: `cip ${b.durum}` }, DURUM_ADI[b.durum]),
+        b.surum ? el("span", { sinif: "cip surum" }, b.surum.rol === "yeni" ? "Yeni sürüm" : "Özgün sürüm") : null),
+      el("span", { sinif: "meta" }, `${b.id} · ${tarih(b.olusturma)} · ${b.etiket_sayisi} etiket${b.etiket_sayisi ? ": " + turOzeti(b.turler) : ""}`),
+      el("span", { sinif: "eylemler" },
+        bulgu ? el("button", { type: "button", sinif: "ikincil", onclick: () => incelemeAc(b, "tutarlilik") },
+          `Tutarlılık · ${bulgu}`) : null,
+        el("button", { type: "button", sinif: b.durum === "hazir" ? "ikincil" : "", onclick: () => incelemeAc(b) },
+          b.durum === "hazir" ? "Önizle" : "İncele"),
+        el("button", { type: "button", sinif: "ikincil", "aria-label": `${b.kaynak_ad} sil`, onclick: () => belgeSil(b.id) }, "Sil")),
+    );
+  }));
 }
 
-function incelemeAc(belge) {
+const tutarlilikSayisi = (b) => (b.tutarlilik && b.tutarlilik.ozet ? b.tutarlilik.ozet.toplam : 0);
+
+function incelemeAc(belge, bolum) {
   durum.acikInceleme = belge.id;
   durum.incelemeImza = `${belge.id}:${belge.durum}:${belge.etiket_sayisi}`;
-  durum.kaydir = true;
+  durum.kaydir = bolum || true;
   incelemeyiCiz();
 }
 
@@ -373,6 +381,8 @@ function incelemeyiCiz() {
       belge.ocr ? "Maskeli sayfaları kontrol et (PDF)" : "Maskeli kopyayı aç")));
   bolumler.push(el("h3", {}, "Claude'un göreceği metin"));
   bolumler.push(el("div", { sinif: "onizleme", tabindex: "0" }, etiketliMetin(belge.maskeli_metin)));
+  const tutarlilikKutusu = tutarlilikBolumu(belge);
+  if (tutarlilikKutusu) bolumler.push(tutarlilikKutusu);
 
   const hata = el("p", { sinif: "hata-mesaji", role: "alert" });
   const eylemler = el("div", { sinif: "eylem-satiri" });
@@ -399,9 +409,56 @@ function incelemeyiCiz() {
   bolumler.push(hata, eylemler);
   $("inceleme-icerik").replaceChildren(...bolumler);
   if (durum.kaydir) {
+    const hedef = durum.kaydir === "tutarlilik" && tutarlilikKutusu ? tutarlilikKutusu : panel;
     durum.kaydir = false;
-    panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    hedef.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+}
+
+// -- iç tutarlılık raporu (tam hâli, gerçek adlarla; yalnız bu bilgisayardan okunur) ---------------------
+const ONEM_SINIFI = { "yüksek": "kirmizi_hat", "orta": "onay_bekliyor", "düşük": "" };
+durum.tutarlilik = {};
+
+function tutarlilikBolumu(belge) {
+  const rapor = belge.tutarlilik;
+  if (!rapor) return null;
+  const kutu = el("section", { sinif: "tutarlilik", "aria-label": "İç tutarlılık denetimi" });
+  kutu.append(el("h3", {}, "İç tutarlılık denetimi"));
+  if (rapor.hata) {
+    kutu.append(el("p", { sinif: "not ust-bosluksuz" }, rapor.hata));
+    return kutu;
+  }
+  const o = rapor.ozet;
+  kutu.append(el("p", { sinif: "not ust-bosluksuz" }, o.toplam
+    ? `${o.toplam} bulgu: ${o.yuksek} yüksek, ${o.orta} orta, ${o.dusuk} düşük önem. Kurallarla bulundu; her birini metinde kontrol edin.`
+    : "Tanımlı terimler, iç atıflar, taraf unvanları ve çift dilli sütunlarda tutarsızlık bulunmadı."));
+  const liste = el("ol", { sinif: "tutarlilik-listesi" });
+  const notlar = el("div");
+  kutu.append(liste, notlar);
+  if (belge.durum === "hazir") {
+    const komut = `ArthurMask'teki ${belge.id} için tutarlılık raporunu yorumla ve düzeltme öner`;
+    kutu.append(el("div", { sinif: "komut" }, el("span", {}, "Claude'a:"), el("code", {}, komut),
+      el("button", { type: "button", sinif: "ikincil", onclick: (e) => kopyala(komut, e.currentTarget) }, "Kopyala")));
+  }
+  if (!o.toplam && !(rapor.notlar || []).length) return kutu;
+  const anahtar = `${belge.id}:${belge.etiket_sayisi}:${o.toplam}`;
+  const ciz = (tam) => {
+    liste.replaceChildren(...tam.bulgular.map((b) => el("li", { sinif: "tutarlilik-bulgu" },
+      el("div", {}, el("span", { sinif: `cip ${ONEM_SINIFI[b.onem] || ""}` }, b.onem), " ", el("strong", {}, b.kural)),
+      el("div", {}, b.aciklama),
+      el("div", { sinif: "meta" }, b.yer),
+      b.alinti ? el("div", { sinif: "onizleme alinti" }, b.alinti) : null)));
+    notlar.replaceChildren(...(tam.notlar || []).map((n) => el("p", { sinif: "not" }, n)));
+  };
+  if (durum.tutarlilik[belge.id] && durum.tutarlilik[belge.id].anahtar === anahtar) {
+    ciz(durum.tutarlilik[belge.id].rapor);
+  } else {
+    liste.append(el("li", { sinif: "not" }, "Rapor açılıyor…"));
+    api("GET", `/api/dosyalar/${encodeURIComponent(durum.aktif)}/belgeler/${belge.id}/tutarlilik`)
+      .then((tam) => { durum.tutarlilik[belge.id] = { anahtar, rapor: tam }; ciz(tam); })
+      .catch((h) => liste.replaceChildren(el("li", { sinif: "hata-mesaji" }, h.message)));
+  }
+  return kutu;
 }
 
 async function maskeliKopyaAc(belge) {
@@ -425,7 +482,20 @@ function cevaplariCiz() {
   liste.replaceChildren(...durum.cevaplar.map(cevapKarti));
 }
 
+function karsilastirmaKarti(c) {
+  const uyarilar = (c.uyarilar || []).map((u) => el("p", { sinif: "uyari" }, `⚠ ${u}`));
+  return el("li", { sinif: "cevap" },
+    el("span", { sinif: "ad" }, c.baslik, " ", el("span", { sinif: "cip hazir" }, "Sürüm karşılaştırması")),
+    el("span", { sinif: "meta" }, `${tarih(c.olusturma)} · ${c.ozgun} (özgün) → ${c.yeni} (yeni sürüm) · Word, izli değişiklik`),
+    el("span", { sinif: "eylemler" },
+      el("button", { type: "button", onclick: () => cevapAc(c, false) }, "Word'de aç (izli değişiklikler)"),
+      el("button", { type: "button", sinif: "ikincil", onclick: () => cevapAc(c, true) }, "Klasörde göster")),
+    el("div", { sinif: "cevap-alt" }, ...uyarilar, el("p", { sinif: "not ust-bosluksuz" }, c.acik_metin)),
+  );
+}
+
 function cevapKarti(c) {
+  if (c.tur === "karsilastirma") return karsilastirmaKarti(c);
   const revizyon = c.tur === "revizyon";
   const metinKutusu = el("div", { sinif: "metin onizleme", tabindex: "0" });
   const sekmeler = el("div", { sinif: "sekmeler", role: "tablist", "aria-label": "Görünüm" });
@@ -476,6 +546,7 @@ async function cevapAc(cevap, klasorde) {
 // -- Claude'a giden ve sızıntı denetimi ----------------------------------------------------------
 const ARAC_ADI = {
   mcp_belgeler: "Belge listesi", mcp_belge_getir: "Belge metni", mcp_revize: "Revizyon sonucu", mcp_teslim: "Teslim sonucu",
+  mcp_surum_karsilastir: "Sürüm karşılaştırma özeti", mcp_tutarlilik: "Tutarlılık raporu",
 };
 
 function gidenleriCiz() {
@@ -533,6 +604,108 @@ $("denetle").addEventListener("click", async (o) => {
   } finally {
     dugme.disabled = false;
     dugme.textContent = "Sızıntı denetimi yap";
+  }
+});
+
+// -- sürüm karşılaştırması --------------------------------------------------------------------------
+const surum = { ozgun: null, yeni: null, rol: null };
+const YUVA_IPUCU = { ozgun: "Sizdeki metin — bırakın ya da seçin", yeni: "Karşı taraftan gelen — bırakın ya da seçin" };
+
+function yuvalariCiz() {
+  for (const rol of ["ozgun", "yeni"]) {
+    const dosya = surum[rol];
+    $(`yuva-${rol}`).classList.toggle("dolu", !!dosya);
+    $(`yuva-${rol}-ad`).textContent = dosya ? dosya.name : YUVA_IPUCU[rol];
+  }
+  $("karsilastir-basla").disabled = !(surum.ozgun && surum.yeni);
+}
+
+function karsilastirDurumu(metin, hata = false) {
+  const d = $("karsilastir-durum");
+  d.textContent = metin;
+  d.classList.toggle("hata-mesaji", hata);
+}
+
+function surumDosyalari(dosyalar, rol) {
+  const word = dosyalar.filter((d) => /\.docx$/i.test(d.name));
+  if (word.length !== dosyalar.length) karsilastirDurumu("Sürüm karşılaştırması yalnız Word (.docx) dosyalarıyla yapılır.", true);
+  else karsilastirDurumu("");
+  if (word.length >= 2) {
+    // İki dosya birlikte bırakıldı: eski tarihli olan özgün sayılır; gerekirse ⇄ ile değiştirilir.
+    const [eski, yeni] = word.slice(0, 2).sort((a, b) => a.lastModified - b.lastModified);
+    surum.ozgun = eski;
+    surum.yeni = yeni;
+    karsilastirDurumu("Eski tarihli dosya özgün sayıldı; yanlışsa ⇄ ile yer değiştirin.");
+  } else if (word.length === 1) {
+    surum[rol || (surum.ozgun ? "yeni" : "ozgun")] = word[0];
+  }
+  yuvalariCiz();
+}
+
+for (const rol of ["ozgun", "yeni"]) {
+  const yuva = $(`yuva-${rol}`);
+  const sec = () => { surum.rol = rol; $("yuva-sec").click(); };
+  yuva.addEventListener("click", sec);
+  yuva.addEventListener("keydown", (o) => { if (o.key === "Enter" || o.key === " ") { o.preventDefault(); sec(); } });
+  yuva.addEventListener("dragover", (o) => { o.preventDefault(); yuva.classList.add("uzerinde"); });
+  yuva.addEventListener("dragleave", () => yuva.classList.remove("uzerinde"));
+  yuva.addEventListener("drop", (o) => {
+    o.preventDefault();
+    o.stopPropagation();
+    yuva.classList.remove("uzerinde");
+    surumDosyalari([...o.dataTransfer.files], rol);
+  });
+}
+$("karsilastir").addEventListener("dragover", (o) => o.preventDefault());
+$("karsilastir").addEventListener("drop", (o) => { o.preventDefault(); surumDosyalari([...o.dataTransfer.files], null); });
+$("yuva-sec").addEventListener("change", (o) => { surumDosyalari([...o.target.files], surum.rol); o.target.value = ""; });
+$("yuva-degistir").addEventListener("click", () => {
+  [surum.ozgun, surum.yeni] = [surum.yeni, surum.ozgun];
+  karsilastirDurumu("");
+  yuvalariCiz();
+});
+$("karsilastir-komut-kopyala").addEventListener("click", (o) => kopyala($("karsilastir-komut-metni").textContent, o.target));
+
+$("karsilastir-basla").addEventListener("click", async (o) => {
+  const dugme = o.currentTarget;
+  const { ozgun, yeni } = surum;
+  if (!ozgun || !yeni) return;
+  dugme.disabled = true;
+  $("karsilastir-komut").hidden = true;
+  karsilastirDurumu("Karşılaştırılıyor ve maskeleniyor…");
+  try {
+    if (!durum.aktif) {
+      const { klasor } = await api("POST", "/api/dosyalar", { ad: belgedenDosyaAdi(yeni.name), benzersiz: true });
+      durum.yeniDosya = false;
+      durum.aktif = klasor;
+      durum.belgeImza = durum.cevapImza = durum.incelemeImza = durum.gidenImza = undefined;
+    }
+    const govde = new Blob([await ozgun.arrayBuffer(), await yeni.arrayBuffer()]);
+    const sonuc = await api("POST", `/api/dosyalar/${encodeURIComponent(durum.aktif)}/karsilastir`, govde, {
+      "X-Boyut-1": String(ozgun.size),
+      "X-Dosya-Adi-1": encodeURIComponent(ozgun.name),
+      "X-Dosya-Adi-2": encodeURIComponent(yeni.name),
+    });
+    surum.ozgun = surum.yeni = null;
+    yuvalariCiz();
+    let metin = `${sonuc.ozet[0].toUpperCase()}${sonuc.ozet.slice(1)}. İzli değişiklikli Word dosyası açılıyor (Cevaplar'da da duruyor).`;
+    if (!sonuc.hazir) {
+      metin += " Claude'a özet gitmeden önce iki belgenin incelemesini tamamlayın.";
+      const bekleyen = [sonuc.ozgun, sonuc.yeni].find((b) => b.durum !== "hazir");
+      durum.acikInceleme = bekleyen.id;
+      durum.kaydir = true;
+    }
+    karsilastirDurumu(metin);
+    $("karsilastir-komut-metni").textContent =
+      `ArthurMask'teki ${sonuc.ozgun.id} (özgün) ile ${sonuc.yeni.id} (yeni sürüm) arasındaki farkları incele; risklerini ve karşı önerini yaz`;
+    $("karsilastir-komut").hidden = false;
+    await api("POST", `/api/dosyalar/${encodeURIComponent(durum.aktif)}/cevap-ac`, { dosya: sonuc.cevap.dosya, klasorde: false })
+      .catch(() => {});
+  } catch (hata) {
+    karsilastirDurumu(`Olmadı: ${hata.message}`, true);
+  } finally {
+    yuvalariCiz();
+    await dosyalariYukle();
   }
 });
 
