@@ -634,6 +634,7 @@ class Islem:
             "uygulanan_degisiklik": rapor.uygulanan,
             "uygulanamayan": rapor.sorunlar,
             "izli_degisiklik": izli_mi,
+            "gerekce_yorumu": rapor.yorum,
             "not": "Özgün düzen (tablolar, çift sütun, biçim) korundu; gerçek değerler bu yanıta eklenmez.",
         }
 

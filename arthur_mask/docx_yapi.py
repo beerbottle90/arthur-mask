@@ -107,6 +107,46 @@ def claude_gorunumu(yol: Path) -> str:
 class RevizyonRaporu:
     uygulanan: int = 0
     sorunlar: List[Dict[str, str]] = field(default_factory=list)
+    yorum: int = 0   # gerekçesi Word yorumu olarak eklenen değişiklik sayısı
+
+
+_YORUM_TURU = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments"
+_YORUM_ICERIK = "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"
+_W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+
+
+def _yorum_xml(kimlik: int, yazar: str, tarih: str, metin: str) -> str:
+    paragraflar = "".join(
+        f'<w:p><w:r><w:t xml:space="preserve">{html.escape(satir, quote=False)}</w:t></w:r></w:p>'
+        for satir in metin.split("\n") if satir.strip()) or "<w:p/>"
+    return (f'<w:comment w:id="{kimlik}" w:author="{html.escape(yazar)}" w:date="{tarih}" w:initials="AM">'
+            f"{paragraflar}</w:comment>")
+
+
+def _yorumlari_ekle(girdiler, parcalar: Dict[str, str], yorumlar: List[str]):
+    """Yorumları word/comments.xml'e yazar; dosya yoksa ilişkisi ve içerik türüyle birlikte kurar.
+    Dönen: (parçalar, değişen ya da yeni zip girdileri {ad: bayt})."""
+    yeni_girdiler: Dict[str, bytes] = {}
+    eklenecek = "".join(yorumlar)
+    if "word/comments.xml" in parcalar:
+        xml = parcalar["word/comments.xml"]
+        konum = xml.rfind("</w:comments>")
+        parcalar["word/comments.xml"] = xml[:konum] + eklenecek + xml[konum:]
+        return parcalar, yeni_girdiler
+    yeni_girdiler["word/comments.xml"] = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        f'<w:comments xmlns:w="{_W}">{eklenecek}</w:comments>').encode("utf-8")
+    ham = {bilgi.filename: veri for bilgi, veri in girdiler}
+    rels = ham.get("word/_rels/document.xml.rels", b"").decode("utf-8")
+    if _YORUM_TURU not in rels and "</Relationships>" in rels:
+        rels = rels.replace("</Relationships>", f'<Relationship Id="rIdArthurMaskYorum" Type="{_YORUM_TURU}" '
+                                                 'Target="comments.xml"/></Relationships>')
+        yeni_girdiler["word/_rels/document.xml.rels"] = rels.encode("utf-8")
+    tur = ham.get("[Content_Types].xml", b"").decode("utf-8")
+    if "/word/comments.xml" not in tur and "</Types>" in tur:
+        tur = tur.replace("</Types>", f'<Override PartName="/word/comments.xml" ContentType="{_YORUM_ICERIK}"/></Types>')
+        yeni_girdiler["[Content_Types].xml"] = tur.encode("utf-8")
+    return parcalar, yeni_girdiler
 
 
 def _run_sinirlari(xml: str, konum: int):
@@ -128,7 +168,8 @@ def _metin_run(rpr: str, metin: str) -> str:
 
 def revizyon_uygula(kaynak: Path, degisiklikler: Sequence[Dict[str, str]], hedef: Path,
                     izli: bool = True, yazar: str = "Claude (ArthurMask)") -> RevizyonRaporu:
-    """Maskeli .docx üzerinde {eski, yeni} değişikliklerini uygular; sonuç yine maskelidir."""
+    """Maskeli .docx üzerinde {eski, yeni, gerekce?} değişikliklerini uygular; sonuç yine maskelidir. gerekce
+    verilen değişikliğin çevresine Word yorumu konur (izli kipte, yalnız ana metinde; üst/alt bilgide yorum yok)."""
     belge = docx.oku(kaynak)
     rapor = RevizyonRaporu()
     metin = belge.metin
@@ -138,8 +179,12 @@ def revizyon_uygula(kaynak: Path, degisiklikler: Sequence[Dict[str, str]], hedef
     # Her değişikliği önce metin aralığına çevir; bulunamayan, birden çok eşleşen, paragraf aşan ya da
     # çakışanlar raporlanır ve atlanır.
     araliklar = []
+    gerekceler: Dict[int, str] = {}
     for sira, d in enumerate(degisiklikler, start=1):
         eski, yeni = str(d.get("eski", "")), str(d.get("yeni", ""))
+        g = str(d.get("gerekce") or "").strip()
+        if g:
+            gerekceler[sira] = g[:1000]
         if not eski:
             rapor.sorunlar.append({"sira": str(sira), "neden": "eski metin boş"})
             continue
@@ -163,6 +208,10 @@ def revizyon_uygula(kaynak: Path, degisiklikler: Sequence[Dict[str, str]], hedef
     # Düğüm başına kesimler: aynı run'a birden çok değişiklik düşerse run tek seferde yeniden kurulur.
     kesimler: Dict[int, list] = {}
     basarisiz = set()
+    # Yorum kimlikleri belgedeki yorumlardan sonra başlar (aynı kimlik iki yorumda olmasın).
+    var_olan = [int(x) for x in re.findall(r'<w:comment\b[^>]*\bw:id="(\d+)"', belge.parcalar.get("word/comments.xml", ""))]
+    yorum_sayaci = [max(var_olan, default=-1) + 1]
+    yorum_kimligi: Dict[int, int] = {}
     for bas, son, yeni, sira in araliklar:
         dugumler = [i for i, d in enumerate(belge.dugumler) if d.metin_bas < son and bas < d.metin_son]
         uygun = True
@@ -176,12 +225,20 @@ def revizyon_uygula(kaynak: Path, degisiklikler: Sequence[Dict[str, str]], hedef
             basarisiz.add(sira)
             rapor.sorunlar.append({"sira": str(sira), "neden": "metin zaten izli ya da karmaşık bir Word yapısında; daha dar bir parça seçin"})
             continue
-        ilk = True
-        for i in dugumler:
+        # Gerekçe, değişikliğin ilk geçişine bir kez yorum olur ("hepsi" ile çok yerde değişse de).
+        ana_metinde = all(belge.dugumler[i].parca == "word/document.xml" for i in dugumler)
+        yorumlu = izli and sira in gerekceler and ana_metinde and sira not in yorum_kimligi
+        if izli and sira in gerekceler and not ana_metinde and sira not in yorum_kimligi:
+            rapor.sorunlar.append({"sira": str(sira), "neden": "değişiklik uygulandı; gerekçe üst/alt bilgide yorum olarak eklenemedi"})
+        if yorumlu:
+            yorum_kimligi[sira] = yorum_sayaci[0]
+            yorum_sayaci[0] += 1
+        kid = yorum_kimligi[sira] if yorumlu else None
+        for n, i in enumerate(dugumler):
             d = belge.dugumler[i]
             a, b = max(bas - d.metin_bas, 0), min(son - d.metin_bas, len(d.metin))
-            kesimler.setdefault(i, []).append((a, b, yeni if ilk else ""))
-            ilk = False
+            kesimler.setdefault(i, []).append((a, b, yeni if n == 0 else "", kid if n == 0 else None,
+                                               kid if n == len(dugumler) - 1 else None))
     rapor.uygulanan = len({a[3] for a in araliklar} - basarisiz)
 
     islemler = []
@@ -191,9 +248,11 @@ def revizyon_uygula(kaynak: Path, degisiklikler: Sequence[Dict[str, str]], hedef
         sinir = _run_sinirlari(xml, d.xml_bas)
         rpr = _rpr(xml[sinir[0]:sinir[1]])
         yeni_xml, imlec = "", 0
-        for a, b, ekle in sorted(parcalar_listesi):
+        for a, b, ekle, yorum_bas, yorum_son in sorted(parcalar_listesi, key=lambda k: (k[0], k[1])):
             yeni_xml += _metin_run(rpr, d.metin[imlec:a])
             silinen = d.metin[a:b]
+            if yorum_bas is not None:
+                yeni_xml += f'<w:commentRangeStart w:id="{yorum_bas}"/>'
             if izli:
                 if silinen:
                     kimlik[0] += 1
@@ -205,6 +264,9 @@ def revizyon_uygula(kaynak: Path, degisiklikler: Sequence[Dict[str, str]], hedef
                                  f'{_metin_run(rpr, ekle)}</w:ins>')
             else:
                 yeni_xml += _metin_run(rpr, ekle)
+            if yorum_son is not None:
+                yeni_xml += (f'<w:commentRangeEnd w:id="{yorum_son}"/>'
+                             f'<w:r><w:commentReference w:id="{yorum_son}"/></w:r>')
             imlec = b
         yeni_xml += _metin_run(rpr, d.metin[imlec:])
         islemler.append((d.parca, sinir[0], sinir[1], yeni_xml))
@@ -214,7 +276,19 @@ def revizyon_uygula(kaynak: Path, degisiklikler: Sequence[Dict[str, str]], hedef
         xml = parcalar[parca]
         parcalar[parca] = xml[:run_bas] + yeni_xml + xml[run_son:]
 
+    yeni_girdiler: Dict[str, bytes] = {}
+    yorumlar = [_yorum_xml(k, yazar, tarih, gerekceler[s]) for s, k in sorted(yorum_kimligi.items(), key=lambda x: x[1])
+                if s not in basarisiz]
+    if yorumlar:
+        parcalar, yeni_girdiler = _yorumlari_ekle(belge.girdiler, parcalar, yorumlar)
+        rapor.yorum = len(yorumlar)
+
     with zipfile.ZipFile(hedef, "w", zipfile.ZIP_DEFLATED) as zf:
         for bilgi, veri in belge.girdiler:
-            zf.writestr(bilgi, parcalar[bilgi.filename].encode("utf-8") if bilgi.filename in parcalar else veri)
+            if bilgi.filename in yeni_girdiler:
+                zf.writestr(bilgi, yeni_girdiler.pop(bilgi.filename))
+            else:
+                zf.writestr(bilgi, parcalar[bilgi.filename].encode("utf-8") if bilgi.filename in parcalar else veri)
+        for ad, veri in yeni_girdiler.items():
+            zf.writestr(ad, veri)
     return rapor
