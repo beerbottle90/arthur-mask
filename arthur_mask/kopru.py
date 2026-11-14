@@ -30,7 +30,7 @@ TALIMAT = (
     "4) İçtihat/mevzuat araştırma sorgularına etiket yazma.\n"
     "5) Avukatın yüklediği belgeyi düzeltmek/revize etmek için arthur_mask_belgeyi_revize_et kullan: değişiklikler "
     "özgün düzene (çift sütunlu tablolar, biçim) Word izli değişiklik olarak işlenir. Her değişiklikte 'eski' metni "
-    "belgeden birebir ve tek paragraf/hücre içinden kopyala. Çift dilli belgede her iki dil sütununu da ayrı ayrı revize et.\n"
+    "belgeden birebir ve tek paragraf/hücre içinden kopyala; her değişikliğe tek cümlelik 'gerekce' yaz (Word'de yorum olarak görünür). Çift dilli belgede her iki dil sütununu da ayrı ayrı revize et.\n"
     "6) Yeni bir belge (görüş, cetvel, dilekçe) yazıyorsan arthur_mask_teslim kullan; Markdown tablo ve başlıklar "
     "Word'e tablo ve başlık olarak aktarılır. Kaynak belge çift dilliyse yeni belgeyi de aynı dillerde, iki sütunlu tabloyla yaz.\n"
     "7) Belge 'hazir' değilse avukattan ArthurMask'te incelemeyi tamamlamasını iste.\n"
@@ -85,7 +85,7 @@ def sunucu_olustur(islem: Islem) -> MCPServer:
         description=(
             "Avukatın yüklediği Word/UDF belgesine değişiklikleri işler; tablo, çift sütun ve biçim korunur. "
             "Word'de değişiklikler izli (kabul/ret edilebilir) olur. degisiklikler: [{'eski': belgedeki birebir metin "
-            "(tek paragraf ya da hücre), 'yeni': yerine gelecek metin, 'hepsi': true ise her geçişte}]. "
+            "(tek paragraf ya da hücre), 'yeni': yerine gelecek metin, 'gerekce': değişikliğin tek cümlelik gerekçesi (Word'de yorum olur; izli kipte, ana metinde), 'hepsi': true ise her geçişte}]. "
             "Etiketleri ({{KİŞİ-01}}) koru. Yanıtta gerçek değer bulunmaz."
         ),
     )
