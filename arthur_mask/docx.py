@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
 from urllib.parse import unquote
 
+from .dil import cevN
 from .cikis import CikisDenetimi, normallestir
 from .kasa import Kasa
 from .maskeleyici import Degisiklik
@@ -97,7 +98,7 @@ def oku(yol: Path) -> DocxBelge:
         with zipfile.ZipFile(yol) as zf:
             girdiler = arsiv_oku(zf, yol.name, DocxHatasi)
     except zipfile.BadZipFile as hata:
-        raise DocxHatasi(f"{yol} geçerli bir .docx değil (Word 97-2003 .doc ise .docx olarak kaydedin).") from hata
+        raise DocxHatasi(cevN("{0} geçerli bir .docx değil (Word 97-2003 .doc ise .docx olarak kaydedin).").format(yol)) from hata
 
     adlar = [b.filename for b, _ in girdiler]
     if "word/document.xml" not in adlar:
@@ -129,19 +130,20 @@ def oku(yol: Path) -> DocxBelge:
         except ET.ParseError:
             ayni = False
         if not ayni:
-            raise DocxHatasi(f"{yol.name} içindeki {ad} alışılmadık biçimde yazılmış (Word dışı bir program üretmiş "
-                             "olabilir); güvenle maskelenemiyor. Belgeyi Word'de açıp .docx olarak yeniden kaydedin.")
+            raise DocxHatasi(cevN("{0} içindeki {1} alışılmadık biçimde yazılmış (Word dışı bir program üretmiş "
+                                  "olabilir); güvenle maskelenemiyor. Belgeyi Word'de açıp .docx olarak yeniden "
+                                  "kaydedin.").format(yol.name, ad))
 
     uyarilar = []
     govde = parcalar["word/document.xml"]
     if "<w:del " in govde or "<w:ins " in govde:
-        uyarilar.append("Belgede izlenen değişiklikler var; silinmiş metin de maskelendi, yine de göndermeden önce değişiklikleri kabul edin.")
+        uyarilar.append(cevN("Belgede izlenen değişiklikler var; silinmiş metin de maskelendi, yine de göndermeden önce değişiklikleri kabul edin."))
     if "word/comments.xml" in parcalar:
-        uyarilar.append("Belgede yorumlar var; yorum metni maskelendi, gerekmiyorsa yorumları silin.")
+        uyarilar.append(cevN("Belgede yorumlar var; yorum metni maskelendi, gerekmiyorsa yorumları silin."))
     if any(a.startswith("word/media/") for a in adlar):
-        uyarilar.append("Belgede görsel var (imza, kimlik fotokopisi vb.); görseller MASKELENMEZ.")
+        uyarilar.append(cevN("Belgede görsel var (imza, kimlik fotokopisi vb.); görseller MASKELENMEZ."))
     if any(a.startswith("word/embeddings/") for a in adlar):
-        uyarilar.append("Belgede gömülü nesne var; gömülü dosyalar MASKELENMEZ.")
+        uyarilar.append(cevN("Belgede gömülü nesne var; gömülü dosyalar MASKELENMEZ."))
     return DocxBelge(girdiler, parcalar, dugumler, "".join(metin_parcalari), uyarilar)
 
 

@@ -15,6 +15,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
 
+from .dil import cevN
 from . import belgeler, docx, docx_yapi, surum, tutarlilik, udf
 from .cikis import CikisDenetimi
 from .depo import Depo, simdi
@@ -78,11 +79,12 @@ def sayfala(ogeler: List[Dict], boy: int = MCP_PARCA_KARAKTER) -> List[List[Dict
 
 
 def _sayim_metni(sayim: Dict[str, int]) -> str:
-    adlar = [("degisen", "paragraf değişti"), ("eklenen", "paragraf eklendi"), ("silinen", "paragraf silindi"),
-             ("satir_eklenen", "tablo satırı eklendi"), ("satir_silinen", "tablo satırı silindi"),
-             ("tablo_eklenen", "tablo eklendi"), ("tablo_silinen", "tablo silindi")]
-    parcalar = [f"{sayim[k]} {ad}" for k, ad in adlar if sayim.get(k)]
-    return ", ".join(parcalar) if parcalar else "gövde metninde fark bulunmadı"
+    adlar = [("degisen", cevN("{0} paragraf değişti")), ("eklenen", cevN("{0} paragraf eklendi")),
+             ("silinen", cevN("{0} paragraf silindi")), ("satir_eklenen", cevN("{0} tablo satırı eklendi")),
+             ("satir_silinen", cevN("{0} tablo satırı silindi")), ("tablo_eklenen", cevN("{0} tablo eklendi")),
+             ("tablo_silinen", cevN("{0} tablo silindi"))]
+    parcalar = [kalip.format(sayim[k]) for k, kalip in adlar if sayim.get(k)]
+    return ", ".join(parcalar) if parcalar else cevN("gövde metninde fark bulunmadı")
 
 
 class Islem:
@@ -132,7 +134,8 @@ class Islem:
     def arayuz_belge_isle(self, klasor: str, dosya_adi: str, veri: bytes) -> Dict:
         uzanti = Path(dosya_adi).suffix.lower()
         if uzanti not in belgeler.DESTEKLENEN:
-            raise IslemHatasi(f"Desteklenmeyen biçim: {uzanti or 'uzantısız'} ({', '.join(belgeler.DESTEKLENEN)})")
+            raise IslemHatasi(cevN("Desteklenmeyen biçim: {0} ({1})").format(
+                uzanti or cevN("uzantısız"), ", ".join(belgeler.DESTEKLENEN)))
         # Özgün yalnız ayrıştırma süresince, kullanıcıya özel geçici klasörde durur.
         with tempfile.TemporaryDirectory(prefix="arthurmask-") as gecici:
             yol = Path(gecici) / f"girdi{uzanti}"
@@ -209,12 +212,12 @@ class Islem:
                             birakilacak: List[int], gerekce: str = "") -> Dict:
         kayit = self.depo.belge_oku(klasor, belge_id)
         if kayit["kirmizi_hat"] and not gerekce.strip():
-            raise IslemHatasi("Kırmızı hat içeren belge gerekçe yazılmadan Claude'a verilemez.")
+            raise IslemHatasi(cevN("Kırmızı hat içeren belge gerekçe yazılmadan Claude'a verilemez."))
         bekleyen = self._bekleyen.get((klasor, belge_id))
         # Şüpheli adaylar yalnız bellekte durur; uygulama yeniden başladıysa avukat onları görmeden onaylayamaz,
         # yoksa incelenmemiş adlar maskesiz Claude'a gider.
         if not bekleyen and (maskelenecek or (kayit["durum"] != DURUM_HAZIR and kayit.get("supheli_sayisi", 0) > 0)):
-            raise IslemHatasi("Onay bilgisi bu oturumda yok (uygulama yeniden başlamış). Belgeyi yeniden yükleyin.")
+            raise IslemHatasi(cevN("Onay bilgisi bu oturumda yok (uygulama yeniden başlamış). Belgeyi yeniden yükleyin."))
 
         if bekleyen:
             belge, bulgular, supheli = bekleyen
@@ -268,7 +271,7 @@ class Islem:
             self.depo.gizli_kaydet(klasor, f"{kayit['id']}.tutarlilik", {"olusturma": simdi(), **tam})
         except Exception as hata:  # noqa: BLE001 - denetim maskelemeyi durdurmaz; istisna metni belge içerebilir
             gunluk.error("Tutarlılık denetimi yapılamadı (%s).", type(hata).__name__)
-            kayit["tutarlilik"] = {"hata": "Tutarlılık denetimi bu belgede yapılamadı."}
+            kayit["tutarlilik"] = {"hata": cevN("Tutarlılık denetimi bu belgede yapılamadı.")}
             return
         kayit["tutarlilik"] = maskeli
 
@@ -278,8 +281,8 @@ class Islem:
         try:
             rapor = self.depo.gizli_oku(klasor, f"{belge_id}.tutarlilik")
         except FileNotFoundError:
-            raise IslemHatasi("Bu belgenin tutarlılık raporu yok: belge bu özellikten önce yüklenmiş ya da süresi "
-                              "dolmuş. Belgeyi silip yeniden bırakın.")
+            raise IslemHatasi(cevN("Bu belgenin tutarlılık raporu yok: belge bu özellikten önce yüklenmiş ya da süresi "
+                                   "dolmuş. Belgeyi silip yeniden bırakın."))
         return {"belge": belge_id, "kaynak_ad": kayit["kaynak_ad"], **rapor}
 
     def mcp_tutarlilik(self, kimlik: str, parca: int = 1) -> Dict:
@@ -314,22 +317,22 @@ class Islem:
         normal maskeleme akışından geçer; Claude'a giden özet sonradan maskeli kopyalardan üretilir."""
         for ad in (ozgun_adi, yeni_adi):
             if Path(ad).suffix.lower() != ".docx":
-                raise IslemHatasi("Sürüm karşılaştırması yalnız Word (.docx) belgelerinde yapılır.")
+                raise IslemHatasi(cevN("Sürüm karşılaştırması yalnız Word (.docx) belgelerinde yapılır."))
         try:
             izli, sayim, uyarilar = surum.izli_karsilastirma(ozgun, yeni)
         except surum.SurumHatasi as hata:
             raise IslemHatasi(str(hata)) from hata
         kayit_ozgun = self.arayuz_belge_isle(klasor, ozgun_adi, ozgun)
         kayit_yeni = self.arayuz_belge_isle(klasor, yeni_adi, yeni)
-        baslik = f"Sürüm karşılaştırması {kayit_ozgun['id']} - {kayit_yeni['id']}"
+        baslik = cevN("Sürüm karşılaştırması {0} - {1}").format(kayit_ozgun["id"], kayit_yeni["id"])
         hedef = self.depo.cevap_yolu(klasor, baslik, ".docx")
         hedef.write_bytes(izli)
         meta = {
             "olusturma": simdi(), "baslik": baslik, "bicim": "docx", "dosya": hedef.name, "tur": "karsilastirma",
             "izli": True, "ozgun": kayit_ozgun["id"], "yeni": kayit_yeni["id"], "sayim": sayim, "uyarilar": uyarilar,
             "cozulen": 0, "bilinmeyen": [],
-            "maskeli_metin": f"{kayit_ozgun['id']} (özgün) ile {kayit_yeni['id']} (yeni sürüm) karşılaştırıldı: "
-                             f"{_sayim_metni(sayim)}.",
+            "maskeli_metin": cevN("{0} (özgün) ile {1} (yeni sürüm) karşılaştırıldı: {2}.").format(
+                kayit_ozgun["id"], kayit_yeni["id"], _sayim_metni(sayim)),
         }
         self.depo.cevap_kaydet(klasor, meta, hedef)
         for kayit, rol, karsi in ((kayit_ozgun, "özgün", kayit_yeni), (kayit_yeni, "yeni", kayit_ozgun)):
@@ -474,15 +477,17 @@ class Islem:
         for kayit in self.depo.belgeler(klasor):
             if kayit["durum"] != DURUM_HAZIR:
                 continue
-            kaynaklar.append((f"{kayit['id']} · maskeli metin (çıkış kapısından önce)", kayit["maskeli_metin"]))
+            kaynaklar.append((cevN("{0} · maskeli metin (çıkış kapısından önce)").format(kayit["id"]),
+                              kayit["maskeli_metin"]))
             kopya = self.depo.dosya_yolu(klasor) / "maskeli" / kayit.get("maskeli_kopya", "")
             if kayit["bicim"] == ".docx" and kayit.get("maskeli_kopya") and kopya.is_file():
-                kaynaklar.append((f"{kayit['id']} · Word görünümü (çıkış kapısından önce)", docx_yapi.claude_gorunumu(kopya)))
+                kaynaklar.append((cevN("{0} · Word görünümü (çıkış kapısından önce)").format(kayit["id"]),
+                                  docx_yapi.claude_gorunumu(kopya)))
         for giden in self.depo.gidenler(klasor, en_fazla=10_000):
-            kaynaklar.append((f"Claude'a giden yanıt · {giden['arac']} · {giden['zaman']}",
+            kaynaklar.append((cevN("Claude'a giden yanıt · {0} · {1}").format(giden["arac"], giden["zaman"]),
                               json.dumps(giden.get("yanit"), ensure_ascii=False)))
         for cevap in self.depo.cevaplar(klasor):
-            kaynaklar.append((f"Claude'un yazdığı metin · {cevap['baslik']}", cevap.get("maskeli_metin", "")))
+            kaynaklar.append((cevN("Claude'un yazdığı metin · {0}").format(cevap["baslik"]), cevap.get("maskeli_metin", "")))
 
         bulgular = []
         for ad, metin in kaynaklar:

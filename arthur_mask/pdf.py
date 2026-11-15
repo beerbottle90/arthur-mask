@@ -16,6 +16,7 @@ from typing import List
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
+from .dil import cevN
 from .sinirlar import AZAMI_PDF_SAYFASI
 
 SAYFA_AYRACI = "\n\f\n"
@@ -38,22 +39,24 @@ def oku(yol: Path) -> PdfBelge:
     try:
         okuyucu = PdfReader(str(yol))
     except PdfReadError as hata:
-        raise PdfHatasi(f"{yol} okunamadı: {hata}") from hata
+        raise PdfHatasi(cevN("{0} okunamadı: {1}").format(yol, hata)) from hata
     if okuyucu.is_encrypted:
-        raise PdfHatasi(f"{yol} parolalı; önce parolasını kaldırın.")
+        raise PdfHatasi(cevN("{0} parolalı; önce parolasını kaldırın.").format(yol))
     if len(okuyucu.pages) > AZAMI_PDF_SAYFASI:
-        raise PdfHatasi(f"{yol.name} {len(okuyucu.pages)} sayfa; en çok {AZAMI_PDF_SAYFASI} sayfalık PDF maskelenir. "
-                        "Belgeyi bölüp parça parça yükleyin.")
+        raise PdfHatasi(cevN("{0} {1} sayfa; en çok {2} sayfalık PDF maskelenir. Belgeyi bölüp parça parça "
+                             "yükleyin.").format(yol.name, len(okuyucu.pages), AZAMI_PDF_SAYFASI))
 
     sayfalar = [(sayfa.extract_text() or "").replace("\r\n", "\n") for sayfa in okuyucu.pages]
     bos = [i + 1 for i, s in enumerate(sayfalar) if len(s.strip()) < MIN_KARAKTER_SAYFA_BASI]
     if len(bos) == len(sayfalar):
         raise PdfHatasi(
-            f"{yol} metin katmanı içermiyor (taranmış belge). OCR ile metin katmanı oluşturmadan maskelenemez."
+            cevN("{0} metin katmanı içermiyor (taranmış belge). OCR ile metin katmanı oluşturmadan maskelenemez.")
+            .format(yol)
         )
-    uyarilar = ["Maskeli çıktı PDF değil, metindir; özgün PDF'in kendisi gönderilmez."]
+    uyarilar = [cevN("Maskeli çıktı PDF değil, metindir; özgün PDF'in kendisi gönderilmez.")]
     if bos:
         uyarilar.append(
-            f"Metni olmayan sayfalar: {', '.join(map(str, bos))}. Taranmış sayfa olabilir; bu sayfalardaki veri MASKELENMEDİ."
+            cevN("Metni olmayan sayfalar: {0}. Taranmış sayfa olabilir; bu sayfalardaki veri MASKELENMEDİ.")
+            .format(", ".join(map(str, bos)))
         )
     return PdfBelge(SAYFA_AYRACI.join(sayfalar), len(sayfalar), uyarilar, bos)

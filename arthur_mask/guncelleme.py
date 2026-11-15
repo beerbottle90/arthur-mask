@@ -32,6 +32,7 @@ BASLIK_SURUMU = re.compile(r"Arthur\s*Mask\s+v?(\d+\.\d+\.\d+)")  # eski başlı
 YENILEME_SANIYE = 24 * 3600
 
 _sonuc: Optional[Dict] = None
+_son_durum: Optional[Dict] = None
 
 
 def _surum(metin: str):
@@ -63,22 +64,37 @@ def en_yeni(surumler_json) -> Optional[Dict]:
     return en_iyi
 
 
-def _denetle() -> None:
-    global _sonuc
+def _denetle(zorla: bool = False) -> Dict:
+    """Sürüm sayfasına bakar (günde bir; `zorla` ile hemen). Sonuç: {durum: guncel|yeni|hata, denetim, ...}."""
+    global _sonuc, _son_durum
     onbellek = uygulama_klasoru() / "guncelleme.json"
     try:
-        if onbellek.exists() and time.time() - onbellek.stat().st_mtime < YENILEME_SANIYE:
+        if not zorla and onbellek.exists() and time.time() - onbellek.stat().st_mtime < YENILEME_SANIYE:
             veri = json.loads(onbellek.read_text(encoding="utf-8"))
+            zaman = onbellek.stat().st_mtime
         else:
             istek = urllib.request.Request(SURUM_ADRESI, headers={
                 "Accept": "application/vnd.github+json", "User-Agent": f"ArthurMask/{__version__}"})
             with urllib.request.urlopen(istek, timeout=10) as yanit:  # noqa: S310 - sabit https adresi
                 veri = en_yeni(surum_listesi(json.loads(yanit.read()))) or {}
             onbellek.write_text(json.dumps(veri), encoding="utf-8")
-        if veri.get("surum") and _surum(veri["surum"]) > _surum(__version__):
-            _sonuc = veri
+            zaman = time.time()
+        yeni = bool(veri.get("surum") and _surum(veri["surum"]) > _surum(__version__))
+        _sonuc = veri if yeni else None
+        _son_durum = {"durum": "yeni" if yeni else "guncel", "denetim": int(zaman), **({"son": veri} if yeni else {})}
     except Exception as hata:  # noqa: BLE001 - çevrimdışı çalışmak normaldir
         gunluk.info("Güncelleme denetlenemedi (%s).", type(hata).__name__)
+        _son_durum = {"durum": "hata", "denetim": int(time.time())}
+    return _son_durum
+
+
+def denetle(zorla: bool = False) -> Dict:
+    """Üst şeridin "Güncellemeleri denetle" düğmesi (ArthurLegal kurulu değilken)."""
+    if os.environ.get("ARTHUR_MASK_GUNCELLEME") == "kapali":
+        return {"durum": "hata", "denetim": int(time.time()), "kapali": True}
+    if not zorla and _son_durum is not None:
+        return _son_durum
+    return _denetle(zorla)
 
 
 def arkaplanda_denetle() -> None:

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, List, Optional, Sequence
 
+from .dil import cevN
 from . import docx, goruntu, pdf, udf
 from .maskeleyici import Degisiklik, degisiklikleri_uygula
 
@@ -68,8 +69,8 @@ def ac(yol: Path) -> Belge:
     except (udf.UdfHatasi, docx.DocxHatasi, pdf.PdfHatasi, goruntu.OcrHatasi) as hata:
         raise BelgeHatasi(str(hata)) from hata
     if uzanti == ".doc":
-        raise BelgeHatasi("Word 97-2003 (.doc) desteklenmez; belgeyi .docx olarak kaydedin.")
-    raise BelgeHatasi(f"Desteklenmeyen biçim: {uzanti} (desteklenen: {', '.join(DESTEKLENEN)})")
+        raise BelgeHatasi(cevN("Word 97-2003 (.doc) desteklenmez; belgeyi .docx olarak kaydedin."))
+    raise BelgeHatasi(cevN("Desteklenmeyen biçim: {0} (desteklenen: {1})").format(uzanti, ", ".join(DESTEKLENEN)))
 
 
 def _ocr_ile_ac(yol: Path) -> Belge:

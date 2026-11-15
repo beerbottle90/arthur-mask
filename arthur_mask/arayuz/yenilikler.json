@@ -1,0 +1,25 @@
+{
+ "1.4.0": {
+  "tr": [
+   "Üst şerit: bağlantı durumu, sürüm, güncelleme denetimi, görünüm ve yardım menüleri bir arada.",
+   "Şimdi güncelle: ArthurLegal'in imzalı güncelleyicisi arka planda çalışır; pencereyi kapatabilirsiniz.",
+   "Bütün ekran Türkçe, Azerbaycanca ve İngilizce; dil seçimi öteki ArthurLegal arayüzleriyle ortak.",
+   "Yazı boyutu (Büyük, Çok büyük) ve yüksek karşıtlık seçenekleri.",
+   "Sistem bilgisini tek tıkla kopyalayın; destek isterken belge ya da müvekkil bilgisi gitmez."
+  ],
+  "az": [
+   "Yuxarı zolaq: bağlantı vəziyyəti, versiya, yeniləmə yoxlaması, görünüş və kömək menyuları bir yerdə.",
+   "İndi yenilə: ArthurLegal-ın imzalı yeniləyicisi arxa planda işləyir; pəncərəni bağlaya bilərsiniz.",
+   "Bütün ekran türk, Azərbaycan və ingilis dillərində; dil seçimi digər ArthurLegal interfeysləri ilə ortaqdır.",
+   "Şrift ölçüsü (Böyük, Çox böyük) və yüksək kontrast seçimləri.",
+   "Sistem məlumatını bir kliklə kopyalayın; dəstək istəyərkən sənəd və ya müştəri məlumatı göndərilmir."
+  ],
+  "en": [
+   "Top bar: connection status, version, update check, display and help menus in one place.",
+   "Update now: ArthurLegal's signed updater runs in the background; you can close the window.",
+   "The whole screen in Turkish, Azerbaijani and English; the language choice is shared with the other ArthurLegal interfaces.",
+   "Text size (Large, Extra large) and high contrast options.",
+   "Copy system information in one click; no document or client information is included when you ask for support."
+  ]
+ }
+}

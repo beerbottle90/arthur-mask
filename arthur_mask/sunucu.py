@@ -17,6 +17,7 @@ import socket
 import subprocess
 import sys
 import threading
+import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib import resources
@@ -24,8 +25,9 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import __version__, guncelleme
+from . import __version__, guncelleme, serit
 from .anahtar import ozel_yaz, uygulama_klasoru
+from .dil import cevN
 from .islem import Islem, IslemHatasi
 
 gunluk = logging.getLogger("arthur_mask.sunucu")
@@ -114,7 +116,7 @@ class _Isleyici(BaseHTTPRequestHandler):
     def _govde_json(self) -> dict:
         uzunluk = int(self.headers.get("Content-Length") or 0)
         if uzunluk > AZAMI_YUKLEME:
-            raise IslemHatasi("İstek çok büyük.")
+            raise IslemHatasi(cevN("İstek çok büyük."))
         return json.loads(self.rfile.read(uzunluk) or b"{}")
 
     # -- yönlendirme ---------------------------------------------------------------------
@@ -129,22 +131,24 @@ class _Isleyici(BaseHTTPRequestHandler):
 
     def _yonlendir(self, yontem: str) -> None:
         if not self._host_gecerli():
-            return self._json(HTTPStatus.MISDIRECTED_REQUEST, {"hata": "Geçersiz Host"})
+            return self._json(HTTPStatus.MISDIRECTED_REQUEST, {"hata": cevN("Geçersiz Host")})
         adres = urlparse(self.path)
         yol = adres.path
 
         if yontem == "GET" and not yol.startswith("/api/"):
             return self._statik(yol)
         if not self._origin_gecerli():
-            return self._json(HTTPStatus.FORBIDDEN, {"hata": "Köken reddedildi"})
+            return self._json(HTTPStatus.FORBIDDEN, {"hata": cevN("Köken reddedildi")})
         if not self._yetkili():
-            return self._json(HTTPStatus.UNAUTHORIZED, {"hata": "Belirteç eksik ya da yanlış"})
+            return self._json(HTTPStatus.UNAUTHORIZED, {"hata": cevN("Belirteç eksik ya da yanlış")})
 
         islem = self.uygulama.islem
         parcalar = [unquote(p) for p in yol.split("/")[2:] if p]
         try:
             if yontem == "GET" and parcalar == ["durum"]:
                 return self._json(200, self.uygulama.durum())
+            if parcalar[:1] == ["serit"]:
+                return self._serit(yontem, parcalar[1:])
             if yontem == "GET" and parcalar == ["dosyalar"]:
                 return self._json(200, {"dosyalar": islem.depo.dosyalar(), "aktif": islem.depo.aktif_dosya})
             if yontem == "POST" and parcalar == ["dosyalar"]:
@@ -165,7 +169,7 @@ class _Isleyici(BaseHTTPRequestHandler):
                 if kaynak == "belgeler" and len(parcalar) == 3 and yontem == "POST":
                     uzunluk = int(self.headers.get("Content-Length") or 0)
                     if not 0 < uzunluk <= AZAMI_YUKLEME:
-                        raise IslemHatasi("Belge boş ya da 60 MB'tan büyük.")
+                        raise IslemHatasi(cevN("Belge boş ya da 60 MB'tan büyük."))
                     dosya_adi = unquote(self.headers.get("X-Dosya-Adi", "belge"))
                     return self._json(201, islem.arayuz_belge_isle(klasor, dosya_adi, self.rfile.read(uzunluk)))
                 if kaynak == "belgeler" and len(parcalar) == 5 and parcalar[4] == "onay" and yontem == "POST":
@@ -202,16 +206,38 @@ class _Isleyici(BaseHTTPRequestHandler):
             if yontem == "POST" and parcalar == ["coz"]:
                 govde = self._govde_json()
                 return self._json(200, islem.arayuz_coz(govde.get("metin", ""), govde.get("klasor")))
-            return self._json(HTTPStatus.NOT_FOUND, {"hata": "Bulunamadı"})
+            return self._json(HTTPStatus.NOT_FOUND, {"hata": cevN("Bulunamadı")})
         except IslemHatasi as hata:
             return self._json(HTTPStatus.UNPROCESSABLE_ENTITY, {"hata": str(hata)})
         except (FileNotFoundError, KeyError) as hata:
-            return self._json(HTTPStatus.NOT_FOUND, {"hata": f"Bulunamadı: {hata}"})
+            return self._json(HTTPStatus.NOT_FOUND, {"hata": cevN("Bulunamadı: {0}").format(hata)})
         except Exception as hata:  # noqa: BLE001 - istemciye iç ayrıntı sızdırma
             # Günlüğe yalnız yolun kalıbı ve hatanın türü: dosya adı ve istisna metni belge içeriği taşıyabilir.
             kalip = ["<dosya>" if i == 1 and parcalar[0] == "dosyalar" else p for i, p in enumerate(parcalar)]
             gunluk.error("API hatası: %s /api/%s (%s)", yontem, "/".join(kalip), type(hata).__name__)
-            return self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {"hata": "Beklenmeyen hata; günlüğe bakın."})
+            return self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {"hata": cevN("Beklenmeyen hata; günlüğe bakın.")})
+
+    def _serit(self, yontem: str, parcalar: list) -> None:
+        """Ortak üst şerit: GET bilgi, POST denetle, POST guncelle, GET tani, GET yenilikler, POST tercih."""
+        if yontem == "GET" and not parcalar:
+            return self._json(200, serit.bilgi())
+        if yontem == "POST" and parcalar == ["denetle"]:
+            return self._json(200, serit.denetle(zorla=self._govde_json().get("zorla") is True))
+        if yontem == "POST" and parcalar == ["guncelle"]:
+            return self._json(200, serit.guncellemeyi_baslat())
+        if yontem == "GET" and parcalar == ["tani"]:
+            return self._json(200, serit.tani())
+        if yontem == "GET" and parcalar == ["yenilikler"]:
+            return self._json(200, serit.yenilikler())
+        if yontem == "POST" and parcalar == ["tercih"]:
+            govde = self._govde_json()
+            if not isinstance(govde, dict):
+                raise IslemHatasi(cevN("Geçersiz tercih."))
+            try:
+                return self._json(200, serit.tercih_yaz(govde))
+            except ValueError:
+                raise IslemHatasi(cevN("Geçersiz tercih.")) from None
+        return self._json(HTTPStatus.NOT_FOUND, {"hata": cevN("Bulunamadı")})
 
     def _karsilastir(self, klasor: str) -> dict:
         """Gövde: özgün belgenin baytları ardından yeni sürümün baytları; ilkinin boyu X-Boyut-1 başlığında."""
@@ -221,7 +247,7 @@ class _Isleyici(BaseHTTPRequestHandler):
         except ValueError:
             ilk = -1
         if not 0 < uzunluk <= 2 * AZAMI_YUKLEME or not 0 < ilk < uzunluk:
-            raise IslemHatasi("Belgeler boş ya da toplamı 120 MB'tan büyük.")
+            raise IslemHatasi(cevN("Belgeler boş ya da toplamı 120 MB'tan büyük."))
         veri = self.rfile.read(uzunluk)
         ad1 = unquote(self.headers.get("X-Dosya-Adi-1", "ozgun.docx"))
         ad2 = unquote(self.headers.get("X-Dosya-Adi-2", "yeni.docx"))
@@ -231,11 +257,11 @@ class _Isleyici(BaseHTTPRequestHandler):
         ad = "index.html" if yol in ("", "/") else yol.lstrip("/")
         veri = _arayuz_dosyasi(ad)
         if veri is None:
-            return self._json(HTTPStatus.NOT_FOUND, {"hata": "Bulunamadı"})
+            return self._json(HTTPStatus.NOT_FOUND, {"hata": cevN("Bulunamadı")})
         if ad == "index.html":
             veri = veri.replace(b"{{SURUM}}", __version__.encode())
         tur = mimetypes.guess_type(ad)[0] or "application/octet-stream"
-        if tur.startswith("text/") or tur in ("application/javascript",):
+        if tur.startswith("text/") or tur in ("application/javascript", "application/json"):
             tur += "; charset=utf-8"
         self._gonder(200, veri, tur)
 
@@ -244,7 +270,7 @@ class _Isleyici(BaseHTTPRequestHandler):
         kayit = depo.belge_oku(klasor, belge_id)
         yol = depo.dosya_yolu(klasor) / "maskeli" / kayit.get("maskeli_kopya", "")
         if not kayit.get("maskeli_kopya") or not yol.is_file():
-            return self._json(HTTPStatus.NOT_FOUND, {"hata": "Maskeli kopya yok ya da süresi doldu"})
+            return self._json(HTTPStatus.NOT_FOUND, {"hata": cevN("Maskeli kopya yok ya da süresi doldu")})
         tur = "application/pdf" if yol.suffix == ".pdf" else "application/octet-stream"
         self._gonder(200, yol.read_bytes(), tur, {"Content-Disposition": f'inline; filename="{yol.name}"'})
 
@@ -253,7 +279,7 @@ class _Isleyici(BaseHTTPRequestHandler):
         klasor_yolu = (self.uygulama.islem.depo.dosya_yolu(klasor) / "cevaplar").resolve()
         yol = (klasor_yolu / ad).resolve()
         if yol.parent != klasor_yolu or not yol.is_file() or yol.suffix == ".json":
-            raise IslemHatasi("Cevap dosyası bulunamadı.")
+            raise IslemHatasi(cevN("Cevap dosyası bulunamadı."))
         if sys.platform == "win32":
             if klasorde:
                 subprocess.Popen(["explorer", "/select,", str(yol)])
@@ -267,7 +293,7 @@ class _Isleyici(BaseHTTPRequestHandler):
         klasor_yolu = self.uygulama.islem.depo.dosya_yolu(klasor) / "cevaplar"
         yol = (klasor_yolu / ad).resolve()
         if yol.parent != klasor_yolu.resolve() or not yol.is_file() or yol.suffix == ".json":
-            return self._json(HTTPStatus.NOT_FOUND, {"hata": "Bulunamadı"})
+            return self._json(HTTPStatus.NOT_FOUND, {"hata": cevN("Bulunamadı")})
         guvenli_ad = yol.name.encode("ascii", "ignore").decode() or "cevap"
         self._gonder(200, yol.read_bytes(), "application/octet-stream", {
             "Content-Disposition": f"attachment; filename=\"{guvenli_ad}\"; filename*=UTF-8''{__import__('urllib.parse').parse.quote(yol.name)}",
@@ -284,6 +310,7 @@ class YerelSunucu:
         self.belirtec = belirtec or belirtec_al()
         self.eklenti_kokenleri = set(eklenti_kokenleri)
         self._httpd: Optional[ThreadingHTTPServer] = None
+        self._claude_kaydi = (0.0, False)
 
     def _kurtarma_isareti(self):
         return uygulama_klasoru() / "kurtarma-saklandi"
@@ -298,11 +325,25 @@ class YerelSunucu:
     def kurtarma_onayla(self) -> None:
         self._kurtarma_isareti().write_text("1", encoding="utf-8")
 
+    def claude_kayitli(self) -> bool:
+        """Claude Desktop yapılandırmasında bu kurulumun kaydı var mı (30 sn önbellekli; şerit 5 sn'de bir sorar)."""
+        zaman, deger = self._claude_kaydi
+        if time.time() - zaman > 30:
+            from .claude_ayari import kayitli_mi
+
+            try:
+                deger = kayitli_mi()
+            except Exception:  # noqa: BLE001 - ölçülemeyen kayıt "kayıtlı" gösterilmez
+                deger = False
+            self._claude_kaydi = (time.time(), deger)
+        return deger
+
     def durum(self) -> dict:
         from .goruntu import ocr_kullanilabilir_mi
 
         return {
             "kopru": self.kopru,
+            "claude_kayitli": self.claude_kayitli(),
             "ocr": ocr_kullanilabilir_mi(),
             "kurtarma_saklandi": (not self.kurtarma_kodu) or self._kurtarma_isareti().exists(),
             "surum": __version__,
