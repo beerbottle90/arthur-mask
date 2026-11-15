@@ -387,7 +387,8 @@ function seritCiz() {
   let etiket = yazi;
   if (hal === "denetleniyor") yazi = etiket = cev("Denetleniyor…");
   else if (hal === "guncel") yazi = etiket = cev("Güncelsiniz (v{0}) · son denetim {1}", s.kurulu, s.denetim ? saat(s.denetim) : "—");
-  else if (hal === "yeni") { yazi = cev("Yeni sürüm: v{0}", s.son); etiket = cev("Yeni sürüm var: v{0}. Ayrıntılar için açın.", s.son); }
+  // Dört arayüzde aynı: görünen yazı "Yeni sürüm var" + altın nokta; sürüm numarası yalnız ipucunda (aria-label, title).
+  else if (hal === "yeni") { yazi = cev("Yeni sürüm var"); etiket = cev("Yeni sürüm var: v{0}. Ayrıntılar için açın.", s.son); }
   else if (hal === "guncelleniyor") yazi = etiket = cev("Güncelleniyor…");
   else if (hal === "bitti") yazi = etiket = cev("Yeni sürüm indi");
   else if (hal === "hata") { yazi = cev("Denetlenemedi"); etiket = cev("Denetlenemedi: internet yok ya da GitHub yanıt vermedi"); }
