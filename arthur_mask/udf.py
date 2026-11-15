@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, List, Sequence, Tuple
 
+from .dil import cevN
 from .maskeleyici import Degisiklik, degisiklikleri_uygula
 from .sinirlar import arsiv_oku
 
@@ -65,15 +66,15 @@ def oku(yol: Path) -> UdfBelge:
         with zipfile.ZipFile(yol) as zf:
             girdiler = arsiv_oku(zf, yol.name, UdfHatasi)
     except zipfile.BadZipFile as hata:
-        raise UdfHatasi(f"{yol} geçerli bir UDF (ZIP) değil.") from hata
+        raise UdfHatasi(cevN("{0} geçerli bir UDF (ZIP) değil.").format(yol)) from hata
     ham = next((veri for bilgi, veri in girdiler if bilgi.filename == ICERIK_XML), None)
     if ham is None:
-        raise UdfHatasi(f"{yol} içinde {ICERIK_XML} yok.")
+        raise UdfHatasi(cevN("{0} içinde {1} yok.").format(yol, ICERIK_XML))
     # XML ayrıştırıcıları satır sonlarını \n'e indirger; UYAP ofsetleri buna göre sayılır.
     xml = ham.decode("utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
     m = _ICERIK.search(xml)
     if not m:
-        raise UdfHatasi(f"{yol}: <content> bölümü bulunamadı.")
+        raise UdfHatasi(cevN("{0}: <content> bölümü bulunamadı.").format(yol))
     return UdfBelge(girdiler, xml, _icerik_coz(m.group(1)), m.start(), m.end())
 
 

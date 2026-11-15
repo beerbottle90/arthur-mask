@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
+from .dil import cevN
 from .sinirlar import AZAMI_GORUNTU_PIKSELI, AZAMI_OCR_SAYFASI
 
 gunluk = logging.getLogger("arthur_mask.goruntu")
@@ -62,8 +63,8 @@ class Sayfa:
 
 def _sayfa_siniri(yol: Path, sayi: int) -> None:
     if sayi > AZAMI_OCR_SAYFASI:
-        raise OcrHatasi(f"{yol.name} {sayi} sayfa; yerel OCR en çok {AZAMI_OCR_SAYFASI} sayfayı okur. "
-                        "Belgeyi bölüp parça parça yükleyin.")
+        raise OcrHatasi(cevN("{0} {1} sayfa; yerel OCR en çok {2} sayfayı okur. Belgeyi bölüp parça parça "
+                             "yükleyin.").format(yol.name, sayi, AZAMI_OCR_SAYFASI))
 
 
 def _olcek(genislik: float, yukseklik: float) -> float:
@@ -93,8 +94,8 @@ def sayfa_goruntuleri(yol: Path) -> List["object"]:
     for i in range(getattr(goruntu, "n_frames", 1)):
         goruntu.seek(i)
         if goruntu.size[0] * goruntu.size[1] > AZAMI_GORUNTU_PIKSELI:
-            raise OcrHatasi(f"{yol.name} çok büyük bir görüntü ({goruntu.size[0]}×{goruntu.size[1]}); "
-                            "daha düşük çözünürlükte tarayıp yeniden deneyin.")
+            raise OcrHatasi(cevN("{0} çok büyük bir görüntü ({1}×{2}); daha düşük çözünürlükte tarayıp yeniden "
+                                 "deneyin.").format(yol.name, goruntu.size[0], goruntu.size[1]))
         sayfalar.append(ImageOps.exif_transpose(goruntu.copy()).convert("RGB"))
     return sayfalar
 
@@ -256,12 +257,12 @@ def ocr_belgesi(yol: Path):
     """(metin, yazıcı, uyarılar): sayfaları OCR ile okur; yazıcı maskeli, görüntü tabanlı PDF üretir."""
     if not ocr_kullanilabilir_mi():
         raise OcrHatasi(
-            f"{yol.name} metin katmanı içermiyor ve yerel OCR kurulu değil "
-            '(pip install "arthur-mask[ocr]").'
+            cevN("{0} metin katmanı içermiyor ve yerel OCR kurulu değil ({1}).")
+            .format(yol.name, 'pip install "arthur-mask[ocr]"')
         )
     goruntuler = sayfa_goruntuleri(yol)
     if not goruntuler:
-        raise OcrHatasi(f"{yol.name} içinde sayfa bulunamadı.")
+        raise OcrHatasi(cevN("{0} içinde sayfa bulunamadı.").format(yol.name))
     motor = ocr_motoru()
     sayfalar = [motor.oku(g) for g in goruntuler]
     baslar, imlec = [], 0
@@ -270,16 +271,18 @@ def ocr_belgesi(yol: Path):
         imlec += len(sayfa.metin) + len(SAYFA_AYRACI)
     metin = SAYFA_AYRACI.join(s.metin for s in sayfalar)
     if not metin.strip(" \n\f"):
-        raise OcrHatasi(f"{yol.name} içinde okunabilir metin bulunamadı (boş, el yazısı ya da çok düşük çözünürlük).")
+        raise OcrHatasi(cevN("{0} içinde okunabilir metin bulunamadı (boş, el yazısı ya da çok düşük çözünürlük).")
+                        .format(yol.name))
 
     ortalama = sum(s.guven for s in sayfalar if s.metin) / max(1, sum(1 for s in sayfalar if s.metin))
     uyarilar = [
-        f"Belge yerel OCR ile okundu ({len(sayfalar)} sayfa, ortalama güven %{ortalama * 100:.0f}). "
-        "El yazısı, imza, mühür, fotoğraf ve karekod okunmaz ve MASKELENMEZ: maskeli kopyayı açıp kontrol edin.",
+        cevN("Belge yerel OCR ile okundu ({0} sayfa, ortalama güven %{1}). El yazısı, imza, mühür, fotoğraf ve "
+             "karekod okunmaz ve MASKELENMEZ: maskeli kopyayı açıp kontrol edin.")
+        .format(len(sayfalar), f"{ortalama * 100:.0f}"),
     ]
     zayif = [str(i + 1) for i, s in enumerate(sayfalar) if not s.metin or s.guven < DUSUK_GUVEN]
     if zayif:
-        uyarilar.append(f"Okuma güveni düşük ya da metinsiz sayfalar: {', '.join(zayif)}.")
+        uyarilar.append(cevN("Okuma güveni düşük ya da metinsiz sayfalar: {0}.").format(", ".join(zayif)))
 
     def yazici(degisiklikler, hedef: Path) -> None:
         maskeli = []

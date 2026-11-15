@@ -21,6 +21,7 @@ from decimal import Decimal, InvalidOperation
 from difflib import SequenceMatcher
 from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple
 
+from .dil import cevN
 from .turkce import ascii_kucuk
 
 
@@ -49,19 +50,19 @@ class TutarlilikBulgusu:
 
 
 KURAL_ADLARI = {
-    "terim_kullanilmiyor": "Tanımlanıp kullanılmayan terim",
-    "terim_tanimsiz": "Tanımlanmadan kullanılan terim (olası)",
-    "atif_madde_yok": "Var olmayan maddeye atıf",
-    "atif_alt_yok": "Var olmayan alt maddeye, fıkraya ya da bende atıf",
-    "taraf_turu": "Taraf unvanında şirket türü farkı",
-    "taraf_yazim": "Taraf unvanında yazım farkı",
-    "taraf_rol": "Aynı taraf rolü iki ayrı unvana bağlı",
-    "iki_dil_madde": "Sütunlar arası madde numarası farkı",
-    "iki_dil_atif": "Sütunlar arası atıf farkı",
-    "iki_dil_tutar": "Sütunlar arası tutar farkı",
-    "iki_dil_oran": "Sütunlar arası oran farkı",
-    "iki_dil_tarih": "Sütunlar arası tarih farkı",
-    "iki_dil_sayi": "Sütunlar arası sayı farkı",
+    "terim_kullanilmiyor": cevN("Tanımlanıp kullanılmayan terim"),
+    "terim_tanimsiz": cevN("Tanımlanmadan kullanılan terim (olası)"),
+    "atif_madde_yok": cevN("Var olmayan maddeye atıf"),
+    "atif_alt_yok": cevN("Var olmayan alt maddeye, fıkraya ya da bende atıf"),
+    "taraf_turu": cevN("Taraf unvanında şirket türü farkı"),
+    "taraf_yazim": cevN("Taraf unvanında yazım farkı"),
+    "taraf_rol": cevN("Aynı taraf rolü iki ayrı unvana bağlı"),
+    "iki_dil_madde": cevN("Sütunlar arası madde numarası farkı"),
+    "iki_dil_atif": cevN("Sütunlar arası atıf farkı"),
+    "iki_dil_tutar": cevN("Sütunlar arası tutar farkı"),
+    "iki_dil_oran": cevN("Sütunlar arası oran farkı"),
+    "iki_dil_tarih": cevN("Sütunlar arası tarih farkı"),
+    "iki_dil_sayi": cevN("Sütunlar arası sayı farkı"),
 }
 _ONEM_SIRASI = {"yüksek": 0, "orta": 1, "düşük": 2}
 _AZAMI_TANIMSIZ = 12
@@ -555,8 +556,8 @@ def _taraf_bulgulari(paragraflar, tanimlar_, varliklar_p) -> List[TutarlilikBulg
             (t1, k1), (t2, k2) = sorted(dolu.items(), key=lambda x: x[1][0].paragraf)[:2]
             bulgular.append(TutarlilikBulgusu(
                 "taraf_turu", "yüksek",
-                f"Aynı şirket iki farklı şirket türüyle yazılmış ({t1} / {t2}): {{0}} ve {{1}}. Doğru unvanı ticaret "
-                "sicilinden teyit edin.",
+                cevN("Aynı şirket iki farklı şirket türüyle yazılmış ({tur1} / {tur2}): {0} ve {1}. Doğru unvanı "
+                     "ticaret sicilinden teyit edin.").format("{0}", "{1}", tur1=t1, tur2=t2),
                 [k1[0], k2[0]]))
     cekirdekler = sorted(gruplar)
     for i, c1 in enumerate(cekirdekler):
@@ -569,7 +570,7 @@ def _taraf_bulgulari(paragraflar, tanimlar_, varliklar_p) -> List[TutarlilikBulg
                 k2 = next(iter(gruplar[c2].values()))[0]
                 bulgular.append(TutarlilikBulgusu(
                     "taraf_yazim", "orta",
-                    "Taraf unvanı iki farklı yazımla geçiyor: {0} ve {1}. Aynı taraf ise yazımı birleştirin.",
+                    cevN("Taraf unvanı iki farklı yazımla geçiyor: {0} ve {1}. Aynı taraf ise yazımı birleştirin."),
                     [k1, k2]))
 
     # Rol eşlemesi: '… ABC Enerji A.Ş. ("Satıcı")', imza ve taraf bloklarında 'SATICI: ABC …'.
@@ -620,7 +621,7 @@ def _taraf_bulgulari(paragraflar, tanimlar_, varliklar_p) -> List[TutarlilikBulg
                 continue
             bulgular.append(TutarlilikBulgusu(
                 "taraf_rol", "yüksek",
-                "{0} rolü belgede iki ayrı tarafa bağlanmış: {1} ve {2}.",
+                cevN("{0} rolü belgede iki ayrı tarafa bağlanmış: {1} ve {2}."),
                 [ilk[2], ilk[1], diger[1]]))
             break
     return bulgular
@@ -774,9 +775,9 @@ def _iki_dil_bulgulari(paragraflar, varlik_araliklari, atif_listesi) -> Tuple[Li
     atif_paragraf: Dict[int, List[Atif]] = defaultdict(list)
     for a in atif_listesi:
         atif_paragraf[a.paragraf].append(a)
-    adlar = {"tutar": ("iki_dil_tutar", "yüksek", "tutar"), "oran": ("iki_dil_oran", "yüksek", "oran"),
-             "tarih": ("iki_dil_tarih", "yüksek", "tarih"), "sayi": ("iki_dil_sayi", "orta", "sayı"),
-             "atif": ("iki_dil_atif", "yüksek", "atıf")}
+    adlar = {"tutar": ("iki_dil_tutar", "yüksek", cevN("tutar")), "oran": ("iki_dil_oran", "yüksek", cevN("oran")),
+             "tarih": ("iki_dil_tarih", "yüksek", cevN("tarih")), "sayi": ("iki_dil_sayi", "orta", cevN("sayı")),
+             "atif": ("iki_dil_atif", "yüksek", cevN("atıf"))}
     for (tablo, satir), sutunlar in sorted(hucreler.items()):
         if len(sutunlar) != 2:
             continue
@@ -809,8 +810,10 @@ def _iki_dil_bulgulari(paragraflar, varlik_araliklari, atif_listesi) -> Tuple[Li
         if sol_etiket and sag_etiket and sol_etiket[0] != sag_etiket[0]:
             bulgular.append(TutarlilikBulgusu(
                 "iki_dil_madde", "yüksek",
-                f"Tablo {tablo}, satır {satir}: sol sütunda madde {sol_etiket[0]}, sağ sütunda madde {sag_etiket[0]} "
-                "numarası var ({0} / {1}).", [sol_etiket[1], sag_etiket[1]]))
+                cevN("Tablo {tablo}, satır {satir}: sol sütunda madde {sol}, sağ sütunda madde {sag} numarası var "
+                     "({0} / {1}).").format("{0}", "{1}", tablo=tablo, satir=satir, sol=sol_etiket[0],
+                                            sag=sag_etiket[0]),
+                [sol_etiket[1], sag_etiket[1]]))
         for tur, (kural, onem, ad) in adlar.items():
             a, b = Counter(d for d, _ in sol.get(tur, ())), Counter(d for d, _ in sag.get(tur, ()))
             if a == b:
@@ -820,14 +823,16 @@ def _iki_dil_bulgulari(paragraflar, varlik_araliklari, atif_listesi) -> Tuple[Li
             if tur == "sayi" and (not yalniz_sol or not yalniz_sag):
                 continue  # rakamın bir sütunda yazıyla yazılması olağandır; yalnız iki yanda farklı rakam bildirilir
             if yalniz_sol and yalniz_sag:
-                sablon = f"Tablo {tablo}, satır {satir}: {ad} sütunlarda farklı: sol sütunda {{0}}, sağ sütunda {{1}}."
+                sablon = cevN("Tablo {tablo}, satır {satir}: {ad} sütunlarda farklı: sol sütunda {0}, sağ sütunda "
+                              "{1}.")
                 kanit = [yalniz_sol[0], yalniz_sag[0]]
             elif yalniz_sol:
-                sablon = f"Tablo {tablo}, satır {satir}: sol sütundaki {ad} {{0}} sağ sütunda yok."
+                sablon = cevN("Tablo {tablo}, satır {satir}: sol sütundaki {ad} {0} sağ sütunda yok.")
                 kanit = [yalniz_sol[0]]
             else:
-                sablon = f"Tablo {tablo}, satır {satir}: sağ sütundaki {ad} {{0}} sol sütunda yok."
+                sablon = cevN("Tablo {tablo}, satır {satir}: sağ sütundaki {ad} {0} sol sütunda yok.")
                 kanit = [yalniz_sag[0]]
+            sablon = sablon.format("{0}", "{1}", tablo=tablo, satir=satir, ad=ad)
             bulgular.append(TutarlilikBulgusu(kural, onem, sablon, kanit))
     return bulgular, satir_sayisi
 
@@ -892,31 +897,33 @@ def denetle(paragraflar: Sequence[MetinParagrafi], varliklar: Iterable[Tuple[int
         if not _kullanimlar(t, paragraflar, katlilar, tanim_araliklari):
             bulgular.append(TutarlilikBulgusu(
                 "terim_kullanilmiyor", "orta",
-                "{0} tanımlanmış ama belgenin başka bir yerinde kullanılmamış.", [t.kanit]))
+                cevN("{0} tanımlanmış ama belgenin başka bir yerinde kullanılmamış."), [t.kanit]))
     if len({t.anahtar for t in tanim_listesi}) >= 2:
         for kanitlar, _ in _tanimsiz_terimler(paragraflar, tanim_listesi, varlik_araliklari)[:_AZAMI_TANIMSIZ]:
             bulgular.append(TutarlilikBulgusu(
                 "terim_tanimsiz", "düşük",
-                f"{{0}} büyük harfle, tanımlı terim gibi {len(kanitlar)} kez kullanılmış ama belgede tanımı yok.",
+                cevN("{0} büyük harfle, tanımlı terim gibi {sayi} kez kullanılmış ama belgede tanımı yok.")
+                .format("{0}", sayi=len(kanitlar)),
                 [kanitlar[0]]))
     else:
-        notlar.append("Belgede tırnak içinde tanımlanmış terim azdı; tanımsız terim denetimi yapılmadı.")
+        notlar.append(cevN("Belgede tırnak içinde tanımlanmış terim azdı; tanımsız terim denetimi yapılmadı."))
 
     # 2) İç atıflar
     yapi = MaddeYapisi(paragraflar)
     atif_listesi = atiflar(paragraflar)
     if not yapi.maddeler:
         if atif_listesi:
-            notlar.append("Belgede madde numarası bulunamadı (otomatik numaralandırma okunamamış olabilir); "
-                          "iç atıflar denetlenmedi.")
+            notlar.append(cevN("Belgede madde numarası bulunamadı (otomatik numaralandırma okunamamış olabilir); "
+                               "iç atıflar denetlenmedi."))
     else:
         for a in atif_listesi:
             kural = yapi.var_mi(a)
             if kural:
                 bulgular.append(TutarlilikBulgusu(
                     kural, "yüksek" if kural == "atif_madde_yok" else "orta",
-                    "{0} atfı yapılmış ama belgede bu " + ("madde" if kural == "atif_madde_yok" else "alt madde, fıkra ya da bent")
-                    + " yok.", [Kanit(a.paragraf, a.bas, a.son)]))
+                    cevN("{0} atfı yapılmış ama belgede bu madde yok.") if kural == "atif_madde_yok"
+                    else cevN("{0} atfı yapılmış ama belgede bu alt madde, fıkra ya da bent yok."),
+                    [Kanit(a.paragraf, a.bas, a.son)]))
 
     # 3) Taraflar
     bulgular.extend(_taraf_bulgulari(paragraflar, tanim_listesi, varliklar_p))
@@ -925,7 +932,7 @@ def denetle(paragraflar: Sequence[MetinParagrafi], varliklar: Iterable[Tuple[int
     iki_dil, satir_sayisi = _iki_dil_bulgulari(paragraflar, varlik_araliklari, atif_listesi)
     bulgular.extend(iki_dil)
     if not satir_sayisi:
-        notlar.append("Çift dilli (iki sütunu farklı dilde) tablo bulunamadı; sütun karşılaştırması yapılmadı.")
+        notlar.append(cevN("Çift dilli (iki sütunu farklı dilde) tablo bulunamadı; sütun karşılaştırması yapılmadı."))
     sayilar = {"tanimli_terim": len({t.anahtar for t in tanim_listesi}), "ic_atif": len(atif_listesi),
                "sirket_unvani": sum(1 for _, v, _ in varliklar_p if v == "TR_TUZEL_KISI"),
                "iki_dilli_satir": satir_sayisi}
@@ -975,14 +982,14 @@ def yer_metni(paragraflar: Sequence[MetinParagrafi], yapi: MaddeYapisi, k: Kanit
     p = paragraflar[k.paragraf]
     parcalar = []
     if yapi.yer and yapi.yer[k.paragraf]:
-        parcalar.append(f"Madde {yapi.yer[k.paragraf]}")
+        parcalar.append(cevN("Madde {0}").format(yapi.yer[k.paragraf]))
     if p.tablo:
         tablo, satir, sutun = p.tablo
         dil = (diller or {}).get(tablo)
         ek = f" ({dil[0 if sutun == 1 else 1].upper()})" if dil and sutun in (1, 2) else ""
-        parcalar.append(f"Tablo {tablo}, satır {satir}, sütun {sutun}{ek}")
+        parcalar.append(cevN("Tablo {0}, satır {1}, sütun {2}").format(tablo, satir, sutun) + ek)
     elif not parcalar:
-        parcalar.append(f"paragraf {k.paragraf + 1}")
+        parcalar.append(cevN("paragraf {0}").format(k.paragraf + 1))
     return " · ".join(parcalar)
 
 

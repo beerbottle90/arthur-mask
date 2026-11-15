@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
+from .dil import cevN
 from .docx_agac import AgacHatasi, Oge, Paragraf, WordBelgesi, bloklar, hucreler, oznitelik, satirlar
 from .sinirlar import arsiv_oku
 
@@ -41,7 +42,7 @@ def girdiler(veri: bytes, ad: str = "belge") -> List[Tuple[zipfile.ZipInfo, byte
         with zipfile.ZipFile(io.BytesIO(veri)) as zf:
             return arsiv_oku(zf, ad, SurumHatasi)
     except zipfile.BadZipFile as hata:
-        raise SurumHatasi(f"{ad} geçerli bir Word (.docx) dosyası değil.") from hata
+        raise SurumHatasi(cevN("{0} geçerli bir Word (.docx) dosyası değil.").format(ad)) from hata
 
 
 def word_belgesi(veri_ya_da_girdiler, ad: str = "belge", donustur=None) -> WordBelgesi:
@@ -49,7 +50,7 @@ def word_belgesi(veri_ya_da_girdiler, ad: str = "belge", donustur=None) -> WordB
     try:
         return WordBelgesi({b.filename: v for b, v in liste}, donustur=donustur)
     except (AgacHatasi, UnicodeDecodeError) as hata:
-        raise SurumHatasi(f"{ad} okunamadı: {hata}") from hata
+        raise SurumHatasi(cevN("{0} okunamadı: {1}").format(ad, hata)) from hata
 
 
 # -- sözcük düzeyinde fark --------------------------------------------------------------------------
@@ -499,7 +500,7 @@ def _uygula(xml: str, duzenlemeler) -> str:
     cikti, imlec = [], 0
     for bas, son, metin, _ in sorted(duzenlemeler, key=lambda d: (d[0], d[1], d[3])):
         if bas < imlec:
-            raise SurumHatasi("Karşılaştırma düzenlemeleri çakıştı; bu belge çifti izli değişikliğe çevrilemedi.")
+            raise SurumHatasi(cevN("Karşılaştırma düzenlemeleri çakıştı; bu belge çifti izli değişikliğe çevrilemedi."))
         cikti.append(xml[imlec:bas])
         cikti.append(metin)
         imlec = max(imlec, son)
@@ -519,18 +520,19 @@ def izli_karsilastirma(eski_veri: bytes, yeni_veri: bytes, yazar: str = YAZAR) -
     eski_girdiler, yeni_girdiler = girdiler(eski_veri, "Özgün sürüm"), girdiler(yeni_veri, "Yeni sürüm")
     eski, yeni = word_belgesi(eski_girdiler, "Özgün sürüm"), word_belgesi(yeni_girdiler, "Yeni sürüm")
     if yeni.izli_degisiklik_var():
-        raise SurumHatasi("Yeni sürümde kabul edilmemiş izli değişiklikler var. Karşı tarafın değişikliklerini Word'de "
-                          "'Tümünü kabul et' ile kabul edip kaydedin (ya da temiz sürüm isteyin) ve yeniden deneyin.")
+        raise SurumHatasi(cevN("Yeni sürümde kabul edilmemiş izli değişiklikler var. Karşı tarafın değişikliklerini "
+                               "Word'de 'Tümünü kabul et' ile kabul edip kaydedin (ya da temiz sürüm isteyin) ve "
+                               "yeniden deneyin."))
     uyarilar = []
     if eski.izli_degisiklik_var():
-        uyarilar.append("Özgün sürümde kabul edilmemiş izli değişiklikler vardı; karşılaştırmada kabul edilmiş sayıldı.")
+        uyarilar.append(cevN("Özgün sürümde kabul edilmemiş izli değişiklikler vardı; karşılaştırmada kabul edilmiş sayıldı."))
     yazici = _Yazici(eski, yeni, yazar)
     _Hizalayici(eski, yeni, yazici).govde()
     yeni_xml = _uygula(yeni.xml, yazici.duzenlemeler)
     try:
         ET.fromstring(yeni_xml.encode("utf-8"))
     except ET.ParseError as hata:
-        raise SurumHatasi("İzli değişiklikli belge üretilemedi (Word yapısı beklenmedik).") from hata
+        raise SurumHatasi(cevN("İzli değişiklikli belge üretilemedi (Word yapısı beklenmedik).")) from hata
 
     eski_parcalar = {b.filename: v for b, v in eski_girdiler}
     farkli = []
@@ -540,9 +542,9 @@ def izli_karsilastirma(eski_veri: bytes, yeni_veri: bytes, yazar: str = YAZAR) -
     if any(_DIGER_PARCALAR.match(ad) and ad not in {b.filename for b, _ in yeni_girdiler} for ad in eski_parcalar):
         farkli.append("silinen parça")
     if farkli:
-        uyarilar.append("Üst/alt bilgi ya da dipnotlarda da fark var; bunlar izli değişikliğe işlenmedi, ayrıca kontrol edin.")
+        uyarilar.append(cevN("Üst/alt bilgi ya da dipnotlarda da fark var; bunlar izli değişikliğe işlenmedi, ayrıca kontrol edin."))
     if any(a.startswith("word/media/") for a in eski_parcalar) or any(b.filename.startswith("word/media/") for b, _ in yeni_girdiler):
-        uyarilar.append("Belgede görsel var; görsel değişiklikleri karşılaştırılmaz.")
+        uyarilar.append(cevN("Belgede görsel var; görsel değişiklikleri karşılaştırılmaz."))
 
     tampon = io.BytesIO()
     with zipfile.ZipFile(tampon, "w", zipfile.ZIP_DEFLATED) as zf:
