@@ -95,12 +95,15 @@ def test_baglantilar_yalniz_beerbottle90_onekiyle_gecer(kok):
     assert not serit.baglanti_gecerli('https://github.com/beerbottle90/x" onclick="y')
 
 
-def test_hata_ve_bozuk_cikti(kok):
+def test_hata_ve_bozuk_cikti(kok, monkeypatch):
     denetim_yaz(kok, durum="hata", hata="internet yok", son={}, yeni=[])
     sonuc = serit.denetle(zorla=True)
     assert sonuc["durum"] == "hata" and sonuc["hata"] == "internet yok"
+    # Denetim komutunu bilmeyen eski ArthurLegal JSON vermez: ArthurMask'in kendi bildirimcisine düşülür.
     (kok / "bin" / "al.py").write_text("print('JSON değil')", encoding="utf-8")
-    assert serit.denetle(zorla=True)["durum"] == "hata"
+    monkeypatch.setattr(guncelleme, "denetle", lambda zorla=False: {"durum": "guncel", "denetim": 1})
+    sonuc = serit.denetle(zorla=True)
+    assert sonuc["kaynak"] == "mask" and sonuc["durum"] == "guncel"
 
 
 def test_al_yoksa_kendi_bildirimcisine_duser(kok, monkeypatch):

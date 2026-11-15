@@ -111,7 +111,7 @@ def al_json(*argumanlar: str, zaman_asimi: float = 90) -> Dict:
         if isinstance(veri, dict):
             return veri
     gunluk.info("al.py JSON vermedi (çıkış %s).", sonuc.returncode)
-    return {"durum": "hata", "hata": "ArthurLegal yanıtı okunamadı"}
+    return {"durum": "hata", "hata": "ArthurLegal yanıtı okunamadı", "json_yok": True}
 
 
 # -- güncelleme denetimi ----------------------------------------------------------------------------------
@@ -199,7 +199,10 @@ def yedek_sonuc(zorla: bool) -> Dict:
 def denetle(zorla: bool = False) -> Dict:
     if not al_kurulu():
         return yedek_sonuc(zorla)
-    return al_sonucunu_ozetle(al_json("guncelle", "--denetle", "--json", *(["--zorla"] if zorla else [])))
+    ham = al_json("guncelle", "--denetle", "--json", *(["--zorla"] if zorla else []))
+    if ham.get("json_yok"):  # denetim komutu olmayan eski ArthurLegal: ArthurMask'in kendi bildirimcisi
+        return yedek_sonuc(zorla)
+    return al_sonucunu_ozetle(ham)
 
 
 def guncellemeyi_baslat() -> Dict:
