@@ -217,13 +217,27 @@ function etiketliMetin(metin) {
 const tarih = (iso) => new Date(iso).toLocaleString(DIL.yerel(), { dateStyle: "short", timeStyle: "short" });
 const saat = (sn) => new Date(sn * 1000).toLocaleTimeString(DIL.yerel(), { hour: "2-digit", minute: "2-digit" });
 
+// Pano: önce Clipboard API, olmazsa (izin yok, Safari'de bekleme sonrası) eski yöntem. Düğme her durumda sonucu söyler;
+// kopyalanamadıysa sessiz kalmaz.
+async function panoyaYaz(metin) {
+  try { await navigator.clipboard.writeText(metin); return true; } catch { /* eski yönteme geç */ }
+  const odak = document.activeElement;
+  const alan = el("textarea", { readonly: "" });
+  alan.value = metin;
+  alan.style.position = "fixed";
+  alan.style.left = "-9999px";
+  document.body.append(alan);
+  alan.select();
+  let oldu = false;
+  try { oldu = document.execCommand("copy"); } catch { oldu = false; }
+  alan.remove();
+  if (odak && odak.focus) odak.focus();  // klavyeyle kullanan yerini kaybetmesin
+  return oldu;
+}
 async function kopyala(metin, dugme) {
-  try {
-    await navigator.clipboard.writeText(metin);
-    const eski = dugme.textContent;
-    dugme.textContent = cev("Kopyalandı ✓");
-    setTimeout(() => { dugme.textContent = eski; }, 1500);
-  } catch { /* pano izni yoksa sessiz geç */ }
+  const eski = dugme.textContent;
+  dugme.textContent = (await panoyaYaz(metin)) ? cev("Kopyalandı ✓") : cev("Kopyalanamadı.");
+  setTimeout(() => { dugme.textContent = eski; }, 1500);
 }
 
 // Dış bağlantılar yalnız ArthurLegal'in GitHub sayfalarına açılır.
@@ -279,6 +293,20 @@ window.addEventListener("focus", () => { api("GET", "/api/serit").then((b) => te
 // -- açılır paneller (durum, güncelleme, görünüm, yardım): Esc kapatır, dışarı tıklamak kapatır -----------------
 const ACILIRLAR = [["durum-dugme", "durum-panel"], ["guncelle-dugme", "guncelle-panel"], ["gorunum-dugme", "gorunum-panel"],
   ["yardim-dugme", "yardim-panel"]];
+// Dar pencerede şerit iki satıra iner; düğmeye sağdan hizalı panel ekranın solundan taşar. Panel ekrana kaydırılır
+// (panelin kendi yazı ölçeği, zoom, hesaba katılır).
+function paneliSigdir(panel) {
+  panel.style.left = "";
+  panel.style.right = "";
+  const kenar = 8;
+  const r = panel.getBoundingClientRect();
+  if (r.left >= kenar && r.right <= innerWidth - kenar) return;
+  const olcek = panel.offsetWidth ? r.width / panel.offsetWidth : 1;
+  const kap = panel.parentElement.getBoundingClientRect();
+  const hedef = Math.max(kenar, Math.min(r.left, innerWidth - kenar - r.width));
+  panel.style.right = "auto";
+  panel.style.left = `${(hedef - kap.left) / olcek}px`;
+}
 function panelAc(dugmeId, ac = true) {
   for (const [d, p] of ACILIRLAR) {
     const acik = ac && d === dugmeId;
@@ -287,9 +315,21 @@ function panelAc(dugmeId, ac = true) {
   }
   if (ac) {
     const panel = $(ACILIRLAR.find(([d]) => d === dugmeId)[1]);
+    paneliSigdir(panel);
     const ilk = panel.querySelector("button, [href], input");
     if (ilk && dugmeId !== "durum-dugme") ilk.focus();
   }
+}
+window.addEventListener("resize", () => {
+  const acik = ACILIRLAR.find(([d]) => panelAcikMi(d));
+  if (acik) paneliSigdir($(acik[1]));
+});
+// Şeridin gerçek yüksekliği: dar pencerede iki satıra inince sol panel şeridin altında kalmasın.
+if (window.ResizeObserver) {
+  const serit = document.querySelector(".serit");
+  new ResizeObserver(() => {
+    document.documentElement.style.setProperty("--serit-ust", `${Math.ceil(serit.getBoundingClientRect().height)}px`);
+  }).observe(serit);
 }
 function panelKapat() { panelAc(null, false); }
 const panelAcikMi = (dugmeId) => $(dugmeId).getAttribute("aria-expanded") === "true";
@@ -556,7 +596,7 @@ $("sistem-kopyala").addEventListener("click", async () => {
   bildirim.textContent = cev("Hazırlanıyor…");
   try {
     const t = await api("GET", "/api/serit/tani");
-    await navigator.clipboard.writeText(sistemMetni(t));
+    if (!(await panoyaYaz(sistemMetni(t)))) throw new Error("pano");
     bildirim.textContent = cev("Sistem bilgisi kopyalandı.");
   } catch {
     bildirim.textContent = cev("Kopyalanamadı.");
