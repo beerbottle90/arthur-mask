@@ -11,6 +11,11 @@ sürüm listesinden yeni sürüm olup olmadığını okumak için çıkar.
 > bakımından kişisel veri olmaya devam eder. Araç riski düşürür, yükümlülüğü kaldırmaz:
 > yurt dışına aktarım (KVKK m.9) ve sır saklama (Av.K. m.36) değerlendirmesi ayrıca yapılır.
 
+> **ChatGPT:** ArthurMask'in ChatGPT masaüstü uygulamasıyla çalışması hazırlanıyor (ArthurLegal'in ChatGPT uyarlaması; araçları ChatGPT masaüstünde denendi). Bugün Claude Desktop ile çalışır.<br>
+> **ChatGPT:** support for the ChatGPT desktop app is in preparation as part of ArthurLegal's ChatGPT adaptation (the tools have been tested there). Today ArthurMask runs with Claude Desktop.<br>
+> **ChatGPT:** ArthurMask-in ChatGPT masaüstü tətbiqi ilə işləməsi hazırlanır (ArthurLegal-ın ChatGPT uyğunlaşdırması; alətlər orada sınaqdan keçirilib). Bu gün Claude Desktop ilə işləyir.<br>
+> <sub>ChatGPT ve OpenAI, OpenAI'ın markalarıdır · ChatGPT and OpenAI are trademarks of OpenAI.</sub>
+
 ## Ne yapar
 
 | Katman | Açıklama |
