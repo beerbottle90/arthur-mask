@@ -1,5 +1,7 @@
 /* ArthurMask: AL Masası'nın tasarımı. Renk, yazı ve köşe değerleri arthurlegal-app4all ortak/tasarim/al.css'ten
    birebir (açık tema varsayılan; koyu tema AL laciverti üstünde, altın aynı). Masa değişirse bu blok da güncellenir.
+   Tek ayrım --soluk: masadaki gri (#808a99 / #7c889c) küçük yazıda 4.5:1'in altında kalıyordu; burada bir ton koyu
+   (açıkta #646d7b, koyuda #909cb0), beyaz, grup ve seçili zeminde ≥ 4.5:1.
    Tema seçimi uygulama.js'te: <html data-tema="acik|koyu">. */
 
 :root {
@@ -12,7 +14,7 @@
   --cizgi-guclu: rgb(13 24 38 / 0.18);
   --metin: #0d1117;
   --ikincil: #4b5565;
-  --soluk: #808a99;
+  --soluk: #646d7b;
   --altin: #f7c948;
   --altin-metin: #8a6400;
   --lacivert: #12285a;
@@ -53,7 +55,7 @@
   --cizgi-guclu: rgb(255 255 255 / 0.16);
   --metin: #f2f4f8;
   --ikincil: #a7b3c6;
-  --soluk: #7c889c;
+  --soluk: #909cb0;
   --altin-metin: #f7cd55;
   --lacivert: #e8e4da;
   --birincil: #f7c948;
@@ -91,11 +93,13 @@ a { color: var(--altin-metin); font-weight: 600; text-underline-offset: 3px; }
 .gizli { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---- Düzen: Masa gibi solda panel, sağda içerik ---- */
-.masa { display: grid; grid-template-columns: 268px minmax(0, 1fr); min-height: calc(100vh - var(--serit-h)); }
+/* --serit-ust: şeridin gerçek yüksekliği (uygulama.js ölçer); dar pencerede şerit iki satıra inince sol panel altında
+   kalmaz. */
+.masa { display: grid; grid-template-columns: 268px minmax(0, 1fr); min-height: calc(100vh - var(--serit-ust, var(--serit-h))); }
 .yan {
   display: flex; flex-direction: column; gap: 2px; padding: 16px 12px;
   border-right: 0.5px solid var(--cizgi); background: var(--zemin);
-  position: sticky; top: var(--serit-h); height: calc(100vh - var(--serit-h)); overflow-y: auto;
+  position: sticky; top: var(--serit-ust, var(--serit-h)); height: calc(100vh - var(--serit-ust, var(--serit-h))); overflow-y: auto;
 }
 .icerik { display: flex; flex-direction: column; gap: 16px; padding: 28px 32px 24px; min-width: 0; max-width: 1040px; }
 #calisma { display: flex; flex-direction: column; gap: 16px; }
@@ -342,12 +346,15 @@ textarea, input {
 .durum-dugme.yesil .nokta { background: #2f9e6b; }
 .durum-dugme.sari .nokta { background: #e0a91b; }
 .durum-dugme.gri .nokta { background: var(--soluk); }
+/* Genişlik yazı boyutu ölçeğine (zoom) bölünür: "Çok büyük"te de panel ekrandan geniş olmaz. Dar ekranda paneli
+   ekrana sığdıran kaydırma uygulama.js'te (paneliSigdir). */
 .acilir {
-  position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; width: max-content; min-width: 220px; max-width: min(360px, calc(100vw - 32px));
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; width: max-content; min-width: 220px;
+  max-width: min(360px, calc((100vw - 32px) / var(--olcek)));
   padding: 12px 14px; background: var(--yuzey); color: var(--metin); border: 0.5px solid var(--cizgi-guclu);
   border-radius: var(--k-grup); box-shadow: 0 10px 40px rgb(13 24 38 / 0.18); font-size: 13px;
 }
-.acilir.genis { width: min(380px, calc(100vw - 32px)); }
+.acilir.genis { width: min(380px, calc((100vw - 32px) / var(--olcek))); }
 .acilir p { margin: 0 0 8px; color: var(--ikincil); }
 .acilir p:last-child { margin-bottom: 0; }
 .acilir h2 { font-size: 16px; margin-bottom: 8px; }
