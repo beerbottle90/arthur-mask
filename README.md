@@ -11,9 +11,9 @@ sürüm listesinden yeni sürüm olup olmadığını okumak için çıkar.
 > bakımından kişisel veri olmaya devam eder. Araç riski düşürür, yükümlülüğü kaldırmaz:
 > yurt dışına aktarım (KVKK m.9) ve sır saklama (Av.K. m.36) değerlendirmesi ayrıca yapılır.
 
-> **ChatGPT:** ArthurMask'in ChatGPT masaüstü uygulamasıyla çalışması hazırlanıyor (ArthurLegal'in ChatGPT uyarlaması; araçları ChatGPT masaüstünde denendi). Bugün Claude Desktop ile çalışır.<br>
-> **ChatGPT:** support for the ChatGPT desktop app is in preparation as part of ArthurLegal's ChatGPT adaptation (the tools have been tested there). Today ArthurMask runs with Claude Desktop.<br>
-> **ChatGPT:** ArthurMask-in ChatGPT masaüstü tətbiqi ilə işləməsi hazırlanır (ArthurLegal-ın ChatGPT uyğunlaşdırması; alətlər orada sınaqdan keçirilib). Bu gün Claude Desktop ilə işləyir.<br>
+> **ChatGPT:** ArthurMask ChatGPT masaüstü uygulamasıyla da çalışır. ArthurLegal kurulumunda (v3.4.0 ve sonrası) ChatGPT seçildiyse kurulum ArthurMask'in köprüsünü ChatGPT'nin ayarına da yazar; belgeler yine bu bilgisayarda maskelenir, ChatGPT'ye yalnız maskeli metin gider. ArthurMask'in kendi kurulumu bugün yalnız Claude Desktop'a bağlanır.<br>
+> **ChatGPT:** ArthurMask also works with the ChatGPT desktop app. When ChatGPT is chosen in the ArthurLegal installer (v3.4.0 and later), it adds ArthurMask's bridge to ChatGPT's settings too; documents are still masked on this computer and only masked text reaches ChatGPT. ArthurMask's own installer connects to Claude Desktop only, for now.<br>
+> **ChatGPT:** ArthurMask ChatGPT masaüstü tətbiqi ilə də işləyir. ArthurLegal quraşdırmasında (v3.4.0 və sonrası) ChatGPT seçilibsə, quraşdırma ArthurMask-ın körpüsünü ChatGPT-nin ayarlarına da yazır; sənədlər yenə bu kompüterdə maskalanır, ChatGPT-yə yalnız maskalanmış mətn gedir. ArthurMask-ın öz quraşdırması hələlik yalnız Claude Desktop-a qoşulur.<br>
 > <sub>ChatGPT ve OpenAI, OpenAI'ın markalarıdır · ChatGPT and OpenAI are trademarks of OpenAI.</sub>
 
 ## Ne yapar
