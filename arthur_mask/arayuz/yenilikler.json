@@ -1,4 +1,21 @@
 {
+ "1.4.1": {
+  "tr": [
+   "Dar pencerede ve telefonda üst şerit ve paneller ekrana sığar; Şimdi güncelle düğmesi her zaman görünür.",
+   "Kopyala düğmeleri tarayıcı panoya izin vermese de çalışır; olmazsa ne yapacağınızı söyler.",
+   "Yazılar ve düğmeler açık ve koyu temada daha okunaklı (renk karşıtlığı)."
+  ],
+  "az": [
+   "Dar pəncərədə və telefonda yuxarı zolaq və panellər ekrana sığır; İndi yenilə düyməsi həmişə görünür.",
+   "Kopyala düymələri brauzer mübadilə buferinə icazə verməsə də işləyir; alınmasa, nə edəcəyinizi deyir.",
+   "Yazılar və düymələr açıq və tünd temada daha oxunaqlıdır (rəng kontrastı)."
+  ],
+  "en": [
+   "In a narrow window and on the phone the top bar and panels fit the screen; the Update now button is always visible.",
+   "Copy buttons work even when the browser does not allow the clipboard; if they cannot, they tell you what to do.",
+   "Text and buttons are easier to read in light and dark themes (colour contrast)."
+  ]
+ },
  "1.4.0": {
   "tr": [
    "Üst şerit: bağlantı durumu, sürüm, güncelleme denetimi, görünüm ve yardım menüleri bir arada.",
