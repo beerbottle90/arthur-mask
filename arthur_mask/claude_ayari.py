@@ -26,7 +26,8 @@ KOPRU_KOMUTU = "import sys; from arthur_mask.kopru import main; sys.exit(main())
 
 
 def yapilandirma_yollari() -> List[Path]:
-    """Klasik kurulum (%APPDATA%\\Claude) ve Microsoft Store/MSIX kurulumunun yapılandırma dosyaları."""
+    """Klasik kurulum (%APPDATA%\\Claude), Microsoft Store/MSIX kurulumu ve Claude Desktop 6.x'in Claude-Data klasörü
+    (%LOCALAPPDATA%\\Claude-Data\\claude_<yayıncı kimliği>) altındaki yapılandırma dosyaları."""
     if sys.platform == "darwin":
         return [Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"]
     yollar = []
@@ -37,6 +38,10 @@ def yapilandirma_yollari() -> List[Path]:
     if yerel:
         for paket in sorted((Path(yerel) / "Packages").glob("Claude_*")):
             yollar.append(paket / "LocalCache" / "Roaming" / "Claude" / "claude_desktop_config.json")
+        # Claude Desktop 6.x %APPDATA%\\Claude'u okumaz; bu klasör listede olmazsa arthur-mask Claude'a hiç görünmez.
+        for veri in sorted((Path(yerel) / "Claude-Data").glob("[Cc]laude_*")):
+            if veri.is_dir():
+                yollar.append(veri / "claude_desktop_config.json")
     return yollar
 
 
