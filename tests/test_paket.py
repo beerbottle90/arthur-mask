@@ -35,6 +35,25 @@ def test_claude_desktop_kaydi_diger_ayarlari_korur_ve_yedekler(tmp_path, monkeyp
     assert "arthur-mask" not in veri["mcpServers"] and "baska" in veri["mcpServers"]
 
 
+@yalniz_windows
+def test_claude_data_yapilandirmasina_kaydeder(tmp_path, monkeypatch):
+    """Claude Desktop 6.x (Windows) ayarı %LOCALAPPDATA%\\Claude-Data\\claude_<kimlik> altında tutar."""
+    monkeypatch.setenv("APPDATA", str(tmp_path / "Roaming"))
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "Local"))
+    veri_klasoru = tmp_path / "Local" / "Claude-Data" / "claude_pzs8sxrjxfjjc"
+    veri_klasoru.mkdir(parents=True)
+    yapi = veri_klasoru / "claude_desktop_config.json"
+    yapi.write_text(json.dumps({"preferences": {"tema": "koyu"}}), encoding="utf-8")
+
+    assert claude_ayari.kaydet() == [yapi]
+    veri = json.loads(yapi.read_text(encoding="utf-8"))
+    assert veri["preferences"] == {"tema": "koyu"} and "arthur-mask" in veri["mcpServers"]
+    assert not (tmp_path / "Roaming" / "Claude").exists(), "Claude-Data varken klasik yol oluşturulmamalı"
+
+    claude_ayari.sil()
+    assert "arthur-mask" not in json.loads(yapi.read_text(encoding="utf-8"))["mcpServers"]
+
+
 def test_tek_yedek_yalniz_degisiklikte_ve_yalniz_kullaniciya(tmp_path, monkeypatch):
     """Yapılandırma başka sunucuların sırlarını taşıyabilir: her çalışmada yeni yedek birikmez, eski zaman damgalı
     yedekler silinir, değişiklik yoksa hiç yazılmaz; macOS/Linux'ta yedek 600."""
