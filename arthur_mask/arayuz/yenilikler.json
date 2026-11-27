@@ -1,4 +1,15 @@
 {
+ "1.4.2": {
+  "tr": [
+   "Claude Desktop'ın yeni Windows sürümünde ArthurMask yeniden Claude'a bağlanır: kurulum, Claude'un okuduğu ayar dosyasını bulur."
+  ],
+  "az": [
+   "Claude Desktop-un yeni Windows versiyasında ArthurMask yenidən Claude-a qoşulur: quraşdırma Claude-un oxuduğu ayar faylını tapır."
+  ],
+  "en": [
+   "On the new Claude Desktop for Windows, ArthurMask connects to Claude again: setup finds the settings file Claude reads."
+  ]
+ },
  "1.4.1": {
   "tr": [
    "Dar pencerede ve telefonda üst şerit ve paneller ekrana sığar; Şimdi güncelle düğmesi her zaman görünür.",
